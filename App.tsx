@@ -22,6 +22,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import AwesomeButton from "react-native-really-awesome-button";
 import { AudioWaveForm } from './audio-progress';
+import { Spacer } from './uielements';
 
 const audioRecorderPlayer = new AudioRecorderPlayer();
 const FILE_NAME = "the-record.mp4";
@@ -40,6 +41,8 @@ function App(): React.JSX.Element {
   const [recording, setRecording] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [log, setLog] = useState("");
+
+  const isLandscape = ()=>windowSize.height<windowSize.width;
 
   const onStartRecord = async () => {
     const result = await audioRecorderPlayer.startRecorder()
@@ -132,17 +135,16 @@ function App(): React.JSX.Element {
     width: "100%",
     height: "100%",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
 
   };
 
-  const bottonWidth = windowSize.width * .6;
-
+  const bottonWidth = (isLandscape() ? windowSize.height:windowSize.width) * .4;
 
   return (
     <SafeAreaView style={backgroundStyle} onLayout={(e) => {
       let wz = e.nativeEvent.layout;
-      setWindowSize(windowSize);
+      setWindowSize(wz);
     }}>
       <TouchableOpacity style={{
         position: "absolute",
@@ -166,7 +168,7 @@ function App(): React.JSX.Element {
           });
         }}
       >
-        <Icon size={65} name={recording ? "stop" : "microphone"} color="white" />
+        <Icon size={55} name={recording ? "stop" : "microphone"} color="white" />
       </TouchableOpacity>
 
       <View style={{
@@ -174,6 +176,7 @@ function App(): React.JSX.Element {
         width: bottonWidth * 1.3,
         height: bottonWidth * 1.3,
         padding: bottonWidth * .15,
+        marginTop: isLandscape()?"15%":"40%",
         borderRadius: bottonWidth * 1.3 / 2
       }}>
         <AwesomeButton
@@ -190,15 +193,10 @@ function App(): React.JSX.Element {
         > </AwesomeButton>
       </View>
 
-      <View style={{
-        height: recording ?
-          30 :
-          playing ? 60 : 90
-      }} />
-
-      {playing && <AudioWaveForm height={30} progress={duration && curr && curr / duration || 0} color={BTN_FOR_COLOR} />}
-      {recording && <AudioWaveForm height={30} infiniteProgress={recordProgress} color={BTN_FOR_COLOR} />}
-      {recording && <View style={{height:30}}><Text style={{ marginTop: 20 }}>{state.recordTime?.substring(0, 5) || ""}</Text></View>}
+      <Spacer h={30}/>
+      {playing && <AudioWaveForm height={50} progress={duration && curr && curr / duration || 0} color={BTN_FOR_COLOR} /> }
+      {recording && <AudioWaveForm height={50} infiniteProgress={recordProgress} color={BTN_FOR_COLOR} /> }
+      {recording && <View style={{height:30}}><Text style={{ marginTop: 10 }}>{state.recordTime?.substring(0, 5) || ""}</Text></View> }
 
 
 

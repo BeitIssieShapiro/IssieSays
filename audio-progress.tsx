@@ -11,9 +11,10 @@ export function AudioWaveForm({height, color, progress, infiniteProgress}:any) {
         flexDirection: "row",
         justifyContent: "center",
         alignItems: "center",
-        maxHeight: height || 100
+        maxHeight: height || 100,
+        minHeight:height || 100,
     }}>
-        {wave.map((w, i) => (<View
+        {wave.map((w, i) => (<View key={i}
             style={{
                 height: w,
                 width: 7,
