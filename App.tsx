@@ -23,11 +23,15 @@ import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import AwesomeButton from "react-native-really-awesome-button";
 import { AudioWaveForm } from './audio-progress';
 import { Spacer } from './uielements';
+import { Settings, SettingsButton } from './settings';
+import { About } from './about';
+import { AnimatedButton, AnimatedRotation } from './animatedButton';
+import { AnimatedCircularProgress } from 'react-native-circular-progress';
 
 const audioRecorderPlayer = new AudioRecorderPlayer();
 const FILE_NAME = "the-record.mp4";
 const BTN_FOR_COLOR = "#CD6438";
-const BTN_BACK_COLOR = "#C8572A";
+export const BTN_BACK_COLOR = "#C8572A";
 console.log("doc path", RNFS.DocumentDirectoryPath);
 
 function App(): React.JSX.Element {
@@ -41,8 +45,10 @@ function App(): React.JSX.Element {
   const [recording, setRecording] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [log, setLog] = useState("");
+  const [showSettings, setShowSettings] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
-  const isLandscape = ()=>windowSize.height<windowSize.width;
+  const isLandscape = () => windowSize.height < windowSize.width;
 
   const onStartRecord = async () => {
     const result = await audioRecorderPlayer.startRecorder()
@@ -72,7 +78,9 @@ function App(): React.JSX.Element {
 
   const onStopRecord = async () => {
     const result = await audioRecorderPlayer.stopRecorder()
-      .catch((err) => setLog(prev => prev + "\nerr stop record: " + err));
+      .catch((err) => {
+        setLog(prev => prev + "\nerr stop record: " + err)
+      });
 
     setRecordProgressInterval((prev) => {
       if (prev) clearInterval(prev);
@@ -139,14 +147,29 @@ function App(): React.JSX.Element {
 
   };
 
-  const bottonWidth = (isLandscape() ? windowSize.height:windowSize.width) * .4;
+  const bottonWidth = (isLandscape() ? windowSize.height : windowSize.width) * .4;
+
+  if (showAbout) {
+    return <About onClose={() => setShowAbout(false)} />
+  }
 
   return (
     <SafeAreaView style={backgroundStyle} onLayout={(e) => {
       let wz = e.nativeEvent.layout;
       setWindowSize(wz);
     }}>
-      <TouchableOpacity style={{
+      <SettingsButton onPress={() => setShowSettings(true)} />
+      {showSettings && <Settings
+        onAbout={() => {
+          console.log("On About")
+          setShowAbout(true);
+
+          setShowSettings(false);
+        }}
+        onClose={() => setShowSettings(false)}
+      />}
+
+      <View style={{
         position: "absolute",
         top: 50, left: 50,
         width: 100, height: 100,
@@ -154,29 +177,33 @@ function App(): React.JSX.Element {
         alignItems: "center",
         backgroundColor: BTN_BACK_COLOR,
         justifyContent: "center",
-      }}
-        onLongPress={() => {
-          if (!recording) onStartRecord();
-        }}
-
-        onPress={() => {
-          onStopRecord().then((res) => {
-            if (res.startsWith("file:")) {
-              console.log(res.substring(7))
+      }}>
+        <AnimatedButton
+          duration={recording ? 0 : 3000}
+          icon={recording ? "stop" : "microphone"}
+          onPress={() => {
+            if (!recording) {
+              onStartRecord();
+              return;
             }
-            console.log(res)
-          });
-        }}
-      >
-        <Icon size={55} name={recording ? "stop" : "microphone"} color="white" />
-      </TouchableOpacity>
+
+            onStopRecord().then((res) => {
+              if (res.startsWith("file:")) {
+                console.log(res.substring(7))
+              }
+              console.log(res)
+            });
+          }}
+        />
+      </View>
+
 
       <View style={{
         backgroundColor: BTN_FOR_COLOR,
         width: bottonWidth * 1.3,
         height: bottonWidth * 1.3,
         padding: bottonWidth * .15,
-        marginTop: isLandscape()?"15%":"40%",
+        marginTop: isLandscape() ? "15%" : "40%",
         borderRadius: bottonWidth * 1.3 / 2
       }}>
         <AwesomeButton
@@ -193,10 +220,10 @@ function App(): React.JSX.Element {
         > </AwesomeButton>
       </View>
 
-      <Spacer h={30}/>
-      {playing && <AudioWaveForm height={50} progress={duration && curr && curr / duration || 0} color={BTN_FOR_COLOR} /> }
-      {recording && <AudioWaveForm height={50} infiniteProgress={recordProgress} color={BTN_FOR_COLOR} /> }
-      {recording && <View style={{height:30}}><Text style={{ marginTop: 10 }}>{state.recordTime?.substring(0, 5) || ""}</Text></View> }
+      <Spacer h={30} />
+      {playing && <AudioWaveForm height={50} progress={duration && curr && curr / duration || 0} color={BTN_FOR_COLOR} />}
+      {recording && <AudioWaveForm height={50} infiniteProgress={recordProgress} color={BTN_FOR_COLOR} />}
+      {recording && <View style={{ height: 30 }}><Text style={{ marginTop: 10 }}>{state.recordTime?.substring(0, 5) || ""}</Text></View>}
 
 
 
