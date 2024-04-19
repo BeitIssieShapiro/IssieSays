@@ -1,9 +1,9 @@
 import { View } from "react-native";
 
-const baseColor = "lightgray";
+//const baseColor = "lightgray";
 const filledColor = "green";
 
-export function AudioWaveForm({height, color, progress, infiniteProgress}:any) {
+export function AudioWaveForm({height, color, progress, infiniteProgress, baseColor}:any) {
     const wave = [15, 30, 15, 15, 30, 15, 15, 30, 15, 15, 30, 15];
 
     return <View style={{
