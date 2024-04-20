@@ -3,8 +3,9 @@ import { View } from "react-native";
 //const baseColor = "lightgray";
 const filledColor = "green";
 
-export function AudioWaveForm({height, color, progress, infiniteProgress, baseColor}:any) {
+export function AudioWaveForm({height, color, progress, infiniteProgress, baseColor, width}:any) {
     const wave = [15, 30, 15, 15, 30, 15, 15, 30, 15, 15, 30, 15];
+    const inc = (width/ 3) / wave.length;
 
     return <View style={{
         flex: 1,
@@ -17,14 +18,14 @@ export function AudioWaveForm({height, color, progress, infiniteProgress, baseCo
         {wave.map((w, i) => (<View key={i}
             style={{
                 height: w,
-                width: 7,
+                width: inc,
                 backgroundColor: progress > 0 ?
                     (wave.length * progress > i ? color || filledColor : baseColor) :
                     infiniteProgress > 0 ?
                         infiniteProgress % wave.length == i ? color || filledColor : baseColor :
                         baseColor,
-                marginLeft: 5,
-                marginRight: 5,
+                marginLeft: inc-2,
+                marginRight: inc-2,
                 borderRadius: 2,
             }}
         />))}

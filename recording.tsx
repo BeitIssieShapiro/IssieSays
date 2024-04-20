@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
-import { AnimatedButton } from "./animatedButton";
+//import { AnimatedButton } from "./animatedButton";
+import Icon from 'react-native-vector-icons/FontAwesome';
+
 import AudioRecorderPlayer from "react-native-audio-recorder-player";
 import * as RNFS from 'react-native-fs';
-import { View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { AudioWaveForm } from "./audio-progress";
 import { Text } from "react-native-svg";
-import { BTN_BACK_COLOR } from "./App";
+import { BTN_BACK_COLOR, audioRecorderPlayer } from "./App";
 
 
 export const getRecordingFileName = (recName: string) => {
     return RNFS.DocumentDirectoryPath + "/" + recName + ".mp4";
 }
-const audioRecorderPlayer = new AudioRecorderPlayer();
+//const audioRecorderPlayer = new AudioRecorderPlayer();
 
 
 export function RecordButton({ name, backgroundColor, size }: { name: string, backgroundColor: string, size: number }) {
@@ -21,28 +23,36 @@ export function RecordButton({ name, backgroundColor, size }: { name: string, ba
     const [recording, setRecording] = useState<boolean>(false);
     const [log, setLog] = useState("");
 
-    useEffect(() => {
-        return () => {
-            // unmount event
-            setRecording((nowRecording) => {
-                if (nowRecording) {
-                    // stop recording:
-                    onStopRecord()
+    // useEffect(() => {
+    //     return () => {
+    //         // unmount event
+    //         setRecording((nowRecording) => {
+    //             if (nowRecording) {
+    //                 // stop recording:
+    //                 console.log("unmount while recording - stop recording...")
+    //                 onStopRecord()
 
-                }
-                return false;
-            })
-        }
-    }, [])
+    //             }
+    //             return false;
+    //         })
+    //     }
+    // }, [])
 
     const getFileName = () => {
         return getRecordingFileName(name);
     }
 
     const onStartRecord = async () => {
+        console.log("about to start recording")
         const result = await audioRecorderPlayer.startRecorder()
-            .then(() => setLog(prev => prev + "\nRecording started..."))
-            .catch((err) => setLog(prev => prev + "\nerr start record" + err));
+            .then(() => {
+                setLog(prev => prev + "\nRecording started...");
+                console.log("Recording started...");
+            })
+            .catch((err) => {
+                setLog(prev => prev + "\nerr start record" + err)
+                console.log("Failed to start recording...", err);
+            });
         RNFS.unlink(getFileName()).catch((e) => {/*ignore*/ });
 
         setRecordProgressInterval((prevInterval) => {
@@ -97,15 +107,35 @@ export function RecordButton({ name, backgroundColor, size }: { name: string, ba
 
 
     return <View style={{ flexDirection: "column", alignItems: "center", width: 200 }}>
-        <View style={{
+        <TouchableOpacity style={{
 
             width: size, height: size,
             borderRadius: size / 2,
             alignItems: "center",
             backgroundColor: backgroundColor,
             justifyContent: "center",
-        }}>
-            <AnimatedButton
+        }}
+            onPress={() => {
+                if (!recording) {
+                    onStartRecord();
+                    return;
+                }
+
+                onStopRecord().then((res) => {
+                    if (res.startsWith("file:")) {
+                        console.log(res.substring(7))
+                    }
+                    console.log(res)
+                });
+            }}
+
+        >
+            <Icon
+                name={recording ? "stop" : "microphone"}
+                color={"white"}
+                size={size/2}
+            />
+            {/* <AnimatedButton
                 size={size}
                 duration={recording ? 0 : 0}
                 icon={recording ? "stop" : "microphone"}
@@ -122,11 +152,11 @@ export function RecordButton({ name, backgroundColor, size }: { name: string, ba
                         console.log(res)
                     });
                 }}
-            />
-        </View>
+            /> */}
+        </TouchableOpacity>
         <View style={{ height: 50, width: size * 2 }}>
-            {recording && <AudioWaveForm height={50} infiniteProgress={recordProgress} color={BTN_BACK_COLOR} baseColor={"white"} />}
-            {recording && <View style={{ height: 30 }}><Text style={{ marginTop: 10 }}>{state.recordTime?.substring(0, 5) || ""}</Text></View>}
+            {recording && <AudioWaveForm width={size*2} height={50} infiniteProgress={recordProgress} color={BTN_BACK_COLOR} baseColor={"white"} />}
+            {recording && <View style={{ height: 30 }}><Text style={{ marginTop: 0, color:"white" }}>{state.recordTime?.substring(0, 5) || ""}</Text></View>}
         </View>
     </View>
 }

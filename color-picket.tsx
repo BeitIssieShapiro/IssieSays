@@ -51,6 +51,10 @@ export function MyColorPicker(props: any) {
     }, [composedColor, lastColors]);
 
 
+    if (height === 0) {
+        return null;
+    }
+
     //trace("last colors", lastColors)
     //trace("color", props.color, "composed", composedColor)
     return <FadeInView height={height}
@@ -155,7 +159,6 @@ export function MyColorPicker(props: any) {
 
 export function increaseColor(hexColor:string, amount:number) {
     // Convert hexadecimal color to RGB components
-    console.log("increaseColor", hexColor)
     var r = parseInt(hexColor.substring(1, 3), 16);
     var g = parseInt(hexColor.substring(3, 5), 16);
     var b = parseInt(hexColor.substring(5, 7), 16);

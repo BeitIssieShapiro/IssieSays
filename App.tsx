@@ -11,27 +11,21 @@ import {
   View,
 } from 'react-native';
 
-import {
-  Colors,
-} from 'react-native/Libraries/NewAppScreen';
-
 import * as RNFS from 'react-native-fs';
 
 
-import Icon from 'react-native-vector-icons/FontAwesome';
+//import Icon from 'react-native-vector-icons/FontAwesome';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import AwesomeButton from "react-native-really-awesome-button";
 import { AudioWaveForm } from './audio-progress';
 import { RectView, Spacer } from './uielements';
 import { BUTTONS, BUTTONS_COLOR, getSetting, SettingsButton, SettingsPage } from './settings';
 import { About } from './about';
-import { AnimatedButton } from './animatedButton';
-import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import { getRecordingFileName } from './recording';
 import { increaseColor } from './color-picket';
 
-const audioRecorderPlayer = new AudioRecorderPlayer();
-const FILE_NAME = "the-record.mp4";
+export const audioRecorderPlayer = new AudioRecorderPlayer();
+
 const BTN_FOR_COLOR = "#CD6438";
 export const BTN_BACK_COLOR = "#C8572A";
 console.log("doc path", RNFS.DocumentDirectoryPath);
@@ -96,7 +90,7 @@ function App(): React.JSX.Element {
     height: "100%",
     alignItems: "center",
     justifyContent: "flex-start",
-
+    backgroundColor:"white"
   };
 
 
@@ -153,11 +147,14 @@ function App(): React.JSX.Element {
                 height={bottonWidth}
                 borderRadius={bottonWidth / 2}
                 onPress={() => onStartPlay(i)}
+                animatedPlaceholder={false}
+                
+                
 
-              > </AwesomeButton>
+              >{" "}</AwesomeButton>
             </View>
             <Spacer h={30} />
-            {playing === i ? <AudioWaveForm height={50} progress={duration && curr && curr / duration || 0} color={BTN_FOR_COLOR} baseColor={"lightgray"} /> :
+            {playing === i ? <AudioWaveForm width={bottonWidth} height={50} progress={duration && curr && curr / duration || 0} color={BTN_FOR_COLOR} baseColor={"lightgray"} /> :
               <Spacer h={50} />}
 
           </View>
