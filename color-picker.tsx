@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Settings, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Icon from 'react-native-vector-icons/FontAwesome';
+import Icon from 'react-native-vector-icons/AntDesign';
 import ColorPicker from 'react-native-wheel-color-picker'
 
 import { LAST_COLORS, getSetting } from "./settings";
@@ -28,11 +28,11 @@ export function MyColorPicker(props: any) {
     if (props.isScreenNarrow) {
         colorButtonSize *= 2;
     }
-    let height = props.open ? colorButtonSize + 10 + (openMore ? 290 : 0) : 0;
+    let height = props.open ? props.height : 0;
 
-    useEffect(() => {
-        props.onHeightChanged(height);
-    }, [openMore, props.open]);
+    // useEffect(() => {
+    //     props.onHeightChanged(height);
+    // }, [openMore, props.open]);
 
 
     const _handleSelect = useCallback(() => {
@@ -58,11 +58,19 @@ export function MyColorPicker(props: any) {
     //trace("last colors", lastColors)
     //trace("color", props.color, "composed", composedColor)
     return <FadeInView height={height}
-        style={[styles.pickerView, { top: props.top, left: 0, right: 0 }]}>
+        style={[styles.pickerView, { bottom: 0, left: 0, right: 0 }]}>
+        <Text style={{ fontSize: 25 }}>{props.title}</Text>
+        <View style={styles.closeButton}>
+            <Icon name="close" size={45} onPress={() => props.onClose()} />
+        </View>
+
+
         <View
             style={{
                 flexDirection: 'row',
-                width: '100%', height: colorButtonSize,
+                width: '100%',
+                margin: 70,
+                height: colorButtonSize,
                 justifyContent: 'space-evenly', alignItems: 'center'
             }}>
             {availableColorPicker.map((color, i) => <ColorButton
@@ -112,7 +120,7 @@ export function MyColorPicker(props: any) {
                 top: 95, right: props.isScreenNarrow ? 0 : "15%",
                 width: colorButtonSize * 2 + 30,
                 flexWrap: "wrap",
-                zIndex: 1000, flexDirection: "row"
+                zIndex: 1000, flexDirection: "row",
             }} >
                 {
                     composedColor && composedColor != props.color && !lastColors.find(lc => lc === composedColor) &&
@@ -157,27 +165,33 @@ export function MyColorPicker(props: any) {
     </FadeInView>
 }
 
-export function increaseColor(hexColor:string, amount:number) {
+export function increaseColor(hexColor: string, amount: number) {
     // Convert hexadecimal color to RGB components
     var r = parseInt(hexColor.substring(1, 3), 16);
     var g = parseInt(hexColor.substring(3, 5), 16);
     var b = parseInt(hexColor.substring(5, 7), 16);
-    
+
     // Increase each component by the specified amount
     r = Math.min(255, r + amount);
     g = Math.min(255, g + amount);
     b = Math.min(255, b + amount);
-    
+
     // Convert RGB components back to hexadecimal color
-    var result = '#' + 
+    var result = '#' +
         (r < 16 ? '0' : '') + r.toString(16) +
         (g < 16 ? '0' : '') + g.toString(16) +
         (b < 16 ? '0' : '') + b.toString(16);
-    
+
     return result;
 }
 
 const styles = StyleSheet.create({
+    closeButton: {
+        position: "absolute",
+        right: 50,
+        top: "4%",
+        zIndex: 100
+    },
     pickerView: {
         flexDirection: 'column',
         position: 'absolute',
@@ -189,6 +203,6 @@ const styles = StyleSheet.create({
         //padding: 5,
         paddingTop: 2,
         alignItems: 'center',
-        zIndex:1000
+        zIndex: 1000
     }
 });

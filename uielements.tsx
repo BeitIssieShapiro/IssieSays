@@ -43,34 +43,35 @@ export function getNumButtonsSelection(num: number, size: number) {
     </RectView>
 }
 
-export function RectView({ children, width, height }: any) {
-    const isFour = Array.isArray(children) && children.length === 4;
+export function RectView({ children, width, height, buttonWidth, isLandscape }: any) {
+
+    const space = buttonWidth/3;
+
     return <View style={{
-        flexDirection: "row",
+        flexDirection: "column",
         flexWrap: "wrap",
         alignItems: "center",
-        justifyContent: "space-around",
+        justifyContent: "center",
         alignContent: "center",
         width,
         height,
 
     }}>
-        {isFour ?
-            <View style={{ flexDirection: "column" }}>
-                <View style={{ flexDirection: "row" }}>
-                    {children[0]}
-                    <Spacer w={width / 10} />
-                    {children[1]}
-                </View>
-
-                <View style={{ flexDirection: "row" }}>
-                    {children[2]}
-                    <Spacer w={width / 10} />
-                    {children[3]}
-                </View>
+        <View style={{ display:"flex", flexDirection: "column", alignItems:"center"  }}>
+            <View style={{display:"flex", alignItems: "center", justifyContent:"center", flexDirection: !isLandscape && children.length < 3 ? "column" : "row"}}>
+                {children[0]}
+                {children.length > 1 && <Spacer w={space} h={space}/>} 
+                {children.length > 1 && children[1]}
             </View>
-            : children}
-    </View>
+
+            {children.length > 2 && <View style={{ flexDirection: "row" }}>
+            {children[2]}
+                {children.length > 3 && <Spacer w={space} h={space}/>}
+                {children.length > 3 && children[3]}
+            </View>}
+
+        </View>
+    </View >
 
 }
 
@@ -80,7 +81,6 @@ export function RectView({ children, width, height }: any) {
 export function isTooWhite(color: string) {
     try {
         const limit = 210;
-        let borderStyle = {};
         const bigint = parseInt(color.slice(1), 16);
         const r = (bigint >> 16) & 255;
         const g = (bigint >> 8) & 255;

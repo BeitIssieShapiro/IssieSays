@@ -19,10 +19,10 @@ import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import AwesomeButton from "react-native-really-awesome-button";
 import { AudioWaveForm } from './audio-progress';
 import { RectView, Spacer } from './uielements';
-import { BUTTONS, BUTTONS_COLOR, getSetting, SettingsButton, SettingsPage } from './settings';
+import { BACKGROUND, BUTTONS, BUTTONS_COLOR, getSetting, SettingsButton, SettingsPage } from './settings';
 import { About } from './about';
-import { getRecordingFileName } from './recording';
-import { increaseColor } from './color-picket';
+import { getRecordingFileName, playRecording } from './recording';
+import { increaseColor } from './color-picker';
 
 export const audioRecorderPlayer = new AudioRecorderPlayer();
 
@@ -45,52 +45,43 @@ function App(): React.JSX.Element {
 
   const isLandscape = () => windowSize.height < windowSize.width;
 
-
-  const onStartPlay = useCallback((recName: string) => {
+  const mainBackgroundColor = getSetting(BACKGROUND.name, BACKGROUND.LIGHT);
+  const onStartPlay = useCallback(async (recName: string) => {
     if (playingInProgress) return;
 
-    const filePath = "file://" + getRecordingFileName(recName);
-    RNFS.exists(filePath).then(exists => {
-      if (exists) {
-        setPlaying(recName);
-        setPlayingInProgress(true)
-        console.log('onStartPlay');
-        audioRecorderPlayer.startPlayer(filePath)
-          .then(() => setLog(prev => prev + "\nPlaying..."))
-          .catch((err) => setLog(prev => prev + "\nerr playing: " + err));
-
-        setCurr(0.0);
-        audioRecorderPlayer.addPlayBackListener((e) => {
-          setCurr(e.currentPosition);
-          setDuration(e.duration);
-          const newState = {
-            currentPositionSec: e.currentPosition,
-            currentDurationSec: e.duration,
-            playTime: audioRecorderPlayer.mmssss(Math.floor(e.currentPosition)),
-            duration: audioRecorderPlayer.mmssss(Math.floor(e.duration)),
-          }
-          if (newState.playTime == newState.duration) {
-            setLog(prev => prev + "\nPlaying finished")
-            setPlaying(undefined);
-            setPlayingInProgress(false)
-          }
-          //setState(newState);
-          console.log(newState)
-          return;
-        });
-      } else {
-        console.log("No recording exists", recName)
+    const success = await playRecording(recName, (e) => {
+      setCurr(e.currentPosition);
+      setDuration(e.duration);
+      const newState = {
+        currentPositionSec: e.currentPosition,
+        currentDurationSec: e.duration,
+        playTime: audioRecorderPlayer.mmssss(Math.floor(e.currentPosition)),
+        duration: audioRecorderPlayer.mmssss(Math.floor(e.duration)),
       }
+      if (newState.playTime == newState.duration) {
+        setLog(prev => prev + "\nPlaying finished")
+        setPlaying(undefined);
+        setPlayingInProgress(false)
+      }
+      //setState(newState);
+      console.log(newState)
+      return;
+    })
+    if (success) {
+      setPlaying(recName);
+      setPlayingInProgress(true)
+      setLog(prev => prev + "\Start Playing " + recName)
+    }
 
-    });
 
   }, [playing, playingInProgress]);
   const backgroundStyle = {
     width: "100%",
     height: "100%",
+    // margin: 20,
     alignItems: "center",
     justifyContent: "flex-start",
-    backgroundColor:"white"
+    backgroundColor: mainBackgroundColor
   };
 
 
@@ -99,16 +90,19 @@ function App(): React.JSX.Element {
   }
 
   if (showSettings) {
-    return <SettingsPage
-      windowSize={windowSize}
-      onAbout={() => {
-        console.log("On About")
-        setShowAbout(true);
+    return <SafeAreaView style={backgroundStyle} onLayout={(e) => {
+      let wz = e.nativeEvent.layout;
+      setWindowSize(wz);
+    }}><SettingsPage
+        windowSize={windowSize}
+        onAbout={() => {
+          console.log("On About")
+          setShowAbout(true);
 
-        setShowSettings(false);
-      }}
-      onClose={() => setShowSettings(false)}
-    />
+          setShowSettings(false);
+        }}
+        onClose={() => setShowSettings(false)}
+      /></SafeAreaView >
   }
 
   const numOfButtons: number = getSetting(BUTTONS.name, 1) as number;
@@ -116,26 +110,33 @@ function App(): React.JSX.Element {
 
   const buttonsInCol = numOfButtons < 2 ? 1 : 2
 
-  const bottonWidth = (isLandscape() ? windowSize.height : windowSize.width) * .6 / buttonsInCol;
+  let bottonWidth = (isLandscape() ? windowSize.height : windowSize.width) * (buttonsInCol > 1 ?
+    (numOfButtons > 2 ? .32 : .4) : .6);
+
+  if (windowSize.height < 450) {
+    bottonWidth *= .8;
+  }
+
+  console.log("w/h", windowSize)
 
   return (
     <SafeAreaView style={backgroundStyle} onLayout={(e) => {
       let wz = e.nativeEvent.layout;
       setWindowSize(wz);
     }}>
-      <SettingsButton onPress={() => setShowSettings(true)} />
+      <SettingsButton onPress={() => setShowSettings(true)} backgroundColor={mainBackgroundColor}/>
 
-      <RectView width={windowSize.width} height={windowSize.height}>
+      <RectView buttonWidth={bottonWidth} width={windowSize.width} height={windowSize.height} isLandscape={isLandscape()}>
 
         {Array.from(Array(numOfButtons).keys()).map((i: any) => (
-          <View key={i} >
+          <View key={i}>
             <View style={{
               backgroundColor: buttonColors[i],
               width: bottonWidth * 1.3,
               height: bottonWidth * 1.3,
               padding: bottonWidth * .15,
-              marginTop: isLandscape() ? "15%" : "40%",
-              borderRadius: bottonWidth * 1.3 / 2
+              // marginTop: isLandscape() ? "15%" : "40%",
+              borderRadius: bottonWidth * 1.3 / 2,
             }}>
               <AwesomeButton
                 borderColor={buttonColors[i]}
@@ -148,12 +149,12 @@ function App(): React.JSX.Element {
                 borderRadius={bottonWidth / 2}
                 onPress={() => onStartPlay(i)}
                 animatedPlaceholder={false}
-                
-                
+
+
 
               >{" "}</AwesomeButton>
             </View>
-            <Spacer h={30} />
+            <Spacer h={10} />
             {playing === i ? <AudioWaveForm width={bottonWidth} height={50} progress={duration && curr && curr / duration || 0} color={BTN_FOR_COLOR} baseColor={"lightgray"} /> :
               <Spacer h={50} />}
 
