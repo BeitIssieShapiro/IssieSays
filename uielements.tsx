@@ -1,5 +1,6 @@
 import { TouchableOpacity, View } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { isRTL } from "./lang";
 
 
 export function Spacer({ h, w, bc }: { h?: Number, w?: Number, bc?: string }) {
@@ -45,7 +46,7 @@ export function getNumButtonsSelection(num: number, size: number) {
 
 export function RectView({ children, width, height, buttonWidth, isLandscape }: any) {
 
-    const space = buttonWidth/3;
+    const space = buttonWidth / 3;
 
     return <View style={{
         flexDirection: "column",
@@ -57,16 +58,16 @@ export function RectView({ children, width, height, buttonWidth, isLandscape }: 
         height,
 
     }}>
-        <View style={{ display:"flex", flexDirection: "column", alignItems:"center"  }}>
-            <View style={{display:"flex", alignItems: "center", justifyContent:"center", flexDirection: !isLandscape && children.length < 3 ? "column" : "row"}}>
+        <View style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <View style={{ display: "flex", alignItems: "center", justifyContent: "center", flexDirection: !isLandscape && children.length < 3 ? "column" : (isRTL() ? "row-reverse" : "row") }}>
                 {children[0]}
-                {children.length > 1 && <Spacer w={space} h={space}/>} 
+                {children.length > 1 && <Spacer w={space} h={space} />}
                 {children.length > 1 && children[1]}
             </View>
 
-            {children.length > 2 && <View style={{ flexDirection: "row" }}>
-            {children[2]}
-                {children.length > 3 && <Spacer w={space} h={space}/>}
+            {children.length > 2 && <View style={{ flexDirection: (isRTL() ? "row-reverse" : "row") }}>
+                {children[2]}
+                {children.length > 3 && <Spacer w={space} h={space} />}
                 {children.length > 3 && children[3]}
             </View>}
 

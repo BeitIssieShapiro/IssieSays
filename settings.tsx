@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { NativeSyntheticEvent, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Icon from 'react-native-vector-icons/AntDesign';
 import IconMI from 'react-native-vector-icons/Ionicons';
 
@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 import { RecordButton } from "./recording";
 import { MyColorPicker } from "./color-picker";
 import { BTN_BACK_COLOR } from "./App";
+import { fTranslate, isRTL, translate } from "./lang";
+
 
 export const BUTTONS = {
     name: 'buttons'
@@ -15,6 +17,10 @@ export const BUTTONS = {
 
 export const BUTTONS_COLOR = {
     name: 'buttons_colors',
+}
+
+export const BUTTONS_NAMES = {
+    name: 'buttons_names',
 }
 
 
@@ -53,6 +59,18 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     const numOfButtons = getSetting(BUTTONS.name, 1);
     const backgroundColor = getSetting(BACKGROUND.name, BACKGROUND.LIGHT);
     const buttonColors = getSetting(BUTTONS_COLOR.name, [BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR]);
+    const buttonTexts = getSetting(BUTTONS_NAMES.name, [fTranslate("ButtonTitle", 1), fTranslate("ButtonTitle", 2),
+    fTranslate("ButtonTitle", 3), fTranslate("ButtonTitle", 4)]);
+
+    const isScreenNarrow = windowSize.width < 500;
+    console.log("screen", windowSize)
+    const changeButtonsNames = (index: number, newName: string) => {
+        console.log("change buttun text", index, newName)
+        let newButtonNames = [...buttonTexts]
+        newButtonNames[index] = newName
+        Settings.set({ [BUTTONS_NAMES.name]: newButtonNames });
+        setRevision(old => old + 1);
+    }
 
     const changeBackgroundColor = (color: string) => {
         Settings.set({ [BACKGROUND.name]: color });
@@ -78,23 +96,25 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     }
 
     const colorWidth = Math.min(windowSize.width, windowSize.height);
+    const dirStyle: any = { flexDirection: (isRTL() ? "row" : "row-reverse") }
     let marginHorizontal = {}
     if (windowSize.width < 450) {
         marginHorizontal = { marginHorizontal: 5 };
     }
 
-    let backgroundTitle = "צבע רקע - Background"
-    let halfWidth = windowSize.width / 2 - 2 * styles.section.marginHorizontal
-    if (windowSize.width < 450) {
-        halfWidth = windowSize.width / 2 - 10
-        backgroundTitle = "רקע - B/G"
-    }
+
+    let textWidth = windowSize.width < 500 ?
+        windowSize.width - styles.section.marginHorizontal - 50 :
+        (windowSize.width < 900 ?
+            windowSize.width / 2 - styles.section.marginHorizontal - 80 :
+            windowSize.width / 2 - styles.section.marginHorizontal);
 
 
-    return <View style={styles.settingHost}    >
+
+    return <ScrollView style={[styles.settingHost]}    >
         <MyColorPicker
             open={colorPickerOpen >= 0}
-            title={"Button " + (colorPickerOpen + 1) + " כפתור"}
+            title={fTranslate("ButtonTitle", colorPickerOpen + 1)}
             top={100}
             height={250}
             width={colorWidth}
@@ -109,51 +129,56 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             }}
             maxHeight={500} />
         <View style={styles.settingTitle}>
-            <Text style={styles.settingTitleText}>הגדרות - Settings</Text>
+            <Text style={styles.settingTitleText}>{translate("Settings")}</Text>
         </View>
         <View style={styles.closeButtonHost}>
             <Icon name="close" size={45} onPress={() => onClose()} />
         </View>
-        <View style={{ flexDirection: "row" }}>
-            <TouchableOpacity style={[styles.section, marginHorizontal, { width: halfWidth }]} onPress={() => onAbout()}>
-                <Icon name="infocirlceo" color='black' size={35} />
-                <Text style={{ fontSize: 20 }}>About - אודות</Text>
-            </TouchableOpacity>
-            <View style={[styles.section, marginHorizontal, { width: halfWidth }]} >
-                <View style={{ flexDirection: "row" }}>
-                    <TouchableOpacity style={{ width: 25, height: 25, backgroundColor: BACKGROUND.DARK }}
-                        onPress={() => changeBackgroundColor(BACKGROUND.DARK)}>
-                        {backgroundColor === BACKGROUND.DARK && <Icon name="check" color="white" size={25} />}
-                    </TouchableOpacity>
-                    <Spacer w={25} />
-                    <TouchableOpacity style={{ width: 25, height: 25, backgroundColor: BACKGROUND.LIGHT, borderColor: "black", borderWidth: 1 }}
-                        onPress={() => changeBackgroundColor(BACKGROUND.LIGHT)}>
-                        {backgroundColor === BACKGROUND.LIGHT && <Icon name="check" color="black" size={25} />}
-                    </TouchableOpacity>
+        <TouchableOpacity style={[styles.section, marginHorizontal, dirStyle]} onPress={() => onAbout()}>
+            <Icon name="infocirlceo" color='black' size={35} />
+            <Text style={{ fontSize: 20 }}>{translate("About")}</Text>
+        </TouchableOpacity>
+        <View style={[styles.section, marginHorizontal, dirStyle]} >
+            <View style={{ flexDirection: "row" }}>
+                <TouchableOpacity style={{ width: 25, height: 25, backgroundColor: BACKGROUND.DARK }}
+                    onPress={() => changeBackgroundColor(BACKGROUND.DARK)}>
+                    {backgroundColor === BACKGROUND.DARK && <Icon name="check" color="white" size={25} />}
+                </TouchableOpacity>
+                <Spacer w={25} />
+                <TouchableOpacity style={{ width: 25, height: 25, backgroundColor: BACKGROUND.LIGHT, borderColor: "black", borderWidth: 1 }}
+                    onPress={() => changeBackgroundColor(BACKGROUND.LIGHT)}>
+                    {backgroundColor === BACKGROUND.LIGHT && <Icon name="check" color="black" size={25} />}
+                </TouchableOpacity>
 
-                </View>
-                <Text style={{ fontSize: 20 }}>{backgroundTitle}</Text>
             </View>
+            <Text style={{ fontSize: 20 }}>{translate("BackgroundColor")}</Text>
         </View>
 
-        <View style={[styles.section, marginHorizontal]} >
+        <View style={[styles.section, marginHorizontal, dirStyle]} >
             <View style={styles.numberSelector}>
-                <Icon name="minuscircleo" color='black' size={35} onPress={() => changeNumOfButton(-1)} />
+                <Icon name="minuscircleo" color={numOfButtons == 1 ? "lightgray" : "black"} size={35} onPress={() => changeNumOfButton(-1)} />
                 <Text style={{ fontSize: 30, marginHorizontal: 10 }}>{numOfButtons}</Text>
-                <Icon name="pluscircleo" color='black' size={35} onPress={() => changeNumOfButton(1)} />
+                <Icon name="pluscircleo" color={numOfButtons == 4 ? "lightgray" : "black"} size={35} onPress={() => changeNumOfButton(1)} />
             </View>
-            <Text style={{ fontSize: 20 }}>Buttons - כפתורים</Text>
+            <Text style={{ fontSize: 20 }}>{translate("Buttons")}</Text>
         </View>
 
         <View style={[styles.buttons, marginHorizontal]}>
             {
                 Array.from(Array(numOfButtons).keys()).map((i: any) => {
-                    return <View key={i} style={[styles.button, { borderBottomColor: '#E6E6E6', borderBottomWidth: 3, }]}>
-                        <View >
-                            <RecordButton name={i} backgroundColor={buttonColors[i]} size={60} height={60} />
-                        </View>
-                        <View style={styles.buttonRight}>
-                            <Text style={{ fontSize: 20 }}>Button {i + 1} כפתור </Text>
+                    const textInput = <TextInput
+                        style={{
+                            width: textWidth, fontSize: 20, textAlign: isRTL() ? "right" : "left", backgroundColor: "#F5F5F5", direction: isRTL() ? "rtl" : "ltr",
+                        }}
+                        onChange={(e) => changeButtonsNames(i, e.nativeEvent.text)}>{buttonTexts[i]}</TextInput>
+
+
+                    return <View key={i} style={[styles.button, dirStyle, isScreenNarrow ? { flexDirection: "column-reverse", height: 100 } : { height: 85 }]}>
+                        <RecordButton name={i} backgroundColor={buttonColors[i]} size={60} height={isScreenNarrow ? 70 : 60} />
+                        <View style={[styles.buttonRight,
+                        { alignItems: isScreenNarrow ? "center" : isRTL() ? "flex-end" : "flex-start" },
+                        { flexDirection: (isScreenNarrow ? (isRTL() ? "row-reverse" : "row") : "column") }]}>
+                            {textInput}
                             <IconMI name="color-palette-outline" style={{ fontSize: 30 }} onPress={() => {
                                 setColorPickerOpen(curr => (curr === i) ? -1 : i)
                             }} />
@@ -163,36 +188,35 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                 })
             }
         </View>
-    </View >
+    </ScrollView >
 }
 
 
-function Group({ name, items }: any) {
-    return <View style={{ width: '100%', paddingTop: 25, alignItems: "center" }}>
-        <Text style={styles.SettingsHeaderText}>{name}</Text>
-        <View style={{ flexDirection: "row-reverse" }}>
-            {items.map((item: any, index: number) =>
-                <TouchableOpacity
-                    key={index}
-                    style={{ flexDirection: "row", paddingRight: 35, paddingTop: 15, alignItems: 'center' }}
-                    onPress={item.callback}
-                >
-                    {item.icon}
-                    <Spacer />
-                    <View style={styles.circle}>
-                        {item.selected && <View style={styles.checkedCircle} />}
-                    </View>
-                </TouchableOpacity>
-            )}
-        </View>
-    </View>
-}
+// function Group({ name, items }: any) {
+//     return <View style={{ width: '100%', paddingTop: 25, alignItems: "center" }}>
+//         <Text style={styles.SettingsHeaderText}>{name}</Text>
+//         <View style={{ flexDirection: "row-reverse" }}>
+//             {items.map((item: any, index: number) =>
+//                 <TouchableOpacity
+//                     key={index}
+//                     style={{ flexDirection: "row", paddingRight: 35, paddingTop: 15, alignItems: 'center' }}
+//                     onPress={item.callback}
+//                 >
+//                     {item.icon}
+//                     <Spacer />
+//                     <View style={styles.circle}>
+//                         {item.selected && <View style={styles.checkedCircle} />}
+//                     </View>
+//                 </TouchableOpacity>
+//             )}
+//         </View>
+//     </View>
+// }
 
 
 const styles = StyleSheet.create({
     settingHost: {
         width: "100%",
-        height: "100%",
         backgroundColor: "#F5F5F5",
     },
     settingTitle: {
@@ -227,9 +251,9 @@ const styles = StyleSheet.create({
 
     section: {
         backgroundColor: "white",
-        height: 75,
-        padding: 20,
-        flexDirection: "row",
+        height: 60,
+        padding: 8,
+        paddingHorizontal: 20,
         alignItems: "center",
         justifyContent: "space-between",
         borderRadius: 45,
@@ -250,22 +274,22 @@ const styles = StyleSheet.create({
     },
     button: {
         display: "flex",
-        flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        //backgroundColor: "",
         width: "100%",
-        height: 85,
-        margin: 10
+        margin: 10,
+        borderBottomColor: '#E6E6E6',
+        borderBottomWidth: 3
     },
     buttonRight: {
         height: 70,
         justifyContent: "space-between",
-        alignItems: "flex-end"
     },
     numberSelector: {
         display: "flex",
-        flexDirection: "row"
+        flexDirection: "row",
+        alignItems: "center",
+        height: "100%"
     },
     circle: {
         height: 20,

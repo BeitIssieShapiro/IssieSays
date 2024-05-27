@@ -59,7 +59,7 @@ export function MyColorPicker(props: any) {
     //trace("color", props.color, "composed", composedColor)
     return <FadeInView height={height}
         style={[styles.pickerView, { bottom: 0, left: 0, right: 0 }]}>
-        <Text style={{ fontSize: 25 }}>{props.title}</Text>
+        <Text style={{ fontSize: 25, margin: 25 }}>{props.title}</Text>
         <View style={styles.closeButton}>
             <Icon name="close" size={45} onPress={() => props.onClose()} />
         </View>
@@ -188,19 +188,21 @@ export function increaseColor(hexColor: string, amount: number) {
 const styles = StyleSheet.create({
     closeButton: {
         position: "absolute",
-        right: 50,
+        right: 10,
         top: "4%",
         zIndex: 100
     },
     pickerView: {
         flexDirection: 'column',
         position: 'absolute',
-        backgroundColor: 'lightgray',
+        backgroundColor: '#FAFAFA',
         zIndex: 99999,
         left: 0,
         borderColor: 'gray',
+        borderBottomColor:"transparent",
         borderWidth: 1,
-        //padding: 5,
+        borderTopLeftRadius: 30,
+        borderTopRightRadius: 30,
         paddingTop: 2,
         alignItems: 'center',
         zIndex: 1000

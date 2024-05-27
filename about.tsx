@@ -1,14 +1,14 @@
-import { StyleSheet, Text, View } from "react-native";
-import Icon from 'react-native-vector-icons/FontAwesome';
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import Icon from 'react-native-vector-icons/AntDesign';
 
 
 export function About({ onClose }: { onClose: () => void }) {
     return <View>
-        <View style={{ position: "absolute", top: 50, right: 50 }}>
-            <Icon name="close" color='black' size={45} onPress={(e) => onClose()} />
+        <View style={{ position: "absolute", top: 30, right: 10 }}>
+            <Icon name="close" color='black' size={40} onPress={(e) => onClose()} />
         </View>
         
-        <View style={{ margin: "10%", marginTop: 150, width:"80%" }}>
+        <ScrollView style={{ margin: 30, marginTop: 50, width:"80%" }}>
             <Text style={styles.textHE}>IssieSays היא אפליקציה המשמשת כפלט קולי ומאפשרת הקלטה מהיר של מסר והשמעתו באמצעות לחיצה על המסך.
             </Text>
             <View style={{ height: 10 }} />
@@ -37,18 +37,7 @@ export function About({ onClose }: { onClose: () => void }) {
             </Text>
 
 
-        </View>
-
-
-       
-
-
-
-
-
-
-
-
+        </ScrollView>
 
     </View >
 }

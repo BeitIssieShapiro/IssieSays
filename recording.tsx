@@ -3,26 +3,28 @@ import { useEffect, useState } from "react";
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 import * as RNFS from 'react-native-fs';
-import { TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View, Text } from "react-native";
 import { AudioWaveForm } from "./audio-progress";
-import { Text } from "react-native-svg";
 import { BTN_BACK_COLOR, audioRecorderPlayer } from "./App";
 import { PlayBackType } from "react-native-audio-recorder-player";
+import { isRTL } from "./lang";
 
 
 export const getRecordingFileName = (recName: string) => {
     return RNFS.DocumentDirectoryPath + "/" + recName + ".mp4";
 }
 
-export async function playRecording(name: string, playbackListner?: (playbackMeta: PlayBackType) => void):Promise<boolean> {
+export async function playRecording(name: string, playbackListner?: (playbackMeta: PlayBackType) => void): Promise<boolean> {
     const filePath = "file://" + getRecordingFileName(name);
     return RNFS.exists(filePath).then(exists => {
         if (exists) {
             console.log('Start playing ', name);
             audioRecorderPlayer.startPlayer(filePath);
-            if (playbackListner)
-            audioRecorderPlayer.addPlayBackListener(playbackListner);
-        return true;
+            if (playbackListner) {
+                audioRecorderPlayer.addPlayBackListener(playbackListner);
+            }
+
+            return true;
         } else {
             console.log("No recording exists", name)
             return false;
@@ -37,6 +39,8 @@ export function RecordButton({ name, backgroundColor, size, height }:
     const [state, setState] = useState<any>({ recordSecs: 0 })
     const [recording, setRecording] = useState<boolean>(false);
     const [log, setLog] = useState("");
+    const [playing, setPlaying] = useState<boolean>(false);
+    const [paused, setPaused] = useState<boolean>(false);
 
     const [recordingExists, setRecordingExists] = useState<boolean>(false);
 
@@ -119,9 +123,8 @@ export function RecordButton({ name, backgroundColor, size, height }:
         return tmpFileName;
     };
 
-
-    return <View style={{ flexDirection: "column", alignItems: "center", width: size * 3, height }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+    return <View style={{ flexDirection: "column", alignItems: "center", width: size * 5, height}}>
+        <View style={{ flexDirection: isRTL() ? "row" : "row-reverse", justifyContent: "space-between", alignItems: "center" }}>
             <TouchableOpacity style={{
 
                 width: size,
@@ -133,6 +136,11 @@ export function RecordButton({ name, backgroundColor, size, height }:
             }}
                 onPress={() => {
                     if (!recording) {
+                        if (playing || paused) {
+                            audioRecorderPlayer.stopPlayer();
+                            setPlaying(false);
+                            setPaused(false);
+                        }
                         onStartRecord();
                         return;
                     }
@@ -154,7 +162,7 @@ export function RecordButton({ name, backgroundColor, size, height }:
 
             </TouchableOpacity>
 
-            <TouchableOpacity style={{
+            <TouchableOpacity style={[{
 
                 width: size / 2,
                 height: size / 2,
@@ -163,26 +171,58 @@ export function RecordButton({ name, backgroundColor, size, height }:
                 backgroundColor: recordingExists ? backgroundColor : "lightgray",
                 justifyContent: "center",
                 marginLeft: size / 2
-            }}
-                onPress={() => {
+            }, isRTL() ? { marginLeft: size / 2 } : { marginRight: size / 2 }]}
+                onPress={async () => {
                     if (recording) {
                         return;
                     }
-                    playRecording(name);
+                    if (paused) {
+                        audioRecorderPlayer.resumePlayer().then(() => {
+                            setPlaying(true);
+                            setPaused(false);
+                        })
+                        return;
+                    }
+                    if (playing) {
+                        audioRecorderPlayer.pausePlayer().then(() => {
+                            setPlaying(false);
+                            setPaused(true);
+                        })
+                        return;
+                    }
+                    const success = await playRecording(name, (e) => {
+                        const newState = {
+                            currentPositionSec: e.currentPosition,
+                            currentDurationSec: e.duration,
+                            playTime: audioRecorderPlayer.mmssss(Math.floor(e.currentPosition)),
+                            duration: audioRecorderPlayer.mmssss(Math.floor(e.duration)),
+                        }
+                        if (newState.playTime == newState.duration) {
+                            setPlaying(false);
+                        }
+                        //setState(newState);
+                        console.log(newState)
+                        return;
+                    })
+                    if (success) {
+                        setPlaying(true);
+                    }
                 }}
             >
 
                 <Icon
-                    name="play"
+                    name={!playing ? "play" : "pause"}
                     color={"white"}
                     size={size / 4}
-                    style={{ marginLeft: 3 }}
+                    style={{ marginLeft: 3, marginRight: 3 }}
                 />
             </TouchableOpacity>
+            <View style={{ flexDirection: "column", height: 70, width: size * 2 }}>
+                {recording && <AudioWaveForm width={size * 2} height={40} infiniteProgress={recordProgress} color={BTN_BACK_COLOR} baseColor={"lightgray"} />}
+                {recording && <Text style={{ fontSize: 16, width: size * 2, height: 30, textAlign: "center" }}>{state.recordTime?.substring(0, 5) || ""}</Text>}
+            </View>
+
         </View>
-        <View style={{ height: 50, width: size * 2 }}>
-            {recording && <AudioWaveForm width={size * 2} height={50} infiniteProgress={recordProgress} color={BTN_BACK_COLOR} baseColor={"white"} />}
-            {recording && <View style={{ height: 30 }}><Text style={{ marginTop: 0, color: "white" }}>{state.recordTime?.substring(0, 5) || ""}</Text></View>}
-        </View>
+
     </View>
 }
