@@ -123,8 +123,8 @@ export function RecordButton({ name, backgroundColor, size, height }:
         return tmpFileName;
     };
 
-    return <View style={{ flexDirection: "column", alignItems: "center", width: size * 5, height}}>
-        <View style={{ flexDirection: isRTL() ? "row" : "row-reverse", justifyContent: "space-between", alignItems: "center" }}>
+    return <View style={{ flexDirection: "column", width: size * 4, height }}>
+        <View style={{ flexDirection: isRTL() ? "row" : "row-reverse", justifyContent: "flex-start", alignItems: "center" }}>
             <TouchableOpacity style={{
 
                 width: size,
@@ -133,6 +133,8 @@ export function RecordButton({ name, backgroundColor, size, height }:
                 alignItems: "center",
                 backgroundColor: backgroundColor,
                 justifyContent: "center",
+                marginBottom: 10
+
             }}
                 onPress={() => {
                     if (!recording) {
@@ -170,7 +172,8 @@ export function RecordButton({ name, backgroundColor, size, height }:
                 alignItems: "center",
                 backgroundColor: recordingExists ? backgroundColor : "lightgray",
                 justifyContent: "center",
-                marginLeft: size / 2
+                marginLeft: size / 2,
+                marginBottom: 10
             }, isRTL() ? { marginLeft: size / 2 } : { marginRight: size / 2 }]}
                 onPress={async () => {
                     if (recording) {
@@ -214,7 +217,7 @@ export function RecordButton({ name, backgroundColor, size, height }:
                     name={!playing ? "play" : "pause"}
                     color={"white"}
                     size={size / 4}
-                    style={{ marginLeft: 3, marginRight: 3 }}
+                    style={{ marginLeft: 6, marginRight: 3 }}
                 />
             </TouchableOpacity>
             <View style={{ flexDirection: "column", height: 70, width: size * 2 }}>

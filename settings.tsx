@@ -1,15 +1,17 @@
-import { NativeSyntheticEvent, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { NativeSyntheticEvent, ScrollView, StyleSheet, Text, TextInput, TextInputProps, TouchableOpacity, View } from "react-native";
 import Icon from 'react-native-vector-icons/AntDesign';
-import IconMI from 'react-native-vector-icons/Ionicons';
+import IconIonic from 'react-native-vector-icons/Ionicons';
+import IconMI from 'react-native-vector-icons/MaterialIcons';
 
 import { Settings } from 'react-native';
 import { ColorButton, RectView, Spacer, getNumButtonsSelection } from "./uielements";
-import { useEffect, useState } from "react";
+import { MutableRefObject, RefObject, useEffect, useRef, useState } from "react";
 import { RecordButton } from "./recording";
 import { MyColorPicker } from "./color-picker";
 import { BTN_BACK_COLOR } from "./App";
 import { fTranslate, isRTL, translate } from "./lang";
 
+const BTN_COLOR = "#6E6E6E";
 
 export const BUTTONS = {
     name: 'buttons'
@@ -55,6 +57,10 @@ export function SettingsButton({ onPress, backgroundColor }: { onPress: () => vo
 export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => void, onClose: () => void, windowSize: { width: number, height: number } }) {
     const [revision, setRevision] = useState(0);
     const [colorPickerOpen, setColorPickerOpen] = useState(-1);
+    const [textInEdit, setTextInEdit] = useState<boolean[]>([false, false, false, false]);
+
+    const textInputRef = [useRef<TextInput>(null), useRef<TextInput>(null), useRef<TextInput>(null), useRef<TextInput>(null)];
+
 
     const numOfButtons = getSetting(BUTTONS.name, 1);
     const backgroundColor = getSetting(BACKGROUND.name, BACKGROUND.LIGHT);
@@ -132,10 +138,10 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             <Text style={styles.settingTitleText}>{translate("Settings")}</Text>
         </View>
         <View style={styles.closeButtonHost}>
-            <Icon name="close" size={45} onPress={() => onClose()} />
+            <Icon name="close" size={45} color={BTN_COLOR} onPress={() => onClose()} />
         </View>
         <TouchableOpacity style={[styles.section, marginHorizontal, dirStyle]} onPress={() => onAbout()}>
-            <Icon name="infocirlceo" color='black' size={35} />
+            <Icon name="infocirlceo" color={BTN_COLOR} size={35} />
             <Text style={{ fontSize: 20 }}>{translate("About")}</Text>
         </TouchableOpacity>
         <View style={[styles.section, marginHorizontal, dirStyle]} >
@@ -156,9 +162,9 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
         <View style={[styles.section, marginHorizontal, dirStyle]} >
             <View style={styles.numberSelector}>
-                <Icon name="minuscircleo" color={numOfButtons == 1 ? "lightgray" : "black"} size={35} onPress={() => changeNumOfButton(-1)} />
+                <Icon name="minuscircleo" color={numOfButtons == 1 ? "lightgray" : BTN_COLOR} size={35} onPress={() => changeNumOfButton(-1)} />
                 <Text style={{ fontSize: 30, marginHorizontal: 10 }}>{numOfButtons}</Text>
-                <Icon name="pluscircleo" color={numOfButtons == 4 ? "lightgray" : "black"} size={35} onPress={() => changeNumOfButton(1)} />
+                <Icon name="pluscircleo" color={numOfButtons == 4 ? "lightgray" : BTN_COLOR} size={35} onPress={() => changeNumOfButton(1)} />
             </View>
             <Text style={{ fontSize: 20 }}>{translate("Buttons")}</Text>
         </View>
@@ -166,22 +172,64 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         <View style={[styles.buttons, marginHorizontal]}>
             {
                 Array.from(Array(numOfButtons).keys()).map((i: any) => {
-                    const textInput = <TextInput
+
+                    const colorAndEditBtns = <View style={{ flexDirection: "row" }}>
+                        <IconIonic name="color-palette-outline" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => {
+                            setColorPickerOpen(curr => (curr === i) ? -1 : i)
+                        }} />
+                        <Spacer w={20} />
+                        <IconMI name="edit" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => {
+                            // tougle edit mode
+                            setTextInEdit(curr => {
+                                const newVal = [...curr];
+                                if (curr[i]) {
+                                    // was in edit
+                                    textInputRef[i].current?.blur();
+                                } else {
+                                    textInputRef[i].current?.focus();
+                                }
+
+                                newVal[i] = !curr[i]
+                                return newVal;
+                            })
+
+
+                        }} />
+                    </View>
+
+
+                    const textInput = <TextInput ref={textInputRef[i]}
+                        maxLength={25}
                         style={{
-                            width: textWidth, fontSize: 20, textAlign: isRTL() ? "right" : "left", backgroundColor: "#F5F5F5", direction: isRTL() ? "rtl" : "ltr",
+                            width: textWidth, fontSize: 20, textAlign: isRTL() ? "right" : "left",
+                            backgroundColor: textInEdit[i] ? "#F5F5F5" : "transparent",
+                            direction: isRTL() ? "rtl" : "ltr",
+                            //backgroundColor: "yellow"
                         }}
-                        onChange={(e) => changeButtonsNames(i, e.nativeEvent.text)}>{buttonTexts[i]}</TextInput>
+                        onChange={(e) => changeButtonsNames(i, e.nativeEvent.text)}
+                        onBlur={(e) => setTextInEdit(curr => {
+                            const newVal = [...curr];
+                            newVal[i] = !curr[i]
+                            return newVal;
+                        })}
+                    >{buttonTexts[i]}</TextInput>
 
 
                     return <View key={i} style={[styles.button, dirStyle, isScreenNarrow ? { flexDirection: "column-reverse", height: 100 } : { height: 85 }]}>
-                        <RecordButton name={i} backgroundColor={buttonColors[i]} size={60} height={isScreenNarrow ? 70 : 60} />
+
+                        <View style={{ flexDirection: isRTL() ? "row" : "row-reverse" , alignItems:"center"}}>
+                            <RecordButton name={i} backgroundColor={buttonColors[i]} size={60} height={isScreenNarrow ? 70 : 60} />
+                            {isScreenNarrow && colorAndEditBtns}
+                        </View>
+
                         <View style={[styles.buttonRight,
-                        { alignItems: isScreenNarrow ? "center" : isRTL() ? "flex-end" : "flex-start" },
-                        { flexDirection: (isScreenNarrow ? (isRTL() ? "row-reverse" : "row") : "column") }]}>
+                        {
+                            alignItems: isScreenNarrow ? "center" : isRTL() ? "flex-end" : "flex-start",
+                            //    backgroundColor: "red" 
+                        },
+                        { flexDirection: "column" }]}>
                             {textInput}
-                            <IconMI name="color-palette-outline" style={{ fontSize: 30 }} onPress={() => {
-                                setColorPickerOpen(curr => (curr === i) ? -1 : i)
-                            }} />
+                            {!isScreenNarrow && colorAndEditBtns}
                         </View>
 
                     </View>
@@ -237,14 +285,14 @@ const styles = StyleSheet.create({
 
     settingButtonHost: {
         position: "absolute",
-        right: 50,
+        right: 25,
         top: 50,
         zIndex: 100
     },
 
     closeButtonHost: {
         position: "absolute",
-        right: 10,
+        right: 25,
         top: 25,
         zIndex: 100
     },
@@ -277,13 +325,13 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "space-between",
         width: "100%",
-        margin: 10,
+        //margin: 10,
         borderBottomColor: '#E6E6E6',
         borderBottomWidth: 3
     },
     buttonRight: {
-        height: 70,
         justifyContent: "space-between",
+
     },
     numberSelector: {
         display: "flex",

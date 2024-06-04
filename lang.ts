@@ -6,7 +6,7 @@ const deviceLanguage =
         NativeModules.SettingsManager.settings.AppleLanguages[0] //iOS 13
         : NativeModules.I18nManager.localeIdentifier;
 
-export const gCurrentLang: string = "he" //deviceLanguage
+export const gCurrentLang: string = deviceLanguage
 console.log("Detected Language", deviceLanguage);
 export const isRight2Left = gCurrentLang.startsWith("he");
 
