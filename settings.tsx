@@ -1,4 +1,4 @@
-import { NativeSyntheticEvent, ScrollView, StyleSheet, Text, TextInput, TextInputProps, TouchableOpacity, View } from "react-native";
+import { Keyboard, NativeSyntheticEvent, ScrollView, StyleSheet, Text, TextInput, TextInputProps, TouchableOpacity, View } from "react-native";
 import Icon from 'react-native-vector-icons/AntDesign';
 import IconIonic from 'react-native-vector-icons/Ionicons';
 import IconMI from 'react-native-vector-icons/MaterialIcons';
@@ -58,8 +58,11 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     const [revision, setRevision] = useState(0);
     const [colorPickerOpen, setColorPickerOpen] = useState(-1);
     const [textInEdit, setTextInEdit] = useState<boolean[]>([false, false, false, false]);
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
+    const [yOffset, setYOffset] = useState(0);
 
     const textInputRef = [useRef<TextInput>(null), useRef<TextInput>(null), useRef<TextInput>(null), useRef<TextInput>(null)];
+    const scrollViewRef = useRef<ScrollView>(null);
 
 
     const numOfButtons = getSetting(BUTTONS.name, 1);
@@ -67,6 +70,49 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     const buttonColors = getSetting(BUTTONS_COLOR.name, [BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR]);
     const buttonTexts = getSetting(BUTTONS_NAMES.name, [fTranslate("ButtonTitle", 1), fTranslate("ButtonTitle", 2),
     fTranslate("ButtonTitle", 3), fTranslate("ButtonTitle", 4)]);
+
+    useEffect(() => {
+        const onKeyboardShow = (e: any) => {
+            setKeyboardHeight(e.endCoordinates.height);
+            setTextInEdit(curr => {
+                const edited = curr.findIndex(t => t === true)
+                if (edited < 0) curr;
+
+                textInputRef[edited].current?.measureLayout(
+                    scrollViewRef.current?.getNativeScrollRef() || 0,
+                    (x, y, width, height) => {
+                        console.log("textBox", x, y, width, height, "window", windowSize, "kb", e.endCoordinates.height)
+
+                        const kbTop = windowSize.height - e.endCoordinates.height;
+                        const textButtom = y + height + 70;
+                        const delta = kbTop - textButtom < 0 ? kbTop - textButtom : 0
+                        //console.log("kb", kbTop, textButtom, delta)
+//                        setYOffset(delta)
+                        scrollViewRef.current?.scrollTo({ x: 0, y: -delta, animated: true });
+
+
+                    }
+                );
+
+
+
+                return curr;
+            })
+        };
+
+        const onKeyboardHide = () => {
+            setKeyboardHeight(0);
+        };
+
+        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', onKeyboardShow);
+        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', onKeyboardHide);
+
+        return () => {
+            keyboardDidShowListener.remove();
+            keyboardDidHideListener.remove();
+        };
+    }, []);
+
 
     const isScreenNarrow = windowSize.width < 500;
     console.log("screen", windowSize)
@@ -117,7 +163,8 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
 
 
-    return <ScrollView style={[styles.settingHost]}    >
+    return <ScrollView style={[styles.settingHost]}
+        ref={scrollViewRef} >
         <MyColorPicker
             open={colorPickerOpen >= 0}
             title={fTranslate("ButtonTitle", colorPickerOpen + 1)}
@@ -146,16 +193,16 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         </TouchableOpacity>
         <View style={[styles.section, marginHorizontal, dirStyle]} >
             <View style={{ flexDirection: "row" }}>
-                <TouchableOpacity style={{ width: 25, height: 25, backgroundColor: BACKGROUND.DARK }}
+                <TouchableOpacity style={{ width: 25, height: 25, backgroundColor: BACKGROUND.DARK, borderRadius: 12.5 }}
                     onPress={() => changeBackgroundColor(BACKGROUND.DARK)}>
                     {backgroundColor === BACKGROUND.DARK && <Icon name="check" color="white" size={25} />}
                 </TouchableOpacity>
                 <Spacer w={25} />
-                <TouchableOpacity style={{ width: 25, height: 25, backgroundColor: BACKGROUND.LIGHT, borderColor: "black", borderWidth: 1 }}
+                <TouchableOpacity style={{ width: 25, height: 25, backgroundColor: BACKGROUND.LIGHT, borderColor: "black", borderWidth: 1, borderRadius: 12.5 }}
                     onPress={() => changeBackgroundColor(BACKGROUND.LIGHT)}>
                     {backgroundColor === BACKGROUND.LIGHT && <Icon name="check" color="black" size={25} />}
                 </TouchableOpacity>
-
+                <Spacer w={5} />
             </View>
             <Text style={{ fontSize: 20 }}>{translate("BackgroundColor")}</Text>
         </View>
@@ -217,7 +264,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
                     return <View key={i} style={[styles.button, dirStyle, isScreenNarrow ? { flexDirection: "column-reverse", height: 100 } : { height: 85 }]}>
 
-                        <View style={{ flexDirection: isRTL() ? "row" : "row-reverse" , alignItems:"center"}}>
+                        <View style={{ flexDirection: isRTL() ? "row" : "row-reverse", alignItems: "center" }}>
                             <RecordButton name={i} backgroundColor={buttonColors[i]} size={60} height={isScreenNarrow ? 70 : 60} />
                             {isScreenNarrow && colorAndEditBtns}
                         </View>
@@ -236,30 +283,9 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                 })
             }
         </View>
+        {textInEdit.find(t=>t) && <Spacer h={keyboardHeight}/>}
     </ScrollView >
 }
-
-
-// function Group({ name, items }: any) {
-//     return <View style={{ width: '100%', paddingTop: 25, alignItems: "center" }}>
-//         <Text style={styles.SettingsHeaderText}>{name}</Text>
-//         <View style={{ flexDirection: "row-reverse" }}>
-//             {items.map((item: any, index: number) =>
-//                 <TouchableOpacity
-//                     key={index}
-//                     style={{ flexDirection: "row", paddingRight: 35, paddingTop: 15, alignItems: 'center' }}
-//                     onPress={item.callback}
-//                 >
-//                     {item.icon}
-//                     <Spacer />
-//                     <View style={styles.circle}>
-//                         {item.selected && <View style={styles.checkedCircle} />}
-//                     </View>
-//                 </TouchableOpacity>
-//             )}
-//         </View>
-//     </View>
-// }
 
 
 const styles = StyleSheet.create({
