@@ -78,7 +78,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                 const edited = curr.findIndex(t => t === true)
                 if (edited < 0) curr;
 
-                textInputRef[edited].current?.measureLayout(
+                textInputRef[edited]?.current?.measureLayout(
                     scrollViewRef.current?.getNativeScrollRef() || 0,
                     (x, y, width, height) => {
                         console.log("textBox", x, y, width, height, "window", windowSize, "kb", e.endCoordinates.height)
