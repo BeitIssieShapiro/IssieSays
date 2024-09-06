@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   useColorScheme,
   View,
+  Image
 } from 'react-native';
 
 import * as RNFS from 'react-native-fs';
@@ -19,10 +20,11 @@ import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import AwesomeButton from "react-native-really-awesome-button";
 import { AudioWaveForm } from './audio-progress';
 import { RectView, Spacer } from './uielements';
-import { BACKGROUND, BUTTONS, BUTTONS_COLOR, getSetting, SettingsButton, SettingsPage } from './settings';
+import { BACKGROUND, BUTTONS, BUTTONS_COLOR, BUTTONS_IMAGE_URLS, BUTTONS_NAMES, BUTTONS_SHOW_NAMES, getSetting, SettingsButton, SettingsPage } from './settings';
 import { About } from './about';
 import { getRecordingFileName, playRecording } from './recording';
 import { increaseColor } from './color-picker';
+
 
 export const audioRecorderPlayer = new AudioRecorderPlayer();
 
@@ -107,6 +109,9 @@ function App(): React.JSX.Element {
 
   const numOfButtons: number = getSetting(BUTTONS.name, 1) as number;
   const buttonColors = getSetting(BUTTONS_COLOR.name, [BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR]);
+  const buttonImageUrls = getSetting(BUTTONS_IMAGE_URLS.name, ["", "", "", ""]);
+  const buttonShowNames = getSetting(BUTTONS_SHOW_NAMES.name, [false, false, false, false]);
+  const buttonTexts = getSetting(BUTTONS_NAMES.name, ["", "", "", ""]);
 
   const buttonsInCol = numOfButtons < 2 ? 1 : 2
 
@@ -124,7 +129,7 @@ function App(): React.JSX.Element {
       let wz = e.nativeEvent.layout;
       setWindowSize(wz);
     }}>
-      <SettingsButton onPress={() => setShowSettings(true)} backgroundColor={mainBackgroundColor}/>
+      <SettingsButton onPress={() => setShowSettings(true)} backgroundColor={mainBackgroundColor} />
 
       <RectView buttonWidth={bottonWidth} width={windowSize.width} height={windowSize.height} isLandscape={isLandscape()}>
 
@@ -149,11 +154,28 @@ function App(): React.JSX.Element {
                 borderRadius={bottonWidth / 2}
                 onPress={() => onStartPlay(i)}
                 animatedPlaceholder={false}
+              >
+                {buttonImageUrls[i].length > 0 ? <View
+                  style={{
+                    justifyContent: "center", alignItems: "center",
+                    width: bottonWidth * 5 / 6,
+                    height: bottonWidth * 5 / 6,
+                    backgroundColor: "white",
+                    borderRadius: bottonWidth * 5 / 12,
+                  }} >
+                  <Image source={{ uri: buttonImageUrls[i] }}
+                    style={{
+                      borderRadius: bottonWidth * (5 / 12), 
+                      height: bottonWidth * (5 / 6) , width: bottonWidth * (5 / 6) ,
+                      transform: [{ scale: 0.9 }]
+                    }} />
+                </View> :
+                  " "}
 
-
-
-              >{" "}</AwesomeButton>
+              </AwesomeButton>
             </View>
+            {buttonShowNames[i] == true && <Text style={{ fontSize: 27, textAlign: "center" }}>{buttonTexts[i]}</Text>}
+
             <Spacer h={10} />
             {playing === i ? <AudioWaveForm width={bottonWidth} height={50} progress={duration && curr && curr / duration || 0} color={BTN_FOR_COLOR} baseColor={"lightgray"} /> :
               <Spacer h={50} />}

@@ -199,12 +199,11 @@ const styles = StyleSheet.create({
         zIndex: 99999,
         left: 0,
         borderColor: 'gray',
-        borderBottomColor:"transparent",
+        borderBottomColor: "transparent",
         borderWidth: 1,
         borderTopLeftRadius: 30,
         borderTopRightRadius: 30,
         paddingTop: 2,
         alignItems: 'center',
-        zIndex: 1000
     }
 });

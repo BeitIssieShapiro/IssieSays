@@ -1,6 +1,6 @@
 import { Platform, NativeModules } from 'react-native'
 
-const deviceLanguage =
+const deviceLanguage = //'he';
     Platform.OS === 'ios'
         ? NativeModules.SettingsManager.settings.AppleLocale ||
         NativeModules.SettingsManager.settings.AppleLanguages[0] //iOS 13
@@ -14,18 +14,25 @@ export const isRight2Left = gCurrentLang.startsWith("he");
 var strings: any = {
     "he": {
         "ButtonTitle": "כפתור {1}",
-        "Settings":"הגדרות",
-        "About":"אודות",
-        "BackgroundColor":"צבע רקע",
-        "Buttons":"כפתורים",
-
+        "Settings": "הגדרות",
+        "About": "אודות",
+        "BackgroundColor": "צבע רקע",
+        "Buttons": "כפתורים",
+        "EnterSearchHere": "הכנסת מילות חיפוש",
+        "ShowName": "הצג שם",
+        "SearchImageTitle": "חפש תמונה",
+        "BtnSearch":"חפש"
     },
     "en": {
         "ButtonTitle": "Button {1}",
-        "Settings":"Settings",
-        "About":"About",
-        "BackgroundColor":"Background Color",
-        "Buttons":"Buttons",
+        "Settings": "Settings",
+        "About": "About",
+        "BackgroundColor": "Background Color",
+        "Buttons": "Buttons",
+        "EnterSearchHere": "Enter search keywords",
+        "ShowName": "Show Name",
+        "SearchImageTitle": "Search Image",
+        "BtnSearch":"Search"
     }
 };
 

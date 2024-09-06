@@ -1,7 +1,8 @@
-import { Keyboard, NativeSyntheticEvent, ScrollView, StyleSheet, Text, TextInput, TextInputProps, TouchableOpacity, View } from "react-native";
+import { Keyboard, Image, ScrollView, StyleSheet, Text, TextInput, TextInputProps, TouchableOpacity, View } from "react-native";
 import Icon from 'react-native-vector-icons/AntDesign';
 import IconIonic from 'react-native-vector-icons/Ionicons';
 import IconMI from 'react-native-vector-icons/MaterialIcons';
+import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { Settings } from 'react-native';
 import { ColorButton, RectView, Spacer, getNumButtonsSelection } from "./uielements";
@@ -9,7 +10,8 @@ import { MutableRefObject, RefObject, useEffect, useRef, useState } from "react"
 import { RecordButton } from "./recording";
 import { MyColorPicker } from "./color-picker";
 import { BTN_BACK_COLOR } from "./App";
-import { fTranslate, isRTL, translate } from "./lang";
+import { fTranslate, isRight2Left, isRTL, translate } from "./lang";
+import { SearchImage, SelectFromGallery, SelectImage } from "./search-image";
 
 const BTN_COLOR = "#6E6E6E";
 
@@ -25,6 +27,13 @@ export const BUTTONS_NAMES = {
     name: 'buttons_names',
 }
 
+export const BUTTONS_IMAGE_URLS = {
+    name: 'buttons_image_urls',
+}
+
+export const BUTTONS_SHOW_NAMES = {
+    name: 'button_show_names',
+}
 
 export const LAST_COLORS = {
     name: 'lastColors',
@@ -57,6 +66,7 @@ export function SettingsButton({ onPress, backgroundColor }: { onPress: () => vo
 export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => void, onClose: () => void, windowSize: { width: number, height: number } }) {
     const [revision, setRevision] = useState(0);
     const [colorPickerOpen, setColorPickerOpen] = useState(-1);
+    const [imageSearchOpen, setImageSearchOpen] = useState(-1);
     const [textInEdit, setTextInEdit] = useState<boolean[]>([false, false, false, false]);
     const [keyboardHeight, setKeyboardHeight] = useState(0);
     const [yOffset, setYOffset] = useState(0);
@@ -70,6 +80,9 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     const buttonColors = getSetting(BUTTONS_COLOR.name, [BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR]);
     const buttonTexts = getSetting(BUTTONS_NAMES.name, [fTranslate("ButtonTitle", 1), fTranslate("ButtonTitle", 2),
     fTranslate("ButtonTitle", 3), fTranslate("ButtonTitle", 4)]);
+
+    const buttonImageUrls = getSetting(BUTTONS_IMAGE_URLS.name, ["", "", "", ""]);
+    const buttonShowNames = getSetting(BUTTONS_SHOW_NAMES.name, [false, false, false, false]);
 
     useEffect(() => {
         const onKeyboardShow = (e: any) => {
@@ -87,7 +100,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                         const textButtom = y + height + 70;
                         const delta = kbTop - textButtom < 0 ? kbTop - textButtom : 0
                         //console.log("kb", kbTop, textButtom, delta)
-//                        setYOffset(delta)
+                        //                        setYOffset(delta)
                         scrollViewRef.current?.scrollTo({ x: 0, y: -delta, animated: true });
 
 
@@ -147,6 +160,37 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         setRevision(old => old + 1);
     }
 
+    const saveImageUrl = (index: number, newVal: string) => {
+        let newBtnImageUrls = [...buttonImageUrls]
+        newBtnImageUrls[index] = newVal
+        Settings.set({ [BUTTONS_IMAGE_URLS.name]: newBtnImageUrls });
+        console.log("new button ImageUrl", newBtnImageUrls, index)
+        setRevision(old => old + 1);
+    }
+
+    const saveShowNames = (index: number, newVal: boolean) => {
+        let newBtnShowNames = [...buttonShowNames]
+        newBtnShowNames[index] = newVal
+        Settings.set({ [BUTTONS_SHOW_NAMES.name]: newBtnShowNames });
+        setRevision(old => old + 1);
+    }
+
+    const handleEdit = (i: number) => {
+        // tougle edit mode
+        setTextInEdit(curr => {
+            const newVal = [...curr];
+            if (curr[i]) {
+                // was in edit
+                textInputRef[i].current?.blur();
+            } else {
+                textInputRef[i].current?.focus();
+            }
+
+            newVal[i] = !curr[i]
+            return newVal;
+        })
+    }
+
     const colorWidth = Math.min(windowSize.width, windowSize.height);
     const dirStyle: any = { flexDirection: (isRTL() ? "row" : "row-reverse") }
     let marginHorizontal = {}
@@ -161,13 +205,12 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             windowSize.width / 2 - styles.section.marginHorizontal - 80 :
             windowSize.width / 2 - styles.section.marginHorizontal);
 
+    console.log("btnImages", buttonImageUrls)
 
-
-    return <ScrollView style={[styles.settingHost]}
-        ref={scrollViewRef} >
+    return <View style={{ position: "relative" }}>
         <MyColorPicker
             open={colorPickerOpen >= 0}
-            title={fTranslate("ButtonTitle", colorPickerOpen + 1)}
+            title={buttonTexts[colorPickerOpen]}
             top={100}
             height={250}
             width={colorWidth}
@@ -181,117 +224,145 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             onHeightChanged={(height: number) => {
             }}
             maxHeight={500} />
-        <View style={styles.settingTitle}>
-            <Text style={styles.settingTitleText}>{translate("Settings")}</Text>
-        </View>
-        <View style={styles.closeButtonHost}>
-            <Icon name="close" size={45} color={BTN_COLOR} onPress={() => onClose()} />
-        </View>
-        <TouchableOpacity style={[styles.section, marginHorizontal, dirStyle]} onPress={() => onAbout()}>
-            <Icon name="infocirlceo" color={BTN_COLOR} size={35} />
-            <Text style={{ fontSize: 20 }}>{translate("About")}</Text>
-        </TouchableOpacity>
-        <View style={[styles.section, marginHorizontal, dirStyle]} >
-            <View style={{ flexDirection: "row" }}>
-                <TouchableOpacity style={{ width: 25, height: 25, backgroundColor: BACKGROUND.DARK, borderRadius: 12.5 }}
-                    onPress={() => changeBackgroundColor(BACKGROUND.DARK)}>
-                    {backgroundColor === BACKGROUND.DARK && <Icon name="check" color="white" size={25} />}
-                </TouchableOpacity>
-                <Spacer w={25} />
-                <TouchableOpacity style={{ width: 25, height: 25, backgroundColor: BACKGROUND.LIGHT, borderColor: "black", borderWidth: 1, borderRadius: 12.5 }}
-                    onPress={() => changeBackgroundColor(BACKGROUND.LIGHT)}>
-                    {backgroundColor === BACKGROUND.LIGHT && <Icon name="check" color="black" size={25} />}
-                </TouchableOpacity>
-                <Spacer w={5} />
+
+        <SearchImage open={imageSearchOpen >= 0} onClose={() => setImageSearchOpen(-1)}
+            onSelectImage={(url: string) => {
+                saveImageUrl(imageSearchOpen, url);
+                setImageSearchOpen(-1);
+            }}
+            height={windowSize.height * .8} />
+
+        <ScrollView style={styles.settingHost}
+            ref={scrollViewRef} >
+
+            <View style={styles.settingTitle}>
+                <Text style={styles.settingTitleText}>{translate("Settings")}</Text>
             </View>
-            <Text style={{ fontSize: 20 }}>{translate("BackgroundColor")}</Text>
-        </View>
-
-        <View style={[styles.section, marginHorizontal, dirStyle]} >
-            <View style={styles.numberSelector}>
-                <Icon name="minuscircleo" color={numOfButtons == 1 ? "lightgray" : BTN_COLOR} size={35} onPress={() => changeNumOfButton(-1)} />
-                <Text style={{ fontSize: 30, marginHorizontal: 10 }}>{numOfButtons}</Text>
-                <Icon name="pluscircleo" color={numOfButtons == 4 ? "lightgray" : BTN_COLOR} size={35} onPress={() => changeNumOfButton(1)} />
+            <View style={styles.closeButtonHost}>
+                <Icon name="close" size={45} color={BTN_COLOR} onPress={() => onClose()} />
             </View>
-            <Text style={{ fontSize: 20 }}>{translate("Buttons")}</Text>
-        </View>
+            <TouchableOpacity style={[styles.section, marginHorizontal, dirStyle]} onPress={() => onAbout()}>
+                <Icon name="infocirlceo" color={BTN_COLOR} size={35} />
+                <Text style={{ fontSize: 20 }}>{translate("About")}</Text>
+            </TouchableOpacity>
+            <View style={[styles.section, marginHorizontal, dirStyle]} >
+                <View style={{ flexDirection: "row" }}>
+                    <TouchableOpacity style={{ width: 25, height: 25, backgroundColor: BACKGROUND.DARK, borderRadius: 12.5 }}
+                        onPress={() => changeBackgroundColor(BACKGROUND.DARK)}>
+                        {backgroundColor === BACKGROUND.DARK && <Icon name="check" color="white" size={25} />}
+                    </TouchableOpacity>
+                    <Spacer w={25} />
+                    <TouchableOpacity style={{ width: 25, height: 25, backgroundColor: BACKGROUND.LIGHT, borderColor: "black", borderWidth: 1, borderRadius: 12.5 }}
+                        onPress={() => changeBackgroundColor(BACKGROUND.LIGHT)}>
+                        {backgroundColor === BACKGROUND.LIGHT && <Icon name="check" color="black" size={25} />}
+                    </TouchableOpacity>
+                    <Spacer w={5} />
+                </View>
+                <Text style={{ fontSize: 20 }}>{translate("BackgroundColor")}</Text>
+            </View>
 
-        <View style={[styles.buttons, marginHorizontal]}>
-            {
-                Array.from(Array(numOfButtons).keys()).map((i: any) => {
+            <View style={[styles.section, marginHorizontal, dirStyle]} >
+                <View style={styles.numberSelector}>
+                    <Icon name="minuscircleo" color={numOfButtons == 1 ? "lightgray" : BTN_COLOR} size={35} onPress={() => changeNumOfButton(-1)} />
+                    <Text style={{ fontSize: 30, marginHorizontal: 10 }}>{numOfButtons}</Text>
+                    <Icon name="pluscircleo" color={numOfButtons == 4 ? "lightgray" : BTN_COLOR} size={35} onPress={() => changeNumOfButton(1)} />
+                </View>
+                <Text style={{ fontSize: 20 }}>{translate("Buttons")}</Text>
+            </View>
 
-                    const colorAndEditBtns = <View style={{ flexDirection: "row" }}>
-                        <IconIonic name="color-palette-outline" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => {
-                            setColorPickerOpen(curr => (curr === i) ? -1 : i)
-                        }} />
-                        <Spacer w={20} />
-                        <IconMI name="edit" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => {
-                            // tougle edit mode
-                            setTextInEdit(curr => {
-                                const newVal = [...curr];
-                                if (curr[i]) {
-                                    // was in edit
-                                    textInputRef[i].current?.blur();
-                                } else {
-                                    textInputRef[i].current?.focus();
-                                }
-
-                                newVal[i] = !curr[i]
-                                return newVal;
-                            })
-
-
-                        }} />
-                    </View>
-
-
-                    const textInput = <TextInput ref={textInputRef[i]}
-                        maxLength={25}
-                        style={{
-                            width: textWidth, fontSize: 20, textAlign: isRTL() ? "right" : "left",
-                            backgroundColor: textInEdit[i] ? "#F5F5F5" : "transparent",
-                            direction: isRTL() ? "rtl" : "ltr",
-                            //backgroundColor: "yellow"
-                        }}
-                        onChange={(e) => changeButtonsNames(i, e.nativeEvent.text)}
-                        onBlur={(e) => setTextInEdit(curr => {
-                            const newVal = [...curr];
-                            newVal[i] = !curr[i]
-                            return newVal;
-                        })}
-                    >{buttonTexts[i]}</TextInput>
+            <View style={[styles.buttons, marginHorizontal]}>
+                {
+                    Array.from(Array(numOfButtons).keys()).map((i: any) => {
+                        const textInput =
+                            <View style={{ flexDirection: isRight2Left ? "row-reverse" : "row" }}>
+                                <IconMI name="edit" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => handleEdit(i)} />
+                                <Spacer w={10} />
+                                <TextInput ref={textInputRef[i]}
+                                    maxLength={25}
+                                    style={{
+                                        width: textWidth, fontSize: 20, textAlign: isRTL() ? "right" : "left",
+                                        backgroundColor: textInEdit[i] ? "#F5F5F5" : "transparent",
+                                        direction: isRTL() ? "rtl" : "ltr",
+                                        //backgroundColor: "yellow"
+                                    }}
+                                    onChange={(e) => changeButtonsNames(i, e.nativeEvent.text)}
+                                    onBlur={(e) => setTextInEdit(curr => {
+                                        const newVal = [...curr];
+                                        newVal[i] = !curr[i]
+                                        return newVal;
+                                    })}
+                                >{buttonTexts[i]}
+                                </TextInput>
+                            </View>
 
 
-                    return <View key={i} style={[styles.button, dirStyle, isScreenNarrow ? { flexDirection: "column-reverse", height: 100 } : { height: 85 }]}>
+                        return <View key={i} style={[styles.button, dirStyle, { borderBottomWidth: (i == numOfButtons - 1 ? 0 : 3) },
+                        isScreenNarrow ? { flexDirection: "column-reverse" } : { height: 105 }]}>
 
-                        <View style={{ flexDirection: isRTL() ? "row" : "row-reverse", alignItems: "center" }}>
-                            <RecordButton name={i} backgroundColor={buttonColors[i]} size={60} height={isScreenNarrow ? 70 : 60} />
-                            {isScreenNarrow && colorAndEditBtns}
+                            <View style={{ flexDirection: isRTL() ? "row" : "row-reverse", alignItems: "center" }}>
+                                <RecordButton name={i} backgroundColor={buttonColors[i]} size={60} height={isScreenNarrow ? 70 : 60} />
+                                {/* {isScreenNarrow && colorAndEditBtns} */}
+                            </View>
+                            <View style={{ alignItems: "center" }}>
+                                <View style={[{ borderColor: buttonColors[i] }, styles.buttonPreview]}>
+                                    {buttonImageUrls[i].length > 0 && <>
+                                        <Image source={{ uri: buttonImageUrls[i] }} style={styles.buttonImage} />
+                                        <IconIonic name="close" style={{ position: "absolute", right: -15, top: -10, fontSize: 30, color: "red" }} onPress={() => saveImageUrl(i, "")} />
+                                    </>}
+                                </View>
+                                <View style={{ flex: 1, flexDirection: "row", justifyContent: "center" }}>
+                                    <IconIonic name="color-palette-outline" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => {
+                                        setColorPickerOpen(curr => (curr === i) ? -1 : i)
+                                    }} />
+                                    <Spacer w={20} />
+                                    <IconIonic name="image-outline" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => {
+                                        SelectFromGallery().then((url) => {
+                                            if (url !== "") {
+                                                saveImageUrl(i, url);
+                                            }
+                                        })
+                                    }} />
+                                    <Spacer w={20} />
+                                    <IconMCI name="image-search-outline" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => {
+                                        setImageSearchOpen(i);
+                                    }} />
+
+                                </View>
+                            </View>
+
+                            <View style={[styles.buttonRight,
+                            {
+                                alignItems: isScreenNarrow ? "center" : isRTL() ? "flex-end" : "flex-start",
+                                //    backgroundColor: "red" 
+                            },
+                            { flexDirection: "column" }]}>
+                                {textInput}
+                                <TouchableOpacity style={{ flexDirection: isRight2Left ? "row-reverse" : "row", alignItems: "center", }}
+                                    onPress={() => saveShowNames(i, !buttonShowNames[i])}>
+                                    {buttonShowNames[i] ?
+                                        <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR }} /> :
+                                        <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR }} />
+                                    }
+                                    <Text>{translate("ShowName")}</Text>
+                                </TouchableOpacity>
+                            </View>
+
                         </View>
-
-                        <View style={[styles.buttonRight,
-                        {
-                            alignItems: isScreenNarrow ? "center" : isRTL() ? "flex-end" : "flex-start",
-                            //    backgroundColor: "red" 
-                        },
-                        { flexDirection: "column" }]}>
-                            {textInput}
-                            {!isScreenNarrow && colorAndEditBtns}
-                        </View>
-
-                    </View>
-                })
-            }
-        </View>
-        {textInEdit.find(t=>t) && <Spacer h={keyboardHeight}/>}
-    </ScrollView >
+                    })
+                }
+            </View>
+            {textInEdit.find(t => t) && <Spacer h={keyboardHeight} />}
+        </ScrollView >
+    </View>
 }
 
 
 const styles = StyleSheet.create({
     settingHost: {
         width: "100%",
+        flex: 1,
         backgroundColor: "#F5F5F5",
+        position: "relative"
     },
     settingTitle: {
         backgroundColor: "white",
@@ -353,7 +424,7 @@ const styles = StyleSheet.create({
         width: "100%",
         //margin: 10,
         borderBottomColor: '#E6E6E6',
-        borderBottomWidth: 3
+        marginBottom: 10,
     },
     buttonRight: {
         justifyContent: "space-between",
@@ -386,5 +457,20 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         paddingRight: 10,
         paddingLeft: 10
+    },
+    buttonPreview: {
+        alignItems: "center",
+        justifyContent: "center",
+        height: 64,
+        width: 64,
+        borderWidth: 5,
+        borderStyle: "solid",
+        borderRadius: 32,
+        marginBottom: 5,
+    },
+    buttonImage: {
+        height: 45,
+        width: 45,
+        margin: 7,
     },
 })
