@@ -20,9 +20,9 @@ import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import AwesomeButton from "react-native-really-awesome-button";
 import { AudioWaveForm } from './audio-progress';
 import { RectView, Spacer } from './uielements';
-import { BACKGROUND, BUTTONS, BUTTONS_COLOR, BUTTONS_IMAGE_URLS, BUTTONS_NAMES, BUTTONS_SHOW_NAMES, getSetting, SettingsButton, SettingsPage } from './settings';
+import { BACKGROUND, BUTTONS, BUTTONS_COLOR, BUTTONS_IMAGE_URLS, BUTTONS_NAMES, BUTTONS_SHOW_NAMES, BUTTONS_VIBRATE, getSetting, SettingsButton, SettingsPage } from './settings';
 import { About } from './about';
-import { getRecordingFileName, playRecording } from './recording';
+import { playRecording } from './recording';
 import { increaseColor } from './color-picker';
 
 
@@ -50,6 +50,12 @@ function App(): React.JSX.Element {
   const mainBackgroundColor = getSetting(BACKGROUND.name, BACKGROUND.LIGHT);
   const onStartPlay = useCallback(async (recName: string) => {
     if (playingInProgress) return;
+
+    // if (vibrate) {
+    //   console.log("vibrating...")
+    //   Vibration.vibrate([500]);
+    //   console.log("done")
+    // }
 
     const success = await playRecording(recName, (e) => {
       setCurr(e.currentPosition);
@@ -112,6 +118,7 @@ function App(): React.JSX.Element {
   const buttonImageUrls = getSetting(BUTTONS_IMAGE_URLS.name, ["", "", "", ""]);
   const buttonShowNames = getSetting(BUTTONS_SHOW_NAMES.name, [false, false, false, false]);
   const buttonTexts = getSetting(BUTTONS_NAMES.name, ["", "", "", ""]);
+  // const buttonVibrate = getSetting(BUTTONS_VIBRATE.name, false);
 
   const buttonsInCol = numOfButtons < 2 ? 1 : 2
 
@@ -165,8 +172,8 @@ function App(): React.JSX.Element {
                   }} >
                   <Image source={{ uri: buttonImageUrls[i] }}
                     style={{
-                      borderRadius: bottonWidth * (5 / 12), 
-                      height: bottonWidth * (5 / 6) , width: bottonWidth * (5 / 6) ,
+                      borderRadius: bottonWidth * (5 / 12),
+                      height: bottonWidth * (5 / 6), width: bottonWidth * (5 / 6),
                       transform: [{ scale: 0.9 }]
                     }} />
                 </View> :
@@ -174,9 +181,9 @@ function App(): React.JSX.Element {
 
               </AwesomeButton>
             </View>
-            {buttonShowNames[i] == true && <Text style={{ fontSize: 27, textAlign: "center" }}>{buttonTexts[i]}</Text>}
 
-            <Spacer h={10} />
+            <View style={{ height: 30 }}>{buttonShowNames[i] == true && <Text style={{ fontSize: 27, textAlign: "center" }}>{buttonTexts[i]}</Text>}</View>
+
             {playing === i ? <AudioWaveForm width={bottonWidth} height={50} progress={duration && curr && curr / duration || 0} color={BTN_FOR_COLOR} baseColor={"lightgray"} /> :
               <Spacer h={50} />}
 

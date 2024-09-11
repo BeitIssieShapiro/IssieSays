@@ -5,13 +5,14 @@ import IconMI from 'react-native-vector-icons/MaterialIcons';
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { Settings } from 'react-native';
-import { ColorButton, RectView, Spacer, getNumButtonsSelection } from "./uielements";
-import { MutableRefObject, RefObject, useEffect, useRef, useState } from "react";
+import { Spacer } from "./uielements";
+import { useEffect, useRef, useState } from "react";
 import { RecordButton } from "./recording";
 import { MyColorPicker } from "./color-picker";
 import { BTN_BACK_COLOR } from "./App";
 import { fTranslate, isRight2Left, isRTL, translate } from "./lang";
-import { SearchImage, SelectFromGallery, SelectImage } from "./search-image";
+import { deleteFile, SearchImage, SelectFromGallery } from "./search-image";
+import { AnimatedButton } from "./animatedButton";
 
 const BTN_COLOR = "#6E6E6E";
 
@@ -34,6 +35,10 @@ export const BUTTONS_IMAGE_URLS = {
 export const BUTTONS_SHOW_NAMES = {
     name: 'button_show_names',
 }
+
+// export const BUTTONS_VIBRATE = {
+//     name: 'button_vibrate',
+// }
 
 export const LAST_COLORS = {
     name: 'lastColors',
@@ -59,7 +64,8 @@ export function getSetting(name: string, def?: any): any {
 export function SettingsButton({ onPress, backgroundColor }: { onPress: () => void, backgroundColor: string }) {
     const color = (backgroundColor === BACKGROUND.DARK ? BACKGROUND.LIGHT : BACKGROUND.DARK);
     return <View style={styles.settingButtonHost}>
-        <Icon name="setting" size={45} onPress={(e) => onPress()} color={color} />
+        {/* <Icon name="setting" size={45} onPress={(e) => onPress()} color={color} /> */}
+        <AnimatedButton size={45} color={color} icon="setting" onPress={onPress} duration={3000} />
     </View>
 }
 
@@ -83,6 +89,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
     const buttonImageUrls = getSetting(BUTTONS_IMAGE_URLS.name, ["", "", "", ""]);
     const buttonShowNames = getSetting(BUTTONS_SHOW_NAMES.name, [false, false, false, false]);
+    // const buttonVibrate = getSetting(BUTTONS_VIBRATE.name, false);
 
     useEffect(() => {
         const onKeyboardShow = (e: any) => {
@@ -106,8 +113,6 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
                     }
                 );
-
-
 
                 return curr;
             })
@@ -160,6 +165,11 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         setRevision(old => old + 1);
     }
 
+    // const saveVibrate = (newVal: boolean) => {
+    //     Settings.set({ [BUTTONS_VIBRATE.name]: newVal });
+    //     setRevision(old => old + 1);
+    // }
+
     const saveImageUrl = (index: number, newVal: string) => {
         let newBtnImageUrls = [...buttonImageUrls]
         newBtnImageUrls[index] = newVal
@@ -207,7 +217,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
     console.log("btnImages", buttonImageUrls)
 
-    return <View style={{ position: "relative" }}>
+    return <View style={{ position: "relative", width: windowSize.width, height: windowSize.height - 50 }}>
         <MyColorPicker
             open={colorPickerOpen >= 0}
             title={buttonTexts[colorPickerOpen]}
@@ -230,7 +240,8 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                 saveImageUrl(imageSearchOpen, url);
                 setImageSearchOpen(-1);
             }}
-            height={windowSize.height * .8} />
+            isScreenNarrow={isScreenNarrow}
+        />
 
         <ScrollView style={styles.settingHost}
             ref={scrollViewRef} >
@@ -260,7 +271,17 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                 </View>
                 <Text style={{ fontSize: 20 }}>{translate("BackgroundColor")}</Text>
             </View>
+            {/* <View style={[styles.section, marginHorizontal, dirStyle]} >
 
+                <TouchableOpacity style={{ flexDirection: isRight2Left ? "row-reverse" : "row", alignItems: "center", }}
+                    onPress={() => saveVibrate(!buttonVibrate)}>
+                    {buttonVibrate ?
+                        <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR }} /> :
+                        <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR }} />
+                    }
+                </TouchableOpacity>
+                <Text style={{ fontSize: 20 }}>{translate("Vibrate")}</Text>
+            </View> */}
             <View style={[styles.section, marginHorizontal, dirStyle]} >
                 <View style={styles.numberSelector}>
                     <Icon name="minuscircleo" color={numOfButtons == 1 ? "lightgray" : BTN_COLOR} size={35} onPress={() => changeNumOfButton(-1)} />
@@ -295,47 +316,54 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                                 </TextInput>
                             </View>
 
-
-                        return <View key={i} style={[styles.button, dirStyle, { borderBottomWidth: (i == numOfButtons - 1 ? 0 : 3) },
-                        isScreenNarrow ? { flexDirection: "column-reverse" } : { height: 105 }]}>
-
-                            <View style={{ flexDirection: isRTL() ? "row" : "row-reverse", alignItems: "center" }}>
-                                <RecordButton name={i} backgroundColor={buttonColors[i]} size={60} height={isScreenNarrow ? 70 : 60} />
-                                {/* {isScreenNarrow && colorAndEditBtns} */}
-                            </View>
-                            <View style={{ alignItems: "center" }}>
-                                <View style={[{ borderColor: buttonColors[i] }, styles.buttonPreview]}>
-                                    {buttonImageUrls[i].length > 0 && <>
-                                        <Image source={{ uri: buttonImageUrls[i] }} style={styles.buttonImage} />
-                                        <IconIonic name="close" style={{ position: "absolute", right: -15, top: -10, fontSize: 30, color: "red" }} onPress={() => saveImageUrl(i, "")} />
-                                    </>}
+                        return <View key={i} style={[
+                            styles.button, dirStyle,
+                            { borderBottomWidth: (i == numOfButtons - 1 ? 0 : 3) },
+                            isScreenNarrow ? { flexDirection: "column", height: 165 } : { height: 105 },
+                        ]}>
+                            <View style={{ flexDirection: isRight2Left ? "row" : "row-reverse" }}>
+                                <View style={{ alignItems: "center" }}>
+                                    <RecordButton name={i} backgroundColor={buttonColors[i]} size={60} height={60} />
                                 </View>
-                                <View style={{ flex: 1, flexDirection: "row", justifyContent: "center" }}>
-                                    <IconIonic name="color-palette-outline" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => {
-                                        setColorPickerOpen(curr => (curr === i) ? -1 : i)
-                                    }} />
-                                    <Spacer w={20} />
-                                    <IconIonic name="image-outline" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => {
-                                        SelectFromGallery().then((url) => {
-                                            if (url !== "") {
-                                                saveImageUrl(i, url);
-                                            }
-                                        })
-                                    }} />
-                                    <Spacer w={20} />
-                                    <IconMCI name="image-search-outline" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => {
-                                        setImageSearchOpen(i);
-                                    }} />
 
+                                {/*middle buttons (color, image and search) and preview */}
+                                <View style={{ alignItems: "center", height: 100 }}>
+                                    <View style={[{ borderColor: buttonColors[i] }, styles.buttonPreview]}>
+                                        {buttonImageUrls[i].length > 0 && <>
+                                            <Image source={{ uri: buttonImageUrls[i] }} style={styles.buttonImage} />
+                                            <IconIonic name="close" style={{ position: "absolute", right: -15, top: -10, fontSize: 30, color: "red" }} onPress={() => {
+                                                console.log("xxx",buttonImageUrls[i])
+                                                deleteFile(buttonImageUrls[i]);
+                                                saveImageUrl(i, "")
+                                            }} />
+                                        </>}
+                                    </View>
+                                    <View style={{ flex: 1, flexDirection: "row", justifyContent: "center" }}>
+                                        <IconIonic name="color-palette-outline" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => {
+                                            setColorPickerOpen(curr => (curr === i) ? -1 : i)
+                                        }} />
+                                        <Spacer w={20} />
+                                        <IconIonic name="image-outline" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => {
+                                            SelectFromGallery().then((url) => {
+                                                if (url !== "") {
+                                                    saveImageUrl(i, url);
+                                                }
+                                            })
+                                        }} />
+                                        <Spacer w={20} />
+                                        <IconMCI name="image-search-outline" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => {
+                                            setImageSearchOpen(i);
+                                        }} />
+
+                                    </View>
                                 </View>
                             </View>
 
-                            <View style={[styles.buttonRight,
-                            {
-                                alignItems: isScreenNarrow ? "center" : isRTL() ? "flex-end" : "flex-start",
-                                //    backgroundColor: "red" 
-                            },
-                            { flexDirection: "column" }]}>
+                            <View style={[
+                                styles.buttonRight,
+                                { alignItems: isRTL() ? "flex-end" : "flex-start" },
+                                { flexDirection: "column" }
+                            ]}>
                                 {textInput}
                                 <TouchableOpacity style={{ flexDirection: isRight2Left ? "row-reverse" : "row", alignItems: "center", }}
                                     onPress={() => saveShowNames(i, !buttonShowNames[i])}>

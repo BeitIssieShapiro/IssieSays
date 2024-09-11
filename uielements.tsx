@@ -47,7 +47,7 @@ export function getNumButtonsSelection(num: number, size: number) {
 export function RectView({ children, width, height, buttonWidth, isLandscape }: any) {
 
     const space = buttonWidth / 3;
-
+    console.log("rectview", height)
     return <View style={{
         flexDirection: "column",
         flexWrap: "wrap",
@@ -55,7 +55,7 @@ export function RectView({ children, width, height, buttonWidth, isLandscape }: 
         justifyContent: "center",
         alignContent: "center",
         width,
-        height,
+        height: height < 450 ? 450 : height,
 
     }}>
         <View style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>

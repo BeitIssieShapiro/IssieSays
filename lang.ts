@@ -1,14 +1,21 @@
 import { Platform, NativeModules } from 'react-native'
 
-const deviceLanguage = //'he';
+const deviceLanguageRaw = //"he"
     Platform.OS === 'ios'
         ? NativeModules.SettingsManager.settings.AppleLocale ||
-        NativeModules.SettingsManager.settings.AppleLanguages[0] //iOS 13
+        NativeModules.SettingsManager.settings.AppleLanguages[0] // iOS 13 and above
         : NativeModules.I18nManager.localeIdentifier;
 
-export const gCurrentLang: string = deviceLanguage
-console.log("Detected Language", deviceLanguage);
-export const isRight2Left = gCurrentLang.startsWith("he");
+const supportedLanguages = ['he', 'en', 'ar'];
+
+// Extract the first two characters of the language code (e.g., 'en', 'he')
+const deviceLanguage = deviceLanguageRaw.split(/[-_]/)[0];
+
+// Check if the detected language is supported, otherwise default to 'en'
+export const gCurrentLang: string = supportedLanguages.includes(deviceLanguage) ? deviceLanguage : 'en';
+
+console.log("Detected Language", deviceLanguageRaw, "Using Language", gCurrentLang);
+export const isRight2Left = gCurrentLang.startsWith("he") || gCurrentLang.startsWith("ar");
 
 
 var strings: any = {
@@ -21,7 +28,8 @@ var strings: any = {
         "EnterSearchHere": "הכנסת מילות חיפוש",
         "ShowName": "הצג שם",
         "SearchImageTitle": "חפש תמונה",
-        "BtnSearch":"חפש"
+        "BtnSearch": "חפש",
+        "Vibrate": "רטט",
     },
     "en": {
         "ButtonTitle": "Button {1}",
@@ -32,12 +40,25 @@ var strings: any = {
         "EnterSearchHere": "Enter search keywords",
         "ShowName": "Show Name",
         "SearchImageTitle": "Search Image",
-        "BtnSearch":"Search"
+        "BtnSearch": "Search",
+        "Vibrate": "Vibrate",
+    },
+    "ar": {
+        "ButtonTitle": "زر {1}",
+        "Settings": "الإعدادات",
+        "About": "حول",
+        "BackgroundColor": "لون الخلفية",
+        "Buttons": "الأزرار",
+        "EnterSearchHere": "أدخل كلمات البحث",
+        "ShowName": "إظهار الاسم",
+        "SearchImageTitle": "البحث عن صورة",
+        "BtnSearch": "بحث",
+        "Vibrate": "اهتزاز"
     }
 };
 
 
-const currStrings = isRight2Left ? strings["he"] : strings["en"];
+const currStrings = strings[deviceLanguage];
 
 export function isRTL() {
     return isRight2Left;

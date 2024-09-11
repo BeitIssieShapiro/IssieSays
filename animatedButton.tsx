@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { StyleSheet, TouchableOpacity } from "react-native";
 import { AnimatedCircularProgress } from "react-native-circular-progress";
-import Icon from 'react-native-vector-icons/FontAwesome';
+import Icon from 'react-native-vector-icons/AntDesign';
 import { BTN_BACK_COLOR } from "./App";
 
-export function AnimatedButton({ duration, icon, onPress, size }: any) {
+export function AnimatedButton({ duration, icon, onPress, size, color }: any) {
     const [progress, setProgress] = useState(false);
-    if (duration === 0)
-        return <Icon size={size/2} name={icon} color="white" onPress={() => onPress()} />;
 
-    return (<TouchableOpacity activeOpacity={1} style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}
+    if (duration === 0)
+        return <Icon size={size} name={icon} color={color} onPress={() => onPress()} />;
+
+    return (<TouchableOpacity activeOpacity={1} style={{ zIndex: 1000, width: size*1.2, height: size*1.2, alignItems: "center", justifyContent: "center" }}
         delayLongPress={duration}
         onLongPress={() => {
             setProgress(false);
@@ -27,14 +28,14 @@ export function AnimatedButton({ duration, icon, onPress, size }: any) {
             style={{ position: "absolute", top: 0, left: 0, width: size, height: size }}
             duration={duration}
             rotation={0}
-            size={size}
+            size={size * 1.2}
             width={7}
             fill={100}
             tintColor="white"
             onAnimationComplete={() => console.log('onAnimationComplete')}
-            backgroundColor={BTN_BACK_COLOR}
+            backgroundColor={color}
         />}
-        <Icon size={size/2} name={icon} color="white" />
+        <Icon size={size} name={icon} color={color} />
 
     </TouchableOpacity>
 
