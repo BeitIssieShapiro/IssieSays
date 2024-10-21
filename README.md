@@ -6,3 +6,7 @@ The application was developed especially for people with complex communication n
 The application was developed by the Beit Issie Shapiro Technology Center in collaboration with SAP Labs Israel and is part of a package of applications developed and adapted to the communicative, social and educational needs of children and adults with disabilities.
 
 Special thanks to the volunteers at the SAP Labs Israel, who are attentive to every educational and therapeutic need that arises from the field and develop life-changing applications with us.
+
+
+## preparing a video to appstore
+`ffmpeg -i input.mp4 -vf "scale=1920:886,setdar=960/443" output.mp4`

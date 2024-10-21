@@ -30,7 +30,7 @@ export const audioRecorderPlayer = new AudioRecorderPlayer();
 
 const BTN_FOR_COLOR = "#CD6438";
 export const BTN_BACK_COLOR = "#C8572A";
-console.log("doc path", RNFS.DocumentDirectoryPath);
+
 
 
 function App(): React.JSX.Element {
@@ -182,7 +182,8 @@ function App(): React.JSX.Element {
               </AwesomeButton>
             </View>
 
-            <View style={{ height: 30 }}>{buttonShowNames[i] == true && <Text style={{ fontSize: 27, textAlign: "center" }}>{buttonTexts[i]}</Text>}</View>
+            <View style={{ height: 30 }}>{buttonShowNames[i] == true && <Text  allowFontScaling={false} style={{ fontSize: 27, textAlign: "center", 
+              color: mainBackgroundColor == BACKGROUND.LIGHT ? "black" : "white" }}>{buttonTexts[i]}</Text>}</View>
 
             {playing === i ? <AudioWaveForm width={bottonWidth} height={50} progress={duration && curr && curr / duration || 0} color={BTN_FOR_COLOR} baseColor={"lightgray"} /> :
               <Spacer h={50} />}

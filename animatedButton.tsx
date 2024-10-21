@@ -9,8 +9,8 @@ export function AnimatedButton({ duration, icon, onPress, size, color }: any) {
 
     if (duration === 0)
         return <Icon size={size} name={icon} color={color} onPress={() => onPress()} />;
-
-    return (<TouchableOpacity activeOpacity={1} style={{ zIndex: 1000, width: size*1.2, height: size*1.2, alignItems: "center", justifyContent: "center" }}
+    console.log("setting button color", color)
+    return (<TouchableOpacity activeOpacity={1} style={{ zIndex: 1000, width: size * 1.2, height: size * 1.2, alignItems: "center", justifyContent: "center" }}
         delayLongPress={duration}
         onLongPress={() => {
             setProgress(false);
@@ -31,7 +31,7 @@ export function AnimatedButton({ duration, icon, onPress, size, color }: any) {
             size={size * 1.2}
             width={7}
             fill={100}
-            tintColor="white"
+            tintColor={color == "black" ? "white" : "black"}
             onAnimationComplete={() => console.log('onAnimationComplete')}
             backgroundColor={color}
         />}

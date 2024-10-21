@@ -101,7 +101,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                 textInputRef[edited]?.current?.measureLayout(
                     scrollViewRef.current?.getNativeScrollRef() || 0,
                     (x, y, width, height) => {
-                        console.log("textBox", x, y, width, height, "window", windowSize, "kb", e.endCoordinates.height)
+                        //console.log("textBox", x, y, width, height, "window", windowSize, "kb", e.endCoordinates.height)
 
                         const kbTop = windowSize.height - e.endCoordinates.height;
                         const textButtom = y + height + 70;
@@ -247,14 +247,14 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             ref={scrollViewRef} >
 
             <View style={styles.settingTitle}>
-                <Text style={styles.settingTitleText}>{translate("Settings")}</Text>
+                <Text allowFontScaling={false}  style={styles.settingTitleText}>{translate("Settings")}</Text>
             </View>
             <View style={styles.closeButtonHost}>
                 <Icon name="close" size={45} color={BTN_COLOR} onPress={() => onClose()} />
             </View>
             <TouchableOpacity style={[styles.section, marginHorizontal, dirStyle]} onPress={() => onAbout()}>
                 <Icon name="infocirlceo" color={BTN_COLOR} size={35} />
-                <Text style={{ fontSize: 20 }}>{translate("About")}</Text>
+                <Text allowFontScaling={false}  style={{ fontSize: 20 }}>{translate("About")}</Text>
             </TouchableOpacity>
             <View style={[styles.section, marginHorizontal, dirStyle]} >
                 <View style={{ flexDirection: "row" }}>
@@ -269,7 +269,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                     </TouchableOpacity>
                     <Spacer w={5} />
                 </View>
-                <Text style={{ fontSize: 20 }}>{translate("BackgroundColor")}</Text>
+                <Text allowFontScaling={false}  style={{ fontSize: 20 }}>{translate("BackgroundColor")}</Text>
             </View>
             {/* <View style={[styles.section, marginHorizontal, dirStyle]} >
 
@@ -285,10 +285,10 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             <View style={[styles.section, marginHorizontal, dirStyle]} >
                 <View style={styles.numberSelector}>
                     <Icon name="minuscircleo" color={numOfButtons == 1 ? "lightgray" : BTN_COLOR} size={35} onPress={() => changeNumOfButton(-1)} />
-                    <Text style={{ fontSize: 30, marginHorizontal: 10 }}>{numOfButtons}</Text>
+                    <Text allowFontScaling={false} style={{ fontSize: 30, marginHorizontal: 10 }}>{numOfButtons}</Text>
                     <Icon name="pluscircleo" color={numOfButtons == 4 ? "lightgray" : BTN_COLOR} size={35} onPress={() => changeNumOfButton(1)} />
                 </View>
-                <Text style={{ fontSize: 20 }}>{translate("Buttons")}</Text>
+                <Text allowFontScaling={false}  style={{ fontSize: 20 }}>{translate("Buttons")}</Text>
             </View>
 
             <View style={[styles.buttons, marginHorizontal]}>
@@ -298,7 +298,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                             <View style={{ flexDirection: isRight2Left ? "row-reverse" : "row" }}>
                                 <IconMI name="edit" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => handleEdit(i)} />
                                 <Spacer w={10} />
-                                <TextInput ref={textInputRef[i]}
+                                <TextInput allowFontScaling={false}  ref={textInputRef[i]}
                                     maxLength={25}
                                     style={{
                                         width: textWidth, fontSize: 20, textAlign: isRTL() ? "right" : "left",
@@ -332,7 +332,6 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                                         {buttonImageUrls[i].length > 0 && <>
                                             <Image source={{ uri: buttonImageUrls[i] }} style={styles.buttonImage} />
                                             <IconIonic name="close" style={{ position: "absolute", right: -15, top: -10, fontSize: 30, color: "red" }} onPress={() => {
-                                                console.log("xxx",buttonImageUrls[i])
                                                 deleteFile(buttonImageUrls[i]);
                                                 saveImageUrl(i, "")
                                             }} />
@@ -371,7 +370,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                                         <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR }} /> :
                                         <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR }} />
                                     }
-                                    <Text>{translate("ShowName")}</Text>
+                                    <Text allowFontScaling={false} >{translate("ShowName")}</Text>
                                 </TouchableOpacity>
                             </View>
 
