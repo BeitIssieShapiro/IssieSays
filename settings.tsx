@@ -13,12 +13,19 @@ import { BTN_BACK_COLOR } from "./App";
 import { fTranslate, isRight2Left, isRTL, translate } from "./lang";
 import { deleteFile, SearchImage, SelectFromGallery } from "./search-image";
 import { AnimatedButton } from "./animatedButton";
+import { ProfilePicker } from "./profile-picker";
+import { NameEditor } from "./edit-profile-name";
 
 const BTN_COLOR = "#6E6E6E";
 
 export const BUTTONS = {
     name: 'buttons'
 }
+
+export const CURRENT_PROFILE = {
+    name: "current_profile"
+}
+
 
 export const BUTTONS_COLOR = {
     name: 'buttons_colors',
@@ -64,8 +71,7 @@ export function getSetting(name: string, def?: any): any {
 export function SettingsButton({ onPress, backgroundColor }: { onPress: () => void, backgroundColor: string }) {
     const color = (backgroundColor === BACKGROUND.DARK ? BACKGROUND.LIGHT : BACKGROUND.DARK);
     return <View style={styles.settingButtonHost}>
-        {/* <Icon name="setting" size={45} onPress={(e) => onPress()} color={color} /> */}
-        <AnimatedButton size={45} color={color} icon="setting" onPress={onPress} duration={3000} />
+        <AnimatedButton size={45} color={color} icon="setting" onPress={onPress} duration={0} />
     </View>
 }
 
@@ -76,8 +82,10 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     const [textInEdit, setTextInEdit] = useState<boolean[]>([false, false, false, false]);
     const [keyboardHeight, setKeyboardHeight] = useState(0);
     const [yOffset, setYOffset] = useState(0);
-
+    const [nameInEdit, setNameInEdit] = useState<boolean>(false);
+    const [openLoadProfile, setOpenLoadProfile] = useState<boolean>(false);
     const textInputRef = [useRef<TextInput>(null), useRef<TextInput>(null), useRef<TextInput>(null), useRef<TextInput>(null)];
+    const nameInputRef = useRef<TextInput>(null);
     const scrollViewRef = useRef<ScrollView>(null);
 
 
@@ -89,7 +97,9 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
     const buttonImageUrls = getSetting(BUTTONS_IMAGE_URLS.name, ["", "", "", ""]);
     const buttonShowNames = getSetting(BUTTONS_SHOW_NAMES.name, [false, false, false, false]);
-    // const buttonVibrate = getSetting(BUTTONS_VIBRATE.name, false);
+
+    const profileName = getSetting(CURRENT_PROFILE.name, "");
+
 
     useEffect(() => {
         const onKeyboardShow = (e: any) => {
@@ -218,6 +228,26 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     console.log("btnImages", buttonImageUrls)
 
     return <View style={{ position: "relative", width: windowSize.width, height: windowSize.height - 50 }}>
+        <NameEditor
+            open={nameInEdit}
+            height={280}
+            onClose={() => {
+                setNameInEdit(false)
+                setRevision(prev => prev + 1);
+            }}
+        />
+        <ProfilePicker
+            exclude={profileName}
+            open={openLoadProfile}
+            height={280}
+            onClose={(reload: boolean) => {
+                if (reload) {
+                    console.log("reload after loading profile")
+                    setRevision(prev => prev + 1);
+                }
+                setOpenLoadProfile(false)
+            }}
+        />
         <MyColorPicker
             open={colorPickerOpen >= 0}
             title={buttonTexts[colorPickerOpen]}
@@ -247,14 +277,14 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             ref={scrollViewRef} >
 
             <View style={styles.settingTitle}>
-                <Text allowFontScaling={false}  style={styles.settingTitleText}>{translate("Settings")}</Text>
+                <Text allowFontScaling={false} style={styles.settingTitleText}>{translate("Settings")}</Text>
             </View>
             <View style={styles.closeButtonHost}>
                 <Icon name="close" size={45} color={BTN_COLOR} onPress={() => onClose()} />
             </View>
             <TouchableOpacity style={[styles.section, marginHorizontal, dirStyle]} onPress={() => onAbout()}>
                 <Icon name="infocirlceo" color={BTN_COLOR} size={35} />
-                <Text allowFontScaling={false}  style={{ fontSize: 20 }}>{translate("About")}</Text>
+                <Text allowFontScaling={false} style={{ fontSize: 20 }}>{translate("About")}</Text>
             </TouchableOpacity>
             <View style={[styles.section, marginHorizontal, dirStyle]} >
                 <View style={{ flexDirection: "row" }}>
@@ -269,26 +299,28 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                     </TouchableOpacity>
                     <Spacer w={5} />
                 </View>
-                <Text allowFontScaling={false}  style={{ fontSize: 20 }}>{translate("BackgroundColor")}</Text>
+                <Text allowFontScaling={false} style={{ fontSize: 20 }}>{translate("BackgroundColor")}</Text>
             </View>
-            {/* <View style={[styles.section, marginHorizontal, dirStyle]} >
 
-                <TouchableOpacity style={{ flexDirection: isRight2Left ? "row-reverse" : "row", alignItems: "center", }}
-                    onPress={() => saveVibrate(!buttonVibrate)}>
-                    {buttonVibrate ?
-                        <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR }} /> :
-                        <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR }} />
-                    }
-                </TouchableOpacity>
-                <Text style={{ fontSize: 20 }}>{translate("Vibrate")}</Text>
-            </View> */}
+            <View style={[styles.section, marginHorizontal, dirStyle]} >
+                <View style={{ flexDirection: "row" }}>
+                    <Icon name="upload" style={{ fontSize: 30, color: BTN_COLOR, marginEnd: 15 }} onPress={() => setOpenLoadProfile(true)} />
+                    <Icon name="addfile" style={{ fontSize: 30, color: BTN_COLOR, marginEnd: 15 }} onPress={() => addNewProfile(true)} />
+                    <Icon name="edit" style={{ fontSize: 30, color: BTN_COLOR, marginEnd: 15 }} onPress={() => setNameInEdit(true)} />
+                </View>
+                <View style={{ flexDirection: "row" }}>
+                    <Text allowFontScaling={false} style={{ fontSize: 20 }}>{translate("Profile Name")}:</Text>
+                    <Text allowFontScaling={false} style={{ marginStart: 10, fontSize: 20, textAlign: isRTL() ? "right" : "left" }}>{profileName}</Text>
+                </View>
+            </View>
+
             <View style={[styles.section, marginHorizontal, dirStyle]} >
                 <View style={styles.numberSelector}>
                     <Icon name="minuscircleo" color={numOfButtons == 1 ? "lightgray" : BTN_COLOR} size={35} onPress={() => changeNumOfButton(-1)} />
                     <Text allowFontScaling={false} style={{ fontSize: 30, marginHorizontal: 10 }}>{numOfButtons}</Text>
                     <Icon name="pluscircleo" color={numOfButtons == 4 ? "lightgray" : BTN_COLOR} size={35} onPress={() => changeNumOfButton(1)} />
                 </View>
-                <Text allowFontScaling={false}  style={{ fontSize: 20 }}>{translate("Buttons")}</Text>
+                <Text allowFontScaling={false} style={{ fontSize: 20 }}>{translate("Buttons")}</Text>
             </View>
 
             <View style={[styles.buttons, marginHorizontal]}>
@@ -298,7 +330,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                             <View style={{ flexDirection: isRight2Left ? "row-reverse" : "row" }}>
                                 <IconMI name="edit" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => handleEdit(i)} />
                                 <Spacer w={10} />
-                                <TextInput allowFontScaling={false}  ref={textInputRef[i]}
+                                <TextInput allowFontScaling={false} ref={textInputRef[i]}
                                     maxLength={25}
                                     style={{
                                         width: textWidth, fontSize: 20, textAlign: isRTL() ? "right" : "left",

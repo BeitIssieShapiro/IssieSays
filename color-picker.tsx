@@ -59,7 +59,7 @@ export function MyColorPicker(props: any) {
     //trace("color", props.color, "composed", composedColor)
     return <FadeInView height={height}
         style={[styles.pickerView, { bottom: 0, left: 0, right: 0 }]}>
-        <Text style={{ fontSize: 25, margin: 25 }}>{props.title}</Text>
+        <Text allowFontScaling={false} style={{ fontSize: 25, margin: 25 }}>{props.title}</Text>
         <View style={styles.closeButton}>
             <Icon name="close" size={45} onPress={() => props.onClose()} />
         </View>

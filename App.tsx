@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Button,
@@ -39,7 +39,7 @@ function App(): React.JSX.Element {
   const [playingInProgress, setPlayingInProgress] = useState(false);
   const [curr, setCurr] = useState(0.0);
   const [duration, setDuration] = useState(0.0);
-  //const [state, setState] = useState<any>({ recordSecs: 0 })
+  // const [profile, setProfile] = useState<Profile>(readDefaultProfile());
 
   const [log, setLog] = useState("");
   const [showSettings, setShowSettings] = useState(false);
@@ -50,12 +50,6 @@ function App(): React.JSX.Element {
   const mainBackgroundColor = getSetting(BACKGROUND.name, BACKGROUND.LIGHT);
   const onStartPlay = useCallback(async (recName: string) => {
     if (playingInProgress) return;
-
-    // if (vibrate) {
-    //   console.log("vibrating...")
-    //   Vibration.vibrate([500]);
-    //   console.log("done")
-    // }
 
     const success = await playRecording(recName, (e) => {
       setCurr(e.currentPosition);
@@ -113,12 +107,13 @@ function App(): React.JSX.Element {
       /></SafeAreaView >
   }
 
+
+
   const numOfButtons: number = getSetting(BUTTONS.name, 1) as number;
   const buttonColors = getSetting(BUTTONS_COLOR.name, [BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR]);
   const buttonImageUrls = getSetting(BUTTONS_IMAGE_URLS.name, ["", "", "", ""]);
   const buttonShowNames = getSetting(BUTTONS_SHOW_NAMES.name, [false, false, false, false]);
   const buttonTexts = getSetting(BUTTONS_NAMES.name, ["", "", "", ""]);
-  // const buttonVibrate = getSetting(BUTTONS_VIBRATE.name, false);
 
   const buttonsInCol = numOfButtons < 2 ? 1 : 2
 

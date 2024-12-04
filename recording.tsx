@@ -8,11 +8,9 @@ import { AudioWaveForm } from "./audio-progress";
 import { BTN_BACK_COLOR, audioRecorderPlayer } from "./App";
 import { PlayBackType } from "react-native-audio-recorder-player";
 import { isRTL } from "./lang";
+import { getRecordingFileName } from "./profile";
 
 
-export const getRecordingFileName = (recName: string) => {
-    return RNFS.DocumentDirectoryPath + "/" + recName + ".mp4";
-}
 
 export async function playRecording(name: string, playbackListner?: (playbackMeta: PlayBackType) => void): Promise<boolean> {
     const filePath = "file://" + getRecordingFileName(name);
