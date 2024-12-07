@@ -1,4 +1,4 @@
-package com.issiesays
+package com.IssieSays
 
 import android.app.Application
 import com.facebook.react.PackageList

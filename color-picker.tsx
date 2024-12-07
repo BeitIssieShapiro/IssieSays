@@ -166,6 +166,9 @@ export function MyColorPicker(props: any) {
 }
 
 export function increaseColor(hexColor: string, amount: number) {
+    if (!hexColor) {
+        return "white"
+    }
     // Convert hexadecimal color to RGB components
     var r = parseInt(hexColor.substring(1, 3), 16);
     var g = parseInt(hexColor.substring(3, 5), 16);

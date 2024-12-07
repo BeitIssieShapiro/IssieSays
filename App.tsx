@@ -12,7 +12,6 @@ import {
   Image
 } from 'react-native';
 
-import * as RNFS from 'react-native-fs';
 
 
 //import Icon from 'react-native-vector-icons/FontAwesome';
@@ -24,6 +23,7 @@ import { BACKGROUND, BUTTONS, BUTTONS_COLOR, BUTTONS_IMAGE_URLS, BUTTONS_NAMES, 
 import { About } from './about';
 import { playRecording } from './recording';
 import { increaseColor } from './color-picker';
+import Toast from 'react-native-toast-message';
 
 
 export const audioRecorderPlayer = new AudioRecorderPlayer();
@@ -92,19 +92,24 @@ function App(): React.JSX.Element {
   }
 
   if (showSettings) {
-    return <SafeAreaView style={backgroundStyle} onLayout={(e) => {
-      let wz = e.nativeEvent.layout;
-      setWindowSize(wz);
-    }}><SettingsPage
-        windowSize={windowSize}
-        onAbout={() => {
-          console.log("On About")
-          setShowAbout(true);
+    return <>
+      <SafeAreaView style={backgroundStyle} onLayout={(e) => {
+        let wz = e.nativeEvent.layout;
+        setWindowSize(wz);
+      }}>
+        <SettingsPage
+          windowSize={windowSize}
+          onAbout={() => {
+            console.log("On About")
+            setShowAbout(true);
 
-          setShowSettings(false);
-        }}
-        onClose={() => setShowSettings(false)}
-      /></SafeAreaView >
+            setShowSettings(false);
+          }}
+          onClose={() => setShowSettings(false)}
+        />
+      </SafeAreaView >
+      <Toast position='bottom' bottomOffset={30}/>
+    </>
   }
 
 
@@ -127,74 +132,77 @@ function App(): React.JSX.Element {
   console.log("w/h", windowSize)
 
   return (
-    <SafeAreaView style={backgroundStyle} onLayout={(e) => {
-      let wz = e.nativeEvent.layout;
-      setWindowSize(wz);
-    }}>
-      <SettingsButton onPress={() => setShowSettings(true)} backgroundColor={mainBackgroundColor} />
+      <SafeAreaView style={backgroundStyle} onLayout={(e) => {
+        let wz = e.nativeEvent.layout;
+        setWindowSize(wz);
+      }}>
+        <SettingsButton onPress={() => setShowSettings(true)} backgroundColor={mainBackgroundColor} />
 
-      <RectView buttonWidth={bottonWidth} width={windowSize.width} height={windowSize.height} isLandscape={isLandscape()}>
+        <RectView buttonWidth={bottonWidth} width={windowSize.width} height={windowSize.height} isLandscape={isLandscape()}>
 
-        {Array.from(Array(numOfButtons).keys()).map((i: any) => (
-          <View key={i}>
-            <View style={{
-              backgroundColor: buttonColors[i],
-              width: bottonWidth * 1.3,
-              height: bottonWidth * 1.3,
-              padding: bottonWidth * .15,
-              // marginTop: isLandscape() ? "15%" : "40%",
-              borderRadius: bottonWidth * 1.3 / 2,
-            }}>
-              <AwesomeButton
-                borderColor={buttonColors[i]}
-                borderWidth={3}
-                backgroundColor={increaseColor(buttonColors[i], 15)}
-                backgroundDarker={buttonColors[i]}
-                raiseLevel={10}
-                width={bottonWidth}
-                height={bottonWidth}
-                borderRadius={bottonWidth / 2}
-                onPress={() => onStartPlay(i)}
-                animatedPlaceholder={false}
-              >
-                {buttonImageUrls[i].length > 0 ? <View
-                  style={{
-                    justifyContent: "center", alignItems: "center",
-                    width: bottonWidth * 5 / 6,
-                    height: bottonWidth * 5 / 6,
-                    backgroundColor: "white",
-                    borderRadius: bottonWidth * 5 / 12,
-                  }} >
-                  <Image source={{ uri: buttonImageUrls[i] }}
+          {Array.from(Array(numOfButtons).keys()).map((i: any) => (
+            <View key={i}>
+              <View style={{
+                backgroundColor: buttonColors[i],
+                width: bottonWidth * 1.3,
+                height: bottonWidth * 1.3,
+                padding: bottonWidth * .15,
+                // marginTop: isLandscape() ? "15%" : "40%",
+                borderRadius: bottonWidth * 1.3 / 2,
+              }}>
+                <AwesomeButton
+                  borderColor={buttonColors[i]}
+                  borderWidth={3}
+                  backgroundColor={increaseColor(buttonColors[i], 15)}
+                  backgroundDarker={buttonColors[i]}
+                  raiseLevel={10}
+                  width={bottonWidth}
+                  height={bottonWidth}
+                  borderRadius={bottonWidth / 2}
+                  onPress={() => onStartPlay(i)}
+                  animatedPlaceholder={false}
+                >
+                  {buttonImageUrls[i].length > 0 ? <View
                     style={{
-                      borderRadius: bottonWidth * (5 / 12),
-                      height: bottonWidth * (5 / 6), width: bottonWidth * (5 / 6),
-                      transform: [{ scale: 0.9 }]
-                    }} />
-                </View> :
-                  " "}
+                      justifyContent: "center", alignItems: "center",
+                      width: bottonWidth * 5 / 6,
+                      height: bottonWidth * 5 / 6,
+                      backgroundColor: "white",
+                      borderRadius: bottonWidth * 5 / 12,
+                    }} >
+                    <Image source={{ uri: buttonImageUrls[i] }}
+                      style={{
+                        borderRadius: bottonWidth * (5 / 12),
+                        height: bottonWidth * (5 / 6), width: bottonWidth * (5 / 6),
+                        transform: [{ scale: 0.9 }]
+                      }} />
+                  </View> :
+                    " "}
 
-              </AwesomeButton>
+                </AwesomeButton>
+              </View>
+
+              <View style={{ height: 30 }}>{buttonShowNames[i] == true && <Text allowFontScaling={false} style={{
+                fontSize: 27, textAlign: "center",
+                color: mainBackgroundColor == BACKGROUND.LIGHT ? "black" : "white"
+              }}>{buttonTexts[i]}</Text>}</View>
+
+              {playing === i ? <AudioWaveForm width={bottonWidth} height={50} progress={duration && curr && curr / duration || 0} color={BTN_FOR_COLOR} baseColor={"lightgray"} /> :
+                <Spacer h={50} />}
+
             </View>
+          ))
+          }
 
-            <View style={{ height: 30 }}>{buttonShowNames[i] == true && <Text  allowFontScaling={false} style={{ fontSize: 27, textAlign: "center", 
-              color: mainBackgroundColor == BACKGROUND.LIGHT ? "black" : "white" }}>{buttonTexts[i]}</Text>}</View>
-
-            {playing === i ? <AudioWaveForm width={bottonWidth} height={50} progress={duration && curr && curr / duration || 0} color={BTN_FOR_COLOR} baseColor={"lightgray"} /> :
-              <Spacer h={50} />}
-
-          </View>
-        ))
-        }
-
-      </RectView>
+        </RectView>
 
 
-      {/* <ScrollView style={{ maxHeight: 200, width: "100%" }}>
+        {/* <ScrollView style={{ maxHeight: 200, width: "100%" }}>
         <Text style={{ margin: 20, width: "100%" }}>Log:{"\n" + log}</Text>
       </ScrollView>
       <Button onPress={() => setLog("")} title="Clear" /> */}
-    </SafeAreaView>
+
+      </SafeAreaView>
   );
 }
 

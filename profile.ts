@@ -5,20 +5,23 @@ import { BTN_BACK_COLOR } from './App';
 import Button from 'react-native-really-awesome-button';
 import { Settings } from 'react-native';
 
-const enum Folders {
+export const enum Folders {
     Profiles = "profiles",
     Buttons = "buttons",
 }
 
 export class AlreadyExists extends Error { }
+export class InvalidFileName extends Error { }
+
+export const InvalidCharachters = "<, >, :, \", /, \, |, ?, *,"
 
 export interface Button {
-    index: number;
+    // index: number;
     name: string;
-    color?: string;
+    color: string;
     imageUrl: string;
     showName: boolean;
-    recording: string; // base64 of the audio binary
+    recording: string | undefined; // base64 of the audio binary
 }
 
 export interface Profile {
@@ -30,14 +33,23 @@ export const getRecordingFileName = (recName: string | number) => {
 }
 
 export async function Init() {
-    const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles);
-    const exists = await RNFS.exists(profilePath);
+    const profilesPath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles);
+    const buttonsPath = path.join(RNFS.DocumentDirectoryPath, Folders.Buttons);
+    let exists = await RNFS.exists(profilesPath);
     if (!exists) {
-        await RNFS.mkdir(profilePath);
+        await RNFS.mkdir(profilesPath);
+    }
+    exists = await RNFS.exists(buttonsPath);
+    if (!exists) {
+        await RNFS.mkdir(buttonsPath);
     }
 }
 
-export async function SaveProfile(name: string, p: Profile, overwrite = false) {
+
+async function SaveProfile(name: string, p: Profile, overwrite = false) {
+    if (!isValidFilename(name)) {
+        throw new InvalidFileName(name);
+    }
     // todo verify name is a valid file name
     const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
     if (!overwrite) {
@@ -48,24 +60,26 @@ export async function SaveProfile(name: string, p: Profile, overwrite = false) {
 
     const profileToSave = { ...p, buttons: [] } as Profile;
     // load the audio into the json
+    let index = 0
     for (const btn of p.buttons) {
-        const audioB64 = await RNFS.exists(getRecordingFileName(btn.index)) ?
-            await RNFS.readFile(getRecordingFileName(btn.index), 'base64') :
+        const audioB64 = await RNFS.exists(getRecordingFileName(index)) ?
+            await RNFS.readFile(getRecordingFileName(index), 'base64') :
             "";
         profileToSave.buttons.push({
             ...btn,
             recording: audioB64,
         } as Button);
+        index++;
     }
 
     const str = JSON.stringify(profileToSave);
     return RNFS.writeFile(profilePath, str, 'utf8');
 }
 
-export async function renameProfile(previousName: string, newName: string) {
+export async function renameProfile(previousName: string, newName: string, overwrite = false) {
     const prevPath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${previousName}.json`);
     const newPath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${newName}.json`);
-    if (await RNFS.exists(newPath)) {
+    if (!overwrite && await RNFS.exists(newPath)) {
         throw new AlreadyExists(newName);
     }
 
@@ -92,15 +106,22 @@ export async function LoadProfile(name: string) {
         await SaveProfile(currName, currentProfile, true);
     }
 
+    if (name == "") {
+        // create new profile
+        Settings.set({ [CURRENT_PROFILE.name]: "" });
+        return;
+        // todo consider clean all ??
+    }
+
     const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
     const fileContents = await RNFS.readFile(profilePath, 'utf8');
     const p: Profile = JSON.parse(fileContents);
 
-    console.log("Loaded profile", name, "btnCount",p.buttons.length);
+    return writeCurrentProfile(p, name);
+}
 
+async function writeCurrentProfile(p: Profile, name: string) {
     Settings.set({ [CURRENT_PROFILE.name]: name });
-
-    p.buttons.sort((b1, b2) => b1.index - b2.index);
 
     Settings.set({ [BUTTONS.name]: p.buttons.length });
     const buttonColors = [];
@@ -115,13 +136,13 @@ export async function LoadProfile(name: string) {
             buttonImageUrls.push(btn.imageUrl);
             buttonShowNames.push(btn.showName);
             buttonTexts.push(btn.name);
-            if (btn.recording.length > 0) {
+            if (btn.recording && btn.recording.length > 0) {
                 await RNFS.writeFile(getRecordingFileName(i), btn.recording, 'base64');
-            } else {
+            } else if (btn.recording == "") {
                 try {
                     await RNFS.unlink(getRecordingFileName(i));
                 } catch (e) { }
-            }
+            } // if btn.recording undefined do nothing
         } else {
             buttonColors.push(BTN_BACK_COLOR);
             buttonImageUrls.push("");
@@ -133,30 +154,12 @@ export async function LoadProfile(name: string) {
         }
     }
 
-    Settings.set({
-        [BUTTONS_COLOR.name]: buttonColors,
-        [BUTTONS_IMAGE_URLS.name]: buttonImageUrls,
-        [BUTTONS_SHOW_NAMES.name]: buttonShowNames,
-        [BUTTONS_NAMES.name]: buttonTexts,
-    });
+    Settings.set({ [BUTTONS_COLOR.name]: buttonColors });
+    Settings.set({ [BUTTONS_IMAGE_URLS.name]: buttonImageUrls });
+    Settings.set({ [BUTTONS_SHOW_NAMES.name]: buttonShowNames });
+    Settings.set({ [BUTTONS_NAMES.name]: buttonTexts });
+
 }
-
-export async function ListProfiles(): Promise<string[]> {
-    const profilesPath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles);
-    console.log("Profiles Path", profilesPath);
-    const dir = await RNFS.readDir(profilesPath);
-
-    const profiles = [];
-    for (const profileFile of dir) {
-        console.log("profile", profileFile.name)
-        if (profileFile.name.endsWith(".json")) {
-
-            profiles.push(profileFile.name.substring(0, profileFile.name.length - 5));
-        }
-    }
-    return profiles;
-}
-
 
 export function readCurrentProfile(): Profile {
     const numOfButtons: number = getSetting(BUTTONS.name, 1) as number;
@@ -169,15 +172,83 @@ export function readCurrentProfile(): Profile {
     for (let i = 0; i < numOfButtons; i++) {
         buttons.push({
             color: buttonColors[i],
-            index: i,
             name: buttonTexts[i],
             imageUrl: buttonImageUrls[i],
             showName: buttonShowNames[i],
-            recording: "",
+            recording: undefined,
         });
     }
 
     return {
         buttons,
     };
+}
+
+
+export async function loadButton(name: string, index: number) {
+    console.log("Load Button", name, index)
+    const buttonPath = path.join(RNFS.DocumentDirectoryPath, Folders.Buttons, `${name}.json`);
+    const fileContents = await RNFS.readFile(buttonPath, 'utf8');
+    const newBtn: Button = JSON.parse(fileContents);
+
+    const p = readCurrentProfile();
+    p.buttons = p.buttons.map((btn, i) => i != index ? btn : newBtn);
+    console.log("btns", p.buttons.map(b => b.name))
+    const currName = getSetting(CURRENT_PROFILE.name, "");
+
+    writeCurrentProfile(p, currName);
+
+}
+
+export async function saveButton(name: string, index: number, overwrite = false) {
+    if (!isValidFilename(name)) {
+        throw new InvalidFileName(name);
+    }
+
+    const buttonPath = path.join(RNFS.DocumentDirectoryPath, Folders.Buttons, `${name}.json`);
+    console.log("save button", name)
+    if (!overwrite && await RNFS.exists(buttonPath)) {
+        throw new AlreadyExists(name);
+    }
+
+    const p = readCurrentProfile();
+    const btn = p.buttons[index]
+    if (btn) {
+
+        const audioB64 = await RNFS.exists(getRecordingFileName(index)) ?
+            await RNFS.readFile(getRecordingFileName(index), 'base64') :
+            "";
+        const btnToSave = {
+            ...btn,
+            recording: audioB64,
+        }
+
+        const str = JSON.stringify(btnToSave);
+        return RNFS.writeFile(buttonPath, str, 'utf8');
+    }
+}
+
+export async function ListElements(folder: Folders): Promise<string[]> {
+    const listPath = path.join(RNFS.DocumentDirectoryPath, folder);
+    console.log("List Path", folder);
+    const dir = await RNFS.readDir(listPath);
+
+    const list = [];
+    for (const elem of dir) {
+        //console.log("Element", elem.name)
+        if (elem.name.endsWith(".json")) {
+
+            list.push(elem.name.substring(0, elem.name.length - 5));
+        }
+    }
+    return list;
+}
+
+export function isValidFilename(filename: string): boolean {
+    const invalidCharsRegex = /[<>:"/\\|?*\x00-\x1F]/;
+
+    if (invalidCharsRegex.test(filename)) {
+        return false;
+    }
+    return true;
 }

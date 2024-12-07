@@ -1,6 +1,6 @@
 import { Platform, NativeModules } from 'react-native'
 
-const deviceLanguageRaw = //"he"
+const deviceLanguageRaw = // "he"
     Platform.OS === 'ios'
         ? NativeModules.SettingsManager.settings.AppleLocale ||
         NativeModules.SettingsManager.settings.AppleLanguages[0] // iOS 13 and above
@@ -30,6 +30,27 @@ var strings: any = {
         "SearchImageTitle": "חפש תמונה",
         "BtnSearch": "חפש",
         "Vibrate": "רטט",
+        "ProfileName": "פרופיל",
+        "SelectProfileTitle": "בחר פרופיל",
+        "SelectButtonTitle": "בחר כפתור",
+        "ProfileNoName": "ללא שם",
+        "NoItemsFound": "אין",
+        "SetProfileName": "קביעת שם לפרופיל",
+        "RenameProfile": "שנה שם הפרופיל",
+        "InvalidName": "שם לא חוקי. אין להשתמש בתווים הבאים: {1}",
+        "buttonExists": "כפתור בשם זה כבר קיים",
+        "ProfileExists": "פרופיל בשם זה כבר קיים",
+        "Cancel": "ביטול",
+        "Overwrite": "המשך",
+        "Save": "שמור",
+        "ProfileSuccessRenamed": "שם הפרופיל שונה בהצלחה",
+        "ProfileSuccessfulyCreated": "הפרופיל נוצר בהצלחה",
+        "ProfileExistsTitle": "פרופיל קיים",
+        "ProfileSaveFailed": "שמירת הפרופיל נכשלה",
+        "ButtonSaved": "כפתור נשמר בהצלחה",
+        "ButtonExistsTitle": "כפתור קיים",
+        "ButtonSaveFailed": "שמירת הכפתור נכשלה",
+
     },
     "en": {
         "ButtonTitle": "Button {1}",
@@ -42,6 +63,26 @@ var strings: any = {
         "SearchImageTitle": "Search Image",
         "BtnSearch": "Search",
         "Vibrate": "Vibrate",
+        "ProfileNoName": "NONAME",
+        "SelectProfileTitle": "Select a Profile",
+        "SelectButtonTitle": "Select a Button",
+        "ProfileName": "Profile",
+        "NoItemsFound": "Empty",
+        "SetProfileName": "Set Profile Name",
+        "RenameProfile": "Rename Profile",
+        "InvalidName": "Illigal name. Don't use these charachters: {1}",
+        "buttonExists": "Button with that name already exists",
+        "ProfileExists": "Profile with that name already exists",
+        "Cancel": "Cancel",
+        "Overwrite": "Overwrite",
+        "Save": "Save",
+        "ProfileSuccessRenamed": "Profile Renamed Successfully",
+        "ProfileSuccessfulyCreated": "Profile Created Successfully",
+        "ProfileExistsTitle": "Profile Exists",
+        "ProfileSaveFailed": "Failed to save profile",
+        "ButtonSaved": "Button Saved Successfully",
+        "ButtonExistsTitle": "Button exists",
+        "ButtonSaveFailed": "Failed to save the button",
     },
     "ar": {
         "ButtonTitle": "زر {1}",
@@ -53,7 +94,28 @@ var strings: any = {
         "ShowName": "إظهار الاسم",
         "SearchImageTitle": "البحث عن صورة",
         "BtnSearch": "بحث",
-        "Vibrate": "اهتزاز"
+        "Vibrate": "اهتزاز",
+
+        "ProfileNoName": "بدون اسم",
+        "SelectProfileTitle": "اختر ملف تعريف",
+        "SelectButtonTitle": "اختر زر",
+        "ProfileName": "ملف التعريف",
+        "NoItemsFound": "فارغ",
+        "SetProfileName": "تعيين اسم ملف التعريف",
+        "RenameProfile": "إعادة تسمية ملف التعريف",
+        "InvalidName": "اسم غير قانوني. لا تستخدم هذه الأحرف: {1}",
+        "buttonExists": "يوجد زر بهذا الاسم بالفعل",
+        "ProfileExists": "يوجد ملف تعريف بهذا الاسم بالفعل",
+        "Cancel": "إلغاء",
+        "Overwrite": "استبدال",
+        "Save": "حفظ",
+        "ProfileSuccessRenamed": "تم إعادة تسمية ملف التعريف بنجاح",
+        "ProfileSuccessfulyCreated": "تم إنشاء ملف التعريف بنجاح",
+        "ProfileExistsTitle": "ملف التعريف موجود",
+        "ProfileSaveFailed": "فشل في حفظ ملف التعريف",
+        "ButtonSaved": "تم حفظ الزر بنجاح",
+        "ButtonExistsTitle": "الزر موجود",
+        "ButtonSaveFailed": "فشل في حفظ الزر"
     }
 };
 
