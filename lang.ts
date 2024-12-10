@@ -1,10 +1,12 @@
-import { Platform, NativeModules } from 'react-native'
-
-const deviceLanguageRaw = // "he"
-    Platform.OS === 'ios'
-        ? NativeModules.SettingsManager.settings.AppleLocale ||
-        NativeModules.SettingsManager.settings.AppleLanguages[0] // iOS 13 and above
-        : NativeModules.I18nManager.localeIdentifier;
+import { Platform, NativeModules, Settings as RNSettings } from 'react-native'
+import * as RNLocalize from 'react-native-localize';
+// const deviceLanguageRaw = // "he"
+// Platform.OS === 'ios'
+//     ? RNSettings.get('AppleLocale') || RNSettings.get('AppleLanguages')[0]
+//     : 
+const locales = RNLocalize.getLocales();
+const bestLanguage = locales[0]?.languageTag || 'en';
+const deviceLanguageRaw = bestLanguage;
 
 const supportedLanguages = ['he', 'en', 'ar'];
 

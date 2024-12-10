@@ -1,9 +1,11 @@
 import * as RNFS from 'react-native-fs';
 import * as path from 'path';
-import { BUTTONS, BUTTONS_COLOR, BUTTONS_IMAGE_URLS, BUTTONS_NAMES, BUTTONS_SHOW_NAMES, CURRENT_PROFILE, getSetting } from './settings';
+import { BACKGROUND, BUTTONS, BUTTONS_COLOR, BUTTONS_IMAGE_URLS, BUTTONS_NAMES, BUTTONS_SHOW_NAMES, CURRENT_PROFILE, LAST_COLORS } from './settings';
 import { BTN_BACK_COLOR } from './App';
 import Button from 'react-native-really-awesome-button';
-import { Settings } from 'react-native';
+import { Settings } from './setting-storage';
+import { Platform, Settings as RNSettings } from 'react-native'
+import { MMKV } from 'react-native-mmkv';
 
 export const enum Folders {
     Profiles = "profiles",
@@ -32,7 +34,22 @@ export const getRecordingFileName = (recName: string | number) => {
     return RNFS.DocumentDirectoryPath + "/" + recName + ".mp4";
 }
 
+export let storage: MMKV;
+
 export async function Init() {
+
+    console.log("Initializing MMKV storage");
+    try {
+        storage = new MMKV({
+            id: 'IssieSaysStorage',
+        });
+        console.log("Initializing MMKV storage Success");
+
+    } catch (e) {
+        // https://github.com/mrousavy/react-native-mmkv/issues/776
+        console.log("Initializing MMKV failed", e);
+    }
+
     const profilesPath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles);
     const buttonsPath = path.join(RNFS.DocumentDirectoryPath, Folders.Buttons);
     let exists = await RNFS.exists(profilesPath);
@@ -43,6 +60,59 @@ export async function Init() {
     if (!exists) {
         await RNFS.mkdir(buttonsPath);
     }
+
+    // Check If Migration is needed
+    if (Platform.OS === 'ios') {
+        function getSetting(name: string, def?: any): any {
+            let setting = RNSettings.get(name);
+            if (setting === undefined) {
+                setting = def;
+            }
+            return setting;
+        }
+
+        const numOfButtons = RNSettings.get(BUTTONS.name);
+        if (numOfButtons >= 1 && numOfButtons <= 4) {
+            console.log("migrating old persistancy", numOfButtons)
+            const currName = getSetting(CURRENT_PROFILE.name, "");
+
+            // move settings:
+            const buttonColors = getSetting(BUTTONS_COLOR.name, [BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR]);
+            const buttonImageUrls = getSetting(BUTTONS_IMAGE_URLS.name, ["", "", "", ""]);
+            const buttonShowNames = getSetting(BUTTONS_SHOW_NAMES.name, [false, false, false, false]);
+            const buttonTexts = getSetting(BUTTONS_NAMES.name, ["", "", "", ""]);
+
+            const buttons = [] as Button[];
+            for (let i = 0; i < numOfButtons; i++) {
+                buttons.push({
+                    color: buttonColors[i],
+                    name: buttonTexts[i],
+                    imageUrl: buttonImageUrls[i],
+                    showName: buttonShowNames[i],
+                    recording: undefined,
+                });
+            }
+
+            writeCurrentProfile({ buttons }, currName);
+
+            RNSettings.set({ [BUTTONS.name]: 0 })
+
+
+            const bg = RNSettings.get(BACKGROUND.name);
+            if (bg) {
+                Settings.set(BACKGROUND.name, bg);
+            }
+
+            const lastColors = getSetting(LAST_COLORS.name);
+            if (lastColors) {
+                Settings.setArray(LAST_COLORS.name, lastColors);
+            }
+            console.log("Migration Completed!")
+        } else {
+            console.log("Persistancy is new")
+        }
+    }
+
 }
 
 
@@ -99,7 +169,7 @@ export async function verifyProfileNameFree(name: string) {
 export async function LoadProfile(name: string) {
 
     // First saves current (if named)
-    const currName = getSetting(CURRENT_PROFILE.name, "");
+    const currName = Settings.getString(CURRENT_PROFILE.name, "");
     if (currName.length) {
         console.log("Save profile", currName);
         const currentProfile = await readCurrentProfile();
@@ -108,7 +178,7 @@ export async function LoadProfile(name: string) {
 
     if (name == "") {
         // create new profile
-        Settings.set({ [CURRENT_PROFILE.name]: "" });
+        Settings.set(CURRENT_PROFILE.name, "");
         return;
         // todo consider clean all ??
     }
@@ -121,9 +191,9 @@ export async function LoadProfile(name: string) {
 }
 
 async function writeCurrentProfile(p: Profile, name: string) {
-    Settings.set({ [CURRENT_PROFILE.name]: name });
+    Settings.set(CURRENT_PROFILE.name, name);
 
-    Settings.set({ [BUTTONS.name]: p.buttons.length });
+    Settings.set(BUTTONS.name, p.buttons.length);
     const buttonColors = [];
     const buttonImageUrls = [];
     const buttonShowNames = [];
@@ -154,19 +224,19 @@ async function writeCurrentProfile(p: Profile, name: string) {
         }
     }
 
-    Settings.set({ [BUTTONS_COLOR.name]: buttonColors });
-    Settings.set({ [BUTTONS_IMAGE_URLS.name]: buttonImageUrls });
-    Settings.set({ [BUTTONS_SHOW_NAMES.name]: buttonShowNames });
-    Settings.set({ [BUTTONS_NAMES.name]: buttonTexts });
+    Settings.setArray(BUTTONS_COLOR.name, buttonColors);
+    Settings.setArray(BUTTONS_IMAGE_URLS.name, buttonImageUrls);
+    Settings.setArray(BUTTONS_SHOW_NAMES.name, buttonShowNames);
+    Settings.setArray(BUTTONS_NAMES.name, buttonTexts);
 
 }
 
 export function readCurrentProfile(): Profile {
-    const numOfButtons: number = getSetting(BUTTONS.name, 1) as number;
-    const buttonColors = getSetting(BUTTONS_COLOR.name, [BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR]);
-    const buttonImageUrls = getSetting(BUTTONS_IMAGE_URLS.name, ["", "", "", ""]);
-    const buttonShowNames = getSetting(BUTTONS_SHOW_NAMES.name, [false, false, false, false]);
-    const buttonTexts = getSetting(BUTTONS_NAMES.name, ["", "", "", ""]);
+    const numOfButtons = Settings.getNumber(BUTTONS.name, 1);
+    const buttonColors = Settings.getArray<string>(BUTTONS_COLOR.name, "string", [BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR]);
+    const buttonImageUrls = Settings.getArray<string>(BUTTONS_IMAGE_URLS.name, "string", ["", "", "", ""]);
+    const buttonShowNames = Settings.getArray<boolean>(BUTTONS_SHOW_NAMES.name, "boolean", [false, false, false, false]);
+    const buttonTexts = Settings.getArray<string>(BUTTONS_NAMES.name, "string", ["", "", "", ""]);
 
     const buttons = [] as Button[];
     for (let i = 0; i < numOfButtons; i++) {
@@ -194,7 +264,7 @@ export async function loadButton(name: string, index: number) {
     const p = readCurrentProfile();
     p.buttons = p.buttons.map((btn, i) => i != index ? btn : newBtn);
     console.log("btns", p.buttons.map(b => b.name))
-    const currName = getSetting(CURRENT_PROFILE.name, "");
+    const currName = Settings.getString(CURRENT_PROFILE.name, "");
 
     writeCurrentProfile(p, currName);
 

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { Settings, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import Icon from 'react-native-vector-icons/AntDesign';
 import ColorPicker from 'react-native-wheel-color-picker'
+import { Settings } from './setting-storage';
 
-import { LAST_COLORS, getSetting } from "./settings";
+import { LAST_COLORS } from "./settings";
 import FadeInView from "./FadeInView";
 import { ColorButton } from "./uielements";
 export const availableColorPicker = [
@@ -18,7 +19,7 @@ export function MyColorPicker(props: any) {
 
     useEffect(() => {
         //load last colors
-        const lastC = getSetting(LAST_COLORS.name);
+        const lastC = Settings.getArray<string>(LAST_COLORS.name, "string", []);
         if (lastC?.length > 0) {
             setLastColors(lastC)
         }
@@ -45,7 +46,7 @@ export function MyColorPicker(props: any) {
         while (lastC.length > LAST_COLORS.max) {
             lastC.pop()
         }
-        Settings.set({ [LAST_COLORS.name]: lastC })
+        Settings.setArray(LAST_COLORS.name, lastC )
         setLastColors(lastC)
 
     }, [composedColor, lastColors]);

@@ -1,10 +1,9 @@
-import { Keyboard, Image, ScrollView, StyleSheet, Text, TextInput, TextInputProps, TouchableOpacity, View, Alert, ActivityIndicator } from "react-native";
+import { Keyboard, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, ActivityIndicator } from "react-native";
 import Icon from 'react-native-vector-icons/AntDesign';
 import IconIonic from 'react-native-vector-icons/Ionicons';
 import IconMI from 'react-native-vector-icons/MaterialIcons';
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { Settings } from 'react-native';
 import { Spacer } from "./uielements";
 import { useEffect, useRef, useState } from "react";
 import { RecordButton } from "./recording";
@@ -15,6 +14,7 @@ import { AnimatedButton } from "./animatedButton";
 import { ProfilePicker } from "./profile-picker";
 import { AlreadyExists, Folders, InvalidCharachters, InvalidFileName, isValidFilename, loadButton, LoadProfile, Profile, readCurrentProfile, renameProfile, saveButton, verifyProfileNameFree } from "./profile";
 import Toast from 'react-native-toast-message';
+import { Settings } from './setting-storage';
 
 const BTN_COLOR = "#6E6E6E";
 
@@ -58,16 +58,6 @@ export const BACKGROUND = {
     LIGHT: "white"
 }
 
-
-export function getSetting(name: string, def?: any): any {
-    let setting = Settings.get(name);
-    if (setting === undefined) {
-        setting = def;
-    }
-    return setting;
-}
-
-
 export function SettingsButton({ onPress, backgroundColor }: { onPress: () => void, backgroundColor: string }) {
     const color = (backgroundColor === BACKGROUND.DARK ? BACKGROUND.LIGHT : BACKGROUND.DARK);
     return <View style={styles.settingButtonHost}>
@@ -87,16 +77,16 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     const scrollViewRef = useRef<ScrollView>(null);
 
     const [profile, setProfile] = useState<Profile>(readCurrentProfile());
-    const [profileName, setProfileName] = useState<string>(getSetting(CURRENT_PROFILE.name, ""));
-    const [backgroundColor, setBackgroundColor] = useState<"black" | "white">(getSetting(BACKGROUND.name, BACKGROUND.LIGHT));
+    const [profileName, setProfileName] = useState<string>(Settings.getString(CURRENT_PROFILE.name, ""));
+    const [backgroundColor, setBackgroundColor] = useState<string>(Settings.getString(BACKGROUND.name, BACKGROUND.LIGHT));
     const [profileBusy, setProfileBusy] = useState<boolean>(false);
     const [buttonBusy, setButtonBusy] = useState<number>(-1);
 
     useEffect(() => {
-        setBackgroundColor(getSetting(BACKGROUND.name, BACKGROUND.LIGHT));
+        setBackgroundColor(Settings.getString(BACKGROUND.name, BACKGROUND.LIGHT));
         const p = readCurrentProfile();
         setProfile(p);
-        setProfileName(getSetting(CURRENT_PROFILE.name, ""));
+        setProfileName(Settings.getString(CURRENT_PROFILE.name, ""));
         console.log("reload settings", p.buttons.map(b => b.name))
     }, [revision]);
 
@@ -146,34 +136,34 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         console.log("change buttun text", index, newName)
         let newButtonNames = profile.buttons.map(b => b.name);
         newButtonNames[index] = newName
-        Settings.set({ [BUTTONS_NAMES.name]: newButtonNames });
+        Settings.setArray(BUTTONS_NAMES.name, newButtonNames);
         setRevision(old => old + 1);
     }
 
     const changeBackgroundColor = (color: string) => {
-        Settings.set({ [BACKGROUND.name]: color });
+        Settings.set(BACKGROUND.name, color);
         setRevision(old => old + 1);
     }
 
     const changeNumOfButton = (delta: number) => {
-        const current = getSetting(BUTTONS.name, 1);
+        const current = Settings.getNumber(BUTTONS.name, 1);
         let newVal = current + delta;
         if (newVal < 1) return;
         if (newVal > 4) return;
-        Settings.set({ [BUTTONS.name]: newVal });
+        Settings.set(BUTTONS.name, newVal);
         setRevision(old => old + 1);
     }
     const saveColor = (index: number, newVal: string) => {
         let newColors = profile.buttons.map(b => b.color);
         newColors[index] = newVal
-        Settings.set({ [BUTTONS_COLOR.name]: newColors });
+        Settings.setArray(BUTTONS_COLOR.name, newColors);
         setRevision(old => old + 1);
     }
 
     const saveImageUrl = (index: number, newVal: string) => {
         let newBtnImageUrls = profile.buttons.map(b => b.imageUrl);
         newBtnImageUrls[index] = newVal
-        Settings.set({ [BUTTONS_IMAGE_URLS.name]: newBtnImageUrls });
+        Settings.setArray(BUTTONS_IMAGE_URLS.name, newBtnImageUrls);
         console.log("new button ImageUrl", newBtnImageUrls, index)
         setRevision(old => old + 1);
     }
@@ -181,7 +171,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     const saveShowNames = (index: number, newVal: boolean) => {
         let newBtnShowNames = profile.buttons.map(b => b.showName);
         newBtnShowNames[index] = newVal
-        Settings.set({ [BUTTONS_SHOW_NAMES.name]: newBtnShowNames });
+        Settings.setArray(BUTTONS_SHOW_NAMES.name, newBtnShowNames);
         setRevision(old => old + 1);
     }
 
@@ -202,7 +192,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     }
 
     const addNewProfile = async () => {
-        const currName = getSetting(CURRENT_PROFILE.name, "");
+        const currName = Settings.getString(CURRENT_PROFILE.name, "");
         if (currName.length > 0) {
             await LoadProfile("");
             setRevision(prev => prev + 1)
@@ -228,27 +218,27 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         if (!isValidFilename(name)) {
             throw new InvalidFileName(name);
         }
-        const previousName = getSetting(CURRENT_PROFILE.name, "");
+        const previousName = Settings.getString(CURRENT_PROFILE.name, "");
         if (previousName == "") {
             // new profile
             // const p = readCurrentProfile();
             if (!overwrite) {
                 return verifyProfileNameFree(name).then(() => {
-                    Settings.set({ [CURRENT_PROFILE.name]: name });
+                    Settings.set(CURRENT_PROFILE.name, name);
                 });
             } else {
-                Settings.set({ [CURRENT_PROFILE.name]: name });
+                Settings.set(CURRENT_PROFILE.name, name );
             }
         } else {
             // rename profile
             return renameProfile(previousName, name).then(() => {
-                Settings.set({ [CURRENT_PROFILE.name]: name });
+                Settings.set(CURRENT_PROFILE.name, name );
             })
         }
     }
 
     const handleProfileEditName = () => {
-        const previousName = getSetting(CURRENT_PROFILE.name, "");
+        const previousName = Settings.getString(CURRENT_PROFILE.name, "");
         const isRename = previousName != "";
         Alert.prompt(isRename ? translate("RenameProfile") : translate("SetProfileName"), undefined, [
             {
@@ -361,6 +351,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                 if (openLoadButton > -1) {
                     setOpenLoadButton(-1);
                     await loadButton(buttonName, openLoadButton).finally(() => setButtonBusy(-1));
+                    //setRevision(prev => prev + 1)
                     setTimeout(() => setRevision(prev => prev + 1), 50);
                 }
             }}

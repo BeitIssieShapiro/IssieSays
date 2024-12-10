@@ -10,3 +10,11 @@ Special thanks to the volunteers at the SAP Labs Israel, who are attentive to ev
 
 ## preparing a video to appstore
 `ffmpeg -i input.mp4 -vf "scale=1920:886,setdar=960/443" output.mp4`
+
+
+## Android
+android/gradle.properties
+newArchEnabled=true
+
+mkdir -p android/app/src/main/assets/fonts
+cp node_modules/react-native-vector-icons/Fonts/*.ttf android/app/src/main/assets/fonts/
