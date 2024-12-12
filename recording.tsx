@@ -16,7 +16,7 @@ export async function playRecording(name: string, playbackListner?: (playbackMet
     const filePath = "file://" + getRecordingFileName(name);
     return RNFS.exists(filePath).then(exists => {
         if (exists) {
-            console.log('Start playing ', name);
+            console.log('Start playing ', name, filePath);
             audioRecorderPlayer.startPlayer(filePath);
             if (playbackListner) {
                 audioRecorderPlayer.addPlayBackListener(playbackListner);
@@ -30,8 +30,8 @@ export async function playRecording(name: string, playbackListner?: (playbackMet
     });
 }
 
-export function RecordButton({ name, backgroundColor, size, height }:
-    { name: string, backgroundColor: string, size: number, height: number }) {
+export function RecordButton({ name, backgroundColor, size, height, revision }:
+    { name: string, backgroundColor: string, size: number, height: number, revision:number }) {
     const [recordProgress, setRecordProgress] = useState(0);
     const [_, setRecordProgressInterval] = useState<NodeJS.Timeout | undefined>(undefined);
     const [state, setState] = useState<any>({ recordSecs: 0 })
@@ -52,7 +52,7 @@ export function RecordButton({ name, backgroundColor, size, height }:
         RNFS.exists(getFileName()).then((value: boolean) => {
             setRecordingExists(value);
         })
-    }, [])
+    }, [revision])
 
     const onStartRecord = async () => {
         console.log("about to start recording")
@@ -146,10 +146,7 @@ export function RecordButton({ name, backgroundColor, size, height }:
                     }
 
                     onStopRecord().then((res) => {
-                        if (res.startsWith("file:")) {
-                            console.log(res.substring(7))
-                        }
-                        console.log(res)
+                       
                     });
                 }}
 
@@ -202,7 +199,7 @@ export function RecordButton({ name, backgroundColor, size, height }:
                             setPlaying(false);
                         }
                         //setState(newState);
-                        console.log(newState)
+                        console.log("play progress", newState)
                         return;
                     })
                     if (success) {
@@ -220,7 +217,7 @@ export function RecordButton({ name, backgroundColor, size, height }:
             </TouchableOpacity>
             <View style={{ flexDirection: "column", height: 70, width: size * 2 }}>
                 {recording && <AudioWaveForm width={size * 2} height={40} infiniteProgress={recordProgress} color={BTN_BACK_COLOR} baseColor={"lightgray"} />}
-                {recording && <Text style={{ fontSize: 16, width: size * 2, height: 30, textAlign: "center" }}>{state.recordTime?.substring(0, 5) || ""}</Text>}
+                {recording && <Text allowFontScaling={false} style={{ fontSize: 16, width: size * 2, height: 30, textAlign: "center" }}>{state.recordTime?.substring(0, 5) || ""}</Text>}
             </View>
 
         </View>

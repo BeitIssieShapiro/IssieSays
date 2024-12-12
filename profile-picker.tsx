@@ -4,12 +4,13 @@ import FadeInView from "./FadeInView";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { isRTL, translate } from "./lang";
 import Icon from 'react-native-vector-icons/AntDesign';
+import { IconButton } from "./uielements";
 
 
 function Seperator() {
     return <View
         style={{
-            width:"100%",
+            width: "100%",
             marginTop: 4,
             borderBottomColor: 'gray',
             borderBottomWidth: 1,
@@ -24,10 +25,13 @@ interface ProfilePickerProps {
     onSelect: (item: string) => void;
     exclude?: string;
     folder: Folders
+    onDelete?: (name: string, afterDelete: () => void) => void;
+    onEdit?: (name: string, afterSave: () => void) => void;
 }
 
-export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder }: ProfilePickerProps) {
+export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder, onDelete, onEdit }: ProfilePickerProps) {
     const [profiles, setProfiles] = useState<string[]>([]);
+    const [revision, setRevision] = useState<number>(0);
 
     useEffect(() => {
         if (open) {
@@ -35,7 +39,7 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                 setProfiles(list.filter(l => !exclude || l != exclude));
             })
         }
-    }, [open, exclude])
+    }, [open, exclude, revision]);
 
 
     return <FadeInView height={open ? height : 0}
@@ -44,7 +48,7 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
             folder == Folders.Profiles ?
                 translate("SelectProfileTitle") : translate("SelectButtonTitle")
         }</Text>
-        <Seperator/>
+        <Seperator />
         <View style={styles.closeButton}>
             <Icon name="close" size={45} onPress={onClose} />
         </View>
@@ -53,12 +57,27 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
             <ScrollView style={styles.listHost}>
                 {profiles.map(pName => (
                     <Fragment key={pName}>
-                        <TouchableOpacity style={styles.listItem} key={pName} onPress={() => onSelect(pName)}>
-                            <Text allowFontScaling={false} style={{
-                                textAlign: (isRTL() ? "right" : "left"),
-                                fontSize: 28, paddingLeft: 30, paddingRight: 30
-                            }}>{pName}</Text>
-                        </TouchableOpacity>
+                        <View style={{ 
+                            flexDirection: isRTL() ? "row-reverse" : "row", 
+                            width: "90%", 
+                            justifyContent:"space-between",
+                            }}>
+                            <View style={styles.listItem} key={pName} >
+                                <Text
+                                    allowFontScaling={false}
+                                    numberOfLines={1}
+                                    ellipsizeMode="tail"
+                                    style={{
+                                        textAlign: (isRTL() ? "right" : "left"),
+                                        fontSize: 28, paddingLeft: 15, paddingRight: 15
+                                    }}>{pName}</Text>
+                            </View>
+                            <View style={{ flexDirection: "row" }}>
+                                <IconButton icon="upload" onPress={() => onSelect(pName)} text={translate("Load")} />
+                                {onDelete && <IconButton icon="delete" onPress={() => onDelete(pName, () => setRevision(prev => prev + 1))} text={translate("Delete")} />}
+                                {onEdit && <IconButton icon="edit" text={translate("Rename")} onPress={() => onEdit(pName, () => setRevision(prev => prev + 1))} />}
+                            </View>
+                        </View>
                         <Seperator />
                     </Fragment>
 
@@ -72,13 +91,13 @@ const styles = StyleSheet.create({
     closeButton: {
         position: "absolute",
         right: 10,
-        top: "4%",
+        top: 10,
         zIndex: 100
     },
     pickerView: {
         flexDirection: 'column',
         position: 'absolute',
-        backgroundColor: '#FAFAFA',
+        backgroundColor: '#EBEBEB',
         zIndex: 99999,
         left: 0,
         borderColor: 'gray',
@@ -90,12 +109,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     listItem: {
-        width: "100%",
         paddingLeft: "10%",
         paddingRight: "10%",
+        flex:1,
     },
     listHost: {
-        padding:20,
+        padding: 20,
         width: "100%",
     }
 });

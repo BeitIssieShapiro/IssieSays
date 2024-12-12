@@ -1,9 +1,4 @@
-import { Platform, NativeModules, Settings as RNSettings } from 'react-native'
 import * as RNLocalize from 'react-native-localize';
-// const deviceLanguageRaw = // "he"
-// Platform.OS === 'ios'
-//     ? RNSettings.get('AppleLocale') || RNSettings.get('AppleLanguages')[0]
-//     : 
 const locales = RNLocalize.getLocales();
 const bestLanguage = locales[0]?.languageTag || 'en';
 const deviceLanguageRaw = bestLanguage;
@@ -33,18 +28,23 @@ var strings: any = {
         "BtnSearch": "חפש",
         "Vibrate": "רטט",
         "ProfileName": "פרופיל",
-        "SelectProfileTitle": "בחר פרופיל",
-        "SelectButtonTitle": "בחר כפתור",
-        "ProfileNoName": "ללא שם",
+        "SelectProfileTitle": "פרופילים שמורים",
+        "SelectButtonTitle": "כפתורים שמורים",
+        "ProfileNoName": "אין פרופיל פעיל",
         "NoItemsFound": "אין",
-        "SetProfileName": "קביעת שם לפרופיל",
+        "SetProfileName": "שמור פרופיל בשם",
         "RenameProfile": "שנה שם הפרופיל",
         "InvalidName": "שם לא חוקי. אין להשתמש בתווים הבאים: {1}",
-        "buttonExists": "כפתור בשם זה כבר קיים",
-        "ProfileExists": "פרופיל בשם זה כבר קיים",
+        "ButtonExists": "כפתור בשם ׳{1}׳ כבר קיים",
+        "ProfileExists": "פרופיל בשם ׳{1}׳ כבר קיים",
         "Cancel": "ביטול",
         "Overwrite": "המשך",
-        "Save": "שמור",
+        "Save": "שמירה",
+        "Close": "סגירה",
+        "Browse": "עיון",
+        "Create": "יצירה",
+        "Rename": "ערוך שם",
+        "Delete": "מחיקה",
         "ProfileSuccessRenamed": "שם הפרופיל שונה בהצלחה",
         "ProfileSuccessfulyCreated": "הפרופיל נוצר בהצלחה",
         "ProfileExistsTitle": "פרופיל קיים",
@@ -52,7 +52,12 @@ var strings: any = {
         "ButtonSaved": "כפתור נשמר בהצלחה",
         "ButtonExistsTitle": "כפתור קיים",
         "ButtonSaveFailed": "שמירת הכפתור נכשלה",
-
+        "ButtonMissingName": "יש לקבוע שם לכפתור",
+        "DeleteProfileTitle": "מחיקת פרופיל",
+        "DeleteCurrentProfileWarnning": "האם למחוק את הפרופיל ׳{1}׳? יש לשים לב: זהו הפרופיל הנוכחי",
+        "DeleteProfileWarnning": "האם למחוק את הפרופיל ׳{1}׳?",
+        "DeleteButtonTitle": "מחיקת כפתור שמור",
+        "DeleteButtonWarnning": "האם למחוק את הכפתור השמור ׳{1}׳",
     },
     "en": {
         "ButtonTitle": "Button {1}",
@@ -65,16 +70,16 @@ var strings: any = {
         "SearchImageTitle": "Search Image",
         "BtnSearch": "Search",
         "Vibrate": "Vibrate",
-        "ProfileNoName": "NONAME",
-        "SelectProfileTitle": "Select a Profile",
-        "SelectButtonTitle": "Select a Button",
+        "ProfileNoName": "No Active Profile",
+        "SelectProfileTitle": "Saved Profiles",
+        "SelectButtonTitle": "Saved Buttons",
         "ProfileName": "Profile",
         "NoItemsFound": "Empty",
-        "SetProfileName": "Set Profile Name",
+        "SetProfileName": "Save Profile As",
         "RenameProfile": "Rename Profile",
         "InvalidName": "Illigal name. Don't use these charachters: {1}",
-        "buttonExists": "Button with that name already exists",
-        "ProfileExists": "Profile with that name already exists",
+        "ButtonExists": "Button '{1}' already exists",
+        "ProfileExists": "Profile '{1}' already exists",
         "Cancel": "Cancel",
         "Overwrite": "Overwrite",
         "Save": "Save",
@@ -83,8 +88,19 @@ var strings: any = {
         "ProfileExistsTitle": "Profile Exists",
         "ProfileSaveFailed": "Failed to save profile",
         "ButtonSaved": "Button Saved Successfully",
-        "ButtonExistsTitle": "Button exists",
+        "ButtonExistsTitle": "Button Exists",
         "ButtonSaveFailed": "Failed to save the button",
+        "Close": "Close",
+        "Browse": "Browse",
+        "Create": "Create",
+        "Rename": "Rename",
+        "Delete": "Delete",
+        "ButtonMissingName": "A Button Name Is Missing",
+        "DeleteProfileTitle": "Delete Profile",
+        "DeleteCurrentProfileWarnning": "Deleting Profile '{1}'. Are you sure? Note: it is the current profile",
+        "DeleteProfileWarnning": "Deleting Profile '{1}'. Are you sure?",
+        "DeleteButtonTitle": "Delete Saved Button",
+        "DeleteButtonWarnning": "Deleting Saved Button '{1}'. Are you sure"
     },
     "ar": {
         "ButtonTitle": "زر {1}",
@@ -97,29 +113,70 @@ var strings: any = {
         "SearchImageTitle": "البحث عن صورة",
         "BtnSearch": "بحث",
         "Vibrate": "اهتزاز",
-
-        "ProfileNoName": "بدون اسم",
-        "SelectProfileTitle": "اختر ملف تعريف",
-        "SelectButtonTitle": "اختر زر",
-        "ProfileName": "ملف التعريف",
+        "ProfileNoName": "لا يوجد ملف شخصي نشط",
+        "SelectProfileTitle": "الملفات الشخصية المحفوظة",
+        "SelectButtonTitle": "الأزرار المحفوظة",
+        "ProfileName": "الملف الشخصي",
         "NoItemsFound": "فارغ",
-        "SetProfileName": "تعيين اسم ملف التعريف",
-        "RenameProfile": "إعادة تسمية ملف التعريف",
+        "SetProfileName": "حفظ الملف الشخصي باسم",
+        "RenameProfile": "إعادة تسمية الملف الشخصي",
         "InvalidName": "اسم غير قانوني. لا تستخدم هذه الأحرف: {1}",
-        "buttonExists": "يوجد زر بهذا الاسم بالفعل",
-        "ProfileExists": "يوجد ملف تعريف بهذا الاسم بالفعل",
+        "ButtonExists": "يوجد زر '{1}' بالفعل",
+        "ProfileExists": "يوجد ملف شخصي '{1}' بالفعل",
         "Cancel": "إلغاء",
         "Overwrite": "استبدال",
         "Save": "حفظ",
-        "ProfileSuccessRenamed": "تم إعادة تسمية ملف التعريف بنجاح",
-        "ProfileSuccessfulyCreated": "تم إنشاء ملف التعريف بنجاح",
-        "ProfileExistsTitle": "ملف التعريف موجود",
-        "ProfileSaveFailed": "فشل في حفظ ملف التعريف",
+        "ProfileSuccessRenamed": "تمت إعادة تسمية الملف الشخصي بنجاح",
+        "ProfileSuccessfulyCreated": "تم إنشاء الملف الشخصي بنجاح",
+        "ProfileExistsTitle": "الملف الشخصي موجود",
+        "ProfileSaveFailed": "فشل حفظ الملف الشخصي",
         "ButtonSaved": "تم حفظ الزر بنجاح",
         "ButtonExistsTitle": "الزر موجود",
-        "ButtonSaveFailed": "فشل في حفظ الزر"
+        "ButtonSaveFailed": "فشل حفظ الزر",
+        "Close": "إغلاق",
+        "Browse": "تصفح",
+        "Create": "إنشاء",
+        "Rename": "إعادة تسمية",
+        "Delete": "حذف",
+        "ButtonMissingName": "اسم الزر مفقود",
+        "DeleteProfileTitle": "حذف الملف الشخصي",
+        "DeleteCurrentProfileWarnning": "حذف الملف الشخصي '{1}'. هل أنت متأكد؟ ملاحظة: هذا هو الملف الشخصي الحالي",
+        "DeleteProfileWarnning": "حذف الملف الشخصي '{1}'. هل أنت متأكد؟",
+        "DeleteButtonTitle": "حذف الزر المحفوظ",
+        "DeleteButtonWarnning": "حذف الزر المحفوظ '{1}'. هل أنت متأكد؟"
     }
 };
+
+function findMissing() {
+    let missing = ""
+    //English
+    console.log("Missing in English:")
+    Object.entries(strings.he).forEach(([key, value]) => {
+        if (!strings.en[key]) {
+            missing += "\"" + key + "\":" + "\"" + value + "\",\n";
+        }
+    })
+    console.log(missing);
+    missing = "";
+    console.log("\n\nMissing in Arabic:")
+    Object.entries(strings.he).forEach(([key, value]) => {
+        if (!strings.ar[key]) {
+            missing += "\"" + key + "\":" + "\"" + value + "\",\n";
+        }
+    })
+    console.log(missing);
+
+    missing = "";
+    console.log("\n\nMissing in Hebrew:")
+    Object.entries(strings.en).forEach(([key, value]) => {
+        if (!strings.he[key]) {
+            missing += "\"" + key + "\":" + "\"" + value + "\",\n";
+        }
+    })
+    console.log(missing);
+
+}
+//findMissing();
 
 
 const currStrings = strings[deviceLanguage];

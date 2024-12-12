@@ -24,6 +24,7 @@
     "react-native-pager-view": "^6.4.1",
     "react-native-permissions": "^4.0.1",
     "react-native-progress": "^5.0.1",
+    "react-native-prompt-android": "^1.1.0",
     "react-native-really-awesome-button": "^2.0.4",
     "react-native-svg": "^15.8.0",
     "react-native-tab-view": "^3.5.2",

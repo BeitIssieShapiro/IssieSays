@@ -116,7 +116,7 @@ export async function Init() {
 }
 
 
-async function SaveProfile(name: string, p: Profile, overwrite = false) {
+export async function SaveProfile(name: string, p: Profile, overwrite = false) {
     if (!isValidFilename(name)) {
         throw new InvalidFileName(name);
     }
@@ -159,11 +159,18 @@ export async function renameProfile(previousName: string, newName: string, overw
     }
 }
 
+export async function deleteProfile(name:string) {
+    const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
+    return RNFS.unlink(profilePath);
+}
+
 export async function verifyProfileNameFree(name: string) {
+    console.log("verifyProfileNameFree", name)
     const p = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
     if (await RNFS.exists(p)) {
         throw new AlreadyExists(name);
     }
+    console.log("verifyProfileNameFree OK")
 }
 
 export async function LoadProfile(name: string) {
@@ -178,9 +185,8 @@ export async function LoadProfile(name: string) {
 
     if (name == "") {
         // create new profile
-        Settings.set(CURRENT_PROFILE.name, "");
+        await clearProfile()
         return;
-        // todo consider clean all ??
     }
 
     const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
@@ -189,6 +195,23 @@ export async function LoadProfile(name: string) {
 
     return writeCurrentProfile(p, name);
 }
+
+export async function clearProfile() {
+    const p = {
+        buttons: [
+            {
+                color:BTN_BACK_COLOR,
+                imageUrl:"",
+                showName:false,
+                name:"",
+                recording:"", // will delete the file
+            }
+        ]
+    } as Profile;
+    
+    writeCurrentProfile(p, "");
+}
+
 
 async function writeCurrentProfile(p: Profile, name: string) {
     Settings.set(CURRENT_PROFILE.name, name);
@@ -241,13 +264,15 @@ export function readCurrentProfile(): Profile {
     const buttons = [] as Button[];
     for (let i = 0; i < numOfButtons; i++) {
         buttons.push({
-            color: buttonColors[i],
-            name: buttonTexts[i],
-            imageUrl: buttonImageUrls[i],
-            showName: buttonShowNames[i],
+            color: buttonColors[i] || BTN_BACK_COLOR,
+            name: buttonTexts[i] || "",
+            imageUrl: buttonImageUrls[i] || "",
+            showName: buttonShowNames[i] || false,
             recording: undefined,
         });
     }
+
+    console.log("readCurrentProfile", buttons)
 
     return {
         buttons,
@@ -297,6 +322,12 @@ export async function saveButton(name: string, index: number, overwrite = false)
         return RNFS.writeFile(buttonPath, str, 'utf8');
     }
 }
+
+export async function deleteButton(name: string) {
+    const buttonPath = path.join(RNFS.DocumentDirectoryPath, Folders.Buttons, `${name}.json`);
+    return RNFS.unlink(buttonPath);
+}
+
 
 export async function ListElements(folder: Folders): Promise<string[]> {
     const listPath = path.join(RNFS.DocumentDirectoryPath, folder);

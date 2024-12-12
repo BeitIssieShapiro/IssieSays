@@ -1,7 +1,10 @@
-import { TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome';
+import IconAnt from 'react-native-vector-icons/AntDesign';
+
 import { isRTL } from "./lang";
 
+export const BTN_COLOR = "#6E6E6E";
 
 export function Spacer({ h, w, bc }: { h?: Number, w?: Number, bc?: string }) {
     return <View style={{ height: h, width: w, backgroundColor: bc }} />
@@ -92,3 +95,27 @@ export function isTooWhite(color: string) {
     }
     return false;
 }
+export function IconButton({ icon, onPress, text }: { icon: string, text: string, onPress: () => void }) {
+
+    return <TouchableOpacity style={[styles.iconButton, { flexDirection: isRTL() ? "row" : "row-reverse" }]} onPress={onPress} >
+        <Text allowFontScaling={false} style={{ fontSize: 22, marginInlineStart: 5, marginInlineEnd:5 }}>{text}</Text>
+        <IconAnt name={icon} style={{ fontSize: 30, color: BTN_COLOR }} />
+    </TouchableOpacity>
+}
+
+
+const styles = StyleSheet.create({
+
+    iconButton: {
+        
+        marginInlineEnd: 10,
+        maxHeight:39,
+        alignItems: "center",
+        justifyContent: "flex-end",
+        borderColor: "gray",
+        borderStyle: "solid",
+        borderWidth: 1,
+        padding: 4,
+        borderRadius: 10,
+    }
+});

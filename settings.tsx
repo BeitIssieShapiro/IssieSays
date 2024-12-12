@@ -4,7 +4,7 @@ import IconIonic from 'react-native-vector-icons/Ionicons';
 import IconMI from 'react-native-vector-icons/MaterialIcons';
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { Spacer } from "./uielements";
+import { BTN_COLOR, IconButton, Spacer } from "./uielements";
 import { useEffect, useRef, useState } from "react";
 import { RecordButton } from "./recording";
 import { MyColorPicker } from "./color-picker";
@@ -12,11 +12,10 @@ import { fTranslate, isRight2Left, isRTL, translate } from "./lang";
 import { deleteFile, SearchImage, SelectFromGallery } from "./search-image";
 import { AnimatedButton } from "./animatedButton";
 import { ProfilePicker } from "./profile-picker";
-import { AlreadyExists, Folders, InvalidCharachters, InvalidFileName, isValidFilename, loadButton, LoadProfile, Profile, readCurrentProfile, renameProfile, saveButton, verifyProfileNameFree } from "./profile";
+import { AlreadyExists, deleteButton, deleteProfile, Folders, InvalidCharachters, InvalidFileName, isValidFilename, loadButton, LoadProfile, Profile, readCurrentProfile, renameProfile, saveButton, SaveProfile, verifyProfileNameFree } from "./profile";
 import Toast from 'react-native-toast-message';
 import { Settings } from './setting-storage';
-
-const BTN_COLOR = "#6E6E6E";
+import prompt from 'react-native-prompt-android';
 
 export const BUTTONS = {
     name: 'buttons'
@@ -61,7 +60,7 @@ export const BACKGROUND = {
 export function SettingsButton({ onPress, backgroundColor }: { onPress: () => void, backgroundColor: string }) {
     const color = (backgroundColor === BACKGROUND.DARK ? BACKGROUND.LIGHT : BACKGROUND.DARK);
     return <View style={styles.settingButtonHost}>
-        <AnimatedButton size={45} color={color} icon="setting" onPress={onPress} duration={0} />
+        <AnimatedButton size={45} color={color} icon="setting" onPress={onPress} duration={__DEV__ ? 100 : 3000} />
     </View>
 }
 
@@ -191,12 +190,16 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         })
     }
 
-    const addNewProfile = async () => {
+    const closeProfile = async () => {
         const currName = Settings.getString(CURRENT_PROFILE.name, "");
         if (currName.length > 0) {
             await LoadProfile("");
-            setRevision(prev => prev + 1)
+            setTimeout(() => setRevision(prev => prev + 1), 100);
         }
+    }
+
+    const saveAsNewProfile = async () => {
+        handleProfileEditName("", false, () => setRevision(prev => prev + 1))
     }
 
     const colorWidth = Math.min(windowSize.width, windowSize.height);
@@ -214,39 +217,72 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             windowSize.width / 2 - styles.section.marginHorizontal);
 
 
-    const doProfileSave = async (name: string, overwrite = false) => {
+    const doProfileSave = async (name: string, previousName: string, isCurrent: boolean, overwrite = false) => {
+        console.log("doProfileSave")
         if (!isValidFilename(name)) {
             throw new InvalidFileName(name);
         }
-        const previousName = Settings.getString(CURRENT_PROFILE.name, "");
         if (previousName == "") {
             // new profile
-            // const p = readCurrentProfile();
             if (!overwrite) {
-                return verifyProfileNameFree(name).then(() => {
+                return verifyProfileNameFree(name).then(async () => {
+                    const currentProfile = await readCurrentProfile();
+                    await SaveProfile(name, currentProfile, true);
                     Settings.set(CURRENT_PROFILE.name, name);
                 });
             } else {
-                Settings.set(CURRENT_PROFILE.name, name );
+                Settings.set(CURRENT_PROFILE.name, name);
             }
+            setRevision(prev => prev + 1);
         } else {
             // rename profile
             return renameProfile(previousName, name).then(() => {
-                Settings.set(CURRENT_PROFILE.name, name );
+                if (isCurrent) {
+                    Settings.set(CURRENT_PROFILE.name, name);
+                    setRevision(prev => prev + 1);
+                }
             })
         }
     }
 
-    const handleProfileEditName = () => {
-        const previousName = Settings.getString(CURRENT_PROFILE.name, "");
-        const isRename = previousName != "";
-        Alert.prompt(isRename ? translate("RenameProfile") : translate("SetProfileName"), undefined, [
+
+    const handleProfileDelete = async (name: string, afterDelete: () => void, force = false) => {
+        const currName = Settings.getString(CURRENT_PROFILE.name, "");
+        const isCurrent = name == currName;
+
+        if (!force) {
+            const msg = isCurrent ?
+                fTranslate("DeleteCurrentProfileWarnning", name) :
+                fTranslate("DeleteProfileWarnning", name);
+
+            Alert.alert(translate("DeleteProfileTitle"), msg, [
+                { text: translate("Cancel"), style: "cancel" },
+                { text: translate("Delete"), style: "destructive", onPress: () => handleProfileDelete(name, afterDelete, true) }
+            ]);
+            return;
+        }
+
+        if (isCurrent) {
+            await LoadProfile("");
+            setTimeout(() => setRevision(prev => prev + 1), 100);
+        }
+        await deleteProfile(name);
+        afterDelete();
+    }
+
+    const handleProfileEditName = (name: string, isRename: boolean, afterSave: () => void) => {
+        const currName = Settings.getString(CURRENT_PROFILE.name, "");
+        const isCurrent = currName == name;
+        prompt(isRename ? translate("RenameProfile") : translate("SetProfileName"), undefined, [
+            { text: translate("Cancel"), style: "cancel" },
             {
                 text: translate("Save"),
                 onPress: (newName) => {
+                    console.log("save pressed", newName)
                     if (newName) {
-                        doProfileSave(newName)
+                        doProfileSave(newName, name, isCurrent)
                             .then(() => {
+                                afterSave();
                                 Toast.show({
                                     autoHide: true,
                                     type: 'success',
@@ -255,11 +291,12 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                             })
                             .catch((err) => {
                                 if (err instanceof AlreadyExists) {
-                                    Alert.alert(translate("ProfileExistsTitle"), translate("ProfileExists"),
+                                    Alert.alert(translate("ProfileExistsTitle"), fTranslate("ProfileExists", name),
                                         [
                                             {
                                                 text: translate("Overwrite"), onPress: () => {
-                                                    doProfileSave(newName, true).then(() => {
+                                                    doProfileSave(newName, name, isCurrent, true).then(() => {
+                                                        afterSave();
                                                         Toast.show({
                                                             autoHide: true,
                                                             type: 'success',
@@ -283,12 +320,15 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                     }
                 }
             },
-            { text: translate("Cancel"), style: "cancel" }
-        ], 'plain-text', previousName);
+        ], { type: 'plain-text', defaultValue: name });
     }
 
 
     const handleSaveButton = (name: string, index: number) => {
+        if (!name || name.trim().length == 0) {
+            Alert.alert(translate("ButtonMissingName"), "", [{ text: translate("OK") }]);
+            return;
+        }
         saveButton(name, index)
             .then(() => {
                 Toast.show({
@@ -299,7 +339,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             })
             .catch(err => {
                 if (err instanceof AlreadyExists) {
-                    Alert.alert(translate("ButtonExistsTitle"), translate("buttonExists"),
+                    Alert.alert(translate("ButtonExistsTitle"), fTranslate("ButtonExists", name),
                         [
                             {
                                 text: translate("Overwrite"), onPress: () => {
@@ -327,9 +367,23 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             })
     }
 
+    const handleButtonDelete = async (name: string, afterDelete: () => void, force = false) => {
+
+        if (!force) {
+            Alert.alert(translate("DeleteButtonTitle"), fTranslate("DeleteButtonWarnning", name), [
+                { text: translate("Cancel"), style: "cancel" },
+                { text: translate("Delete"), style: "destructive", onPress: () => handleButtonDelete(name, afterDelete, true) }
+            ]);
+            return;
+        }
+
+        await deleteButton(name);
+        afterDelete();
+    }
+
     return <View style={{ position: "relative", width: windowSize.width, height: windowSize.height - 50 }}>
         <ProfilePicker
-            exclude={profileName}
+
             folder={Folders.Profiles}
             open={openLoadProfile}
             height={windowSize.height * .6}
@@ -340,6 +394,10 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                 setRevision(prev => prev + 1);
             }}
             onClose={() => setOpenLoadProfile(false)}
+            onEdit={(name, onFinishEditing) => {
+                handleProfileEditName(name, true, onFinishEditing);
+            }}
+            onDelete={handleProfileDelete}
         />
         <ProfilePicker
             folder={Folders.Buttons}
@@ -356,6 +414,8 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                 }
             }}
             onClose={() => setOpenLoadButton(-1)}
+            onDelete={handleButtonDelete}
+
         />
         {colorPickerOpen > -1 && <MyColorPicker
             open={colorPickerOpen >= 0}
@@ -414,9 +474,11 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             <View style={[styles.section, marginHorizontal, dirStyle]} >
                 <View style={{ flexDirection: isRTL() ? "row-reverse" : "row" }}>
                     {profileBusy && <ActivityIndicator color="#0000ff" size="large" />}
-                    <Icon name="upload" style={{ fontSize: 30, color: BTN_COLOR, marginEnd: 15 }} onPress={() => setOpenLoadProfile(true)} />
-                    <Icon name="addfile" style={{ fontSize: 30, color: BTN_COLOR, marginEnd: 15 }} onPress={() => addNewProfile()} />
-                    <Icon name={profileName.length > 0 ? "edit" : "save"} style={{ fontSize: 33, color: BTN_COLOR, marginEnd: 15 }} onPress={handleProfileEditName} />
+                    <IconButton text={translate("Browse")} icon="folder1" onPress={() => setOpenLoadProfile(true)} />
+                    {profileName.length > 0 ?
+                        <IconButton text={translate("Close")} icon="close" onPress={() => closeProfile()} /> :
+                        <IconButton text={translate("Create")} icon="addfile" onPress={() => saveAsNewProfile()} />
+                    }
                 </View>
                 <View style={{ flexDirection: isRTL() ? "row-reverse" : "row" }}>
                     <Text allowFontScaling={false} style={{ fontSize: 20 }}>{translate("ProfileName")}:</Text>
@@ -465,18 +527,19 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                         ]}>
                             <View style={{ flexDirection: isRight2Left ? "row" : "row-reverse" }}>
                                 <View style={{ alignItems: isRTL() ? "flex-start" : "flex-end", justifyContent: "center" }}>
-                                    <RecordButton name={i} backgroundColor={profile.buttons[i].color} size={60} height={60} />
+                                    <RecordButton name={i} backgroundColor={profile.buttons[i].color}
+                                        size={60} height={60} revision={revision} />
                                     <View style={{ marginEnd: 5, flexDirection: isRTL() ? "row-reverse" : "row" }}>
                                         {buttonBusy == i && <ActivityIndicator size="large" color="#0000ff" />}
-                                        <Icon name="upload" style={{ fontSize: 30, color: BTN_COLOR, marginEnd: 15 }} onPress={() => setOpenLoadButton(i)} />
-                                        <Icon name="save" style={{ fontSize: 33, color: BTN_COLOR, marginEnd: 15 }} onPress={() => handleSaveButton(profile.buttons[i].name, i)} />
+                                        <Icon name="folder1" style={{ fontSize: 30, color: BTN_COLOR, marginEnd: 15 }} onPress={() => setOpenLoadButton(i)} />
+                                        <Icon name="save" style={{ fontSize: 30, color: BTN_COLOR, marginEnd: 15 }} onPress={() => handleSaveButton(profile.buttons[i].name, i)} />
                                     </View>
                                 </View>
 
                                 {/*middle buttons (color, image and search) and preview */}
                                 <View style={{ alignItems: "center", height: 100 }}>
                                     <View style={[{ borderColor: profile.buttons[i].color }, styles.buttonPreview]}>
-                                        {profile.buttons[i].imageUrl.length > 0 && <>
+                                        {profile.buttons[i]?.imageUrl.length > 0 && <>
                                             <Image source={{ uri: profile.buttons[i].imageUrl }} style={styles.buttonImage} />
                                             <IconIonic name="close" style={{ position: "absolute", right: -15, top: -10, fontSize: 30, color: "red" }} onPress={() => {
                                                 deleteFile(profile.buttons[i].imageUrl);
@@ -604,6 +667,7 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
 
     },
+
     numberSelector: {
         display: "flex",
         flexDirection: "row",
