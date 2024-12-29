@@ -1,10 +1,11 @@
 import { Keyboard, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, ActivityIndicator } from "react-native";
 import Icon from 'react-native-vector-icons/AntDesign';
 import IconIonic from 'react-native-vector-icons/Ionicons';
-import IconMI from 'react-native-vector-icons/MaterialIcons';
-import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { BTN_COLOR, IconButton, Spacer } from "./uielements";
+import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
+import IconMI from 'react-native-vector-icons/MaterialIcons';
+
+import { BTN_COLOR, IconButton, MainButton, Spacer } from "./uielements";
 import { useEffect, useRef, useState } from "react";
 import { RecordButton } from "./recording";
 import { MyColorPicker } from "./color-picker";
@@ -12,10 +13,23 @@ import { fTranslate, isRight2Left, isRTL, translate } from "./lang";
 import { deleteFile, SearchImage, SelectFromGallery } from "./search-image";
 import { AnimatedButton } from "./animatedButton";
 import { ProfilePicker } from "./profile-picker";
-import { AlreadyExists, deleteButton, deleteProfile, Folders, InvalidCharachters, InvalidFileName, isValidFilename, loadButton, LoadProfile, Profile, readCurrentProfile, renameProfile, saveButton, SaveProfile, verifyProfileNameFree } from "./profile";
+import { AlreadyExists, Button, deleteButton, deleteProfile, Folders, InvalidCharachters, InvalidFileName, isValidFilename, loadButton, LoadProfile, Profile, readCurrentProfile, renameProfile, saveButton, SaveProfile, verifyProfileNameFree } from "./profile";
 import Toast from 'react-native-toast-message';
 import { Settings } from './setting-storage';
 import prompt from 'react-native-prompt-android';
+import Svg, { G, Path, Polygon } from "react-native-svg";
+
+const removeIcon = <Svg width="23px" height="23px" viewBox="0 0 27 27">
+    <G id="Design-IssieSays" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <G transform="translate(-1755.000000, -13133.000000)">
+            <G transform="translate(1755.000000, 13133.000000)">
+                <Path d="M3,27 C2.175,27 1.46875,26.70625 0.88125,26.11875 C0.29375,25.53125 0,24.825 0,24 L0,3 C0,2.175 0.29375,1.46875 0.88125,0.88125 C1.46875,0.29375 2.175,0 3,0 L15,0 L15,3 L3,3 L3,24 L24,24 L24,12 L27,12 L27,24 C27,24.825 26.70625,25.53125 26.11875,26.11875 C25.53125,26.70625 24.825,27 24,27 L3,27 Z M5,21 L23,21 L17.375,13 L12.875,19.4 L9.5,14.6 L5,21 Z M19.8,9 L18,7.2 L20.7,4.5 L18,1.8 L19.8,0 L22.5,2.7 L25.2,0 L27,1.8 L24.3321429,4.5 L27,7.2 L25.2,9 L22.5,6.33214286 L19.8,9 Z" id="Shape" fill="#5F6368" fill-rule="nonzero"></Path>
+                <Polygon id="Path" fill="#FF0000" points="19.8 9 18 7.2 20.7 4.5 18 1.8 19.8 0 22.5 2.7 25.2 0 27 1.8 24.3321429 4.5 27 7.2 25.2 9 22.5 6.33214286"></Polygon>
+            </G>
+        </G>
+    </G>
+</Svg>
+
 
 export const BUTTONS = {
     name: 'buttons'
@@ -56,6 +70,8 @@ export const BACKGROUND = {
     DARK: "black",
     LIGHT: "white"
 }
+
+const disabledColor = "gray";
 
 export function SettingsButton({ onPress, backgroundColor }: { onPress: () => void, backgroundColor: string }) {
     const color = (backgroundColor === BACKGROUND.DARK ? BACKGROUND.LIGHT : BACKGROUND.DARK);
@@ -209,14 +225,6 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         marginHorizontal = { marginHorizontal: 5 };
     }
 
-
-    let textWidth = windowSize.width < 500 ?
-        windowSize.width - styles.section.marginHorizontal - 50 :
-        (windowSize.width < 900 ?
-            windowSize.width / 2 - styles.section.marginHorizontal - 80 :
-            windowSize.width / 2 - styles.section.marginHorizontal);
-
-
     const doProfileSave = async (name: string, previousName: string, isCurrent: boolean, overwrite = false) => {
         console.log("doProfileSave")
         if (!isValidFilename(name)) {
@@ -244,7 +252,6 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             })
         }
     }
-
 
     const handleProfileDelete = async (name: string, afterDelete: () => void, force = false) => {
         const currName = Settings.getString(CURRENT_PROFILE.name, "");
@@ -322,6 +329,27 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             },
         ], { type: 'plain-text', defaultValue: name });
     }
+
+
+    const handleButtonEditName = (index: number) => {
+        prompt(translate("SetButtonName"), undefined, [
+            { text: translate("Cancel"), style: "cancel" },
+            {
+                text: translate("OK"),
+                onPress: (newName) => {
+                    console.log("OK pressed", newName)
+                    if (newName) {
+                        if (!isValidFilename(newName)) {
+                            Alert.alert(fTranslate("InvalidName", InvalidCharachters));
+                            return;
+                        }
+                        changeButtonsNames(index, newName);
+                    }
+                }
+            },
+        ], { type: 'plain-text', defaultValue: profile.buttons[index].name });
+    }
+
 
 
     const handleSaveButton = (name: string, index: number) => {
@@ -453,7 +481,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             </View>
             <TouchableOpacity style={[styles.section, marginHorizontal, dirStyle]} onPress={() => onAbout()}>
                 <Icon name="infocirlceo" color={BTN_COLOR} size={35} />
-                <Text allowFontScaling={false} style={{ fontSize: 20 }}>{translate("About")}</Text>
+                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("About")}</Text>
             </TouchableOpacity>
             <View style={[styles.section, marginHorizontal, dirStyle]} >
                 <View style={{ flexDirection: "row" }}>
@@ -468,21 +496,30 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                     </TouchableOpacity>
                     <Spacer w={5} />
                 </View>
-                <Text allowFontScaling={false} style={{ fontSize: 20 }}>{translate("BackgroundColor")}</Text>
+                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("BackgroundColor")}</Text>
             </View>
 
-            <View style={[styles.section, marginHorizontal, dirStyle]} >
+            {/* Profile Name */}
+            <View style={[styles.section, marginHorizontal, isScreenNarrow ? {
+                flexDirection: "column-reverse", alignItems: "flex-start", height: 90,
+            } : dirStyle]} >
                 <View style={{ flexDirection: isRTL() ? "row-reverse" : "row" }}>
                     {profileBusy && <ActivityIndicator color="#0000ff" size="large" />}
-                    <IconButton text={translate("Browse")} icon="folder1" onPress={() => setOpenLoadProfile(true)} />
+                    <IconButton text={translate("Load")} onPress={() => setOpenLoadProfile(true)} />
                     {profileName.length > 0 ?
-                        <IconButton text={translate("Close")} icon="close" onPress={() => closeProfile()} /> :
-                        <IconButton text={translate("Create")} icon="addfile" onPress={() => saveAsNewProfile()} />
+                        <IconButton text={translate("Close")} onPress={() => closeProfile()} /> :
+                        <IconButton text={translate("Create")} onPress={() => saveAsNewProfile()} />
                     }
                 </View>
                 <View style={{ flexDirection: isRTL() ? "row-reverse" : "row" }}>
-                    <Text allowFontScaling={false} style={{ fontSize: 20 }}>{translate("ProfileName")}:</Text>
-                    <Text allowFontScaling={false} style={{ marginEnd: 10, marginStart: 10, fontSize: 20, textAlign: isRTL() ? "right" : "left" }}>{profileName.length > 0 ? profileName : translate("ProfileNoName")}</Text>
+                    <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("ProfileName")}:</Text>
+                    <Text allowFontScaling={false} style={{
+                        marginEnd: 10, marginStart: 10, fontSize: 20,
+                        textAlign: isRTL() ? "right" : "left",
+                        color: profileName.length == 0 ? disabledColor : "black"
+                    }}>
+                        {profileName.length > 0 ? profileName : translate("ProfileNoName")}
+                    </Text>
                 </View>
             </View>
 
@@ -492,105 +529,144 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                     <Text allowFontScaling={false} style={{ fontSize: 30, marginHorizontal: 10 }}>{profile.buttons.length}</Text>
                     <Icon name="pluscircleo" color={profile.buttons.length == 4 ? "lightgray" : BTN_COLOR} size={35} onPress={() => changeNumOfButton(1)} />
                 </View>
-                <Text allowFontScaling={false} style={{ fontSize: 20 }}>{translate("Buttons")}</Text>
+                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("Buttons")}</Text>
             </View>
 
             <View style={[styles.buttons, marginHorizontal]}>
                 {
-                    Array.from(Array(profile.buttons.length).keys()).map((i: any) => {
-                        const textInput =
-                            <View style={{ flexDirection: isRight2Left ? "row-reverse" : "row" }}>
-                                <IconMI name="edit" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => handleEdit(i)} />
-                                <Spacer w={10} />
-                                <TextInput allowFontScaling={false} ref={textInputRef[i]}
-                                    maxLength={25}
-                                    style={{
-                                        width: textWidth, fontSize: 20, textAlign: isRTL() ? "right" : "left",
-                                        backgroundColor: textInEdit[i] ? "#F5F5F5" : "transparent",
-                                        direction: isRTL() ? "rtl" : "ltr",
-                                        //backgroundColor: "yellow"
-                                    }}
-                                    onChange={(e) => changeButtonsNames(i, e.nativeEvent.text)}
-                                    onBlur={(e) => setTextInEdit(curr => {
-                                        const newVal = [...curr];
-                                        newVal[i] = !curr[i]
-                                        return newVal;
-                                    })}
-                                >{profile.buttons[i].name}
-                                </TextInput>
-                            </View>
+                    Array.from(Array(profile.buttons.length).keys()).map((i: any) => (
+                        <ButtonSettings
+                            key={i}
+                            index={i}
+                            revision={revision}
+                            profileButton={profile.buttons[i]}
+                            isBusy={buttonBusy == i}
+                            onOpenLoadButtons={() => setOpenLoadButton(i)}
+                            onSaveButton={() => handleSaveButton(profile.buttons[i].name, i)}
+                            onSetImageUrl={(url) => saveImageUrl(i, url)}
+                            onSetColorPickerOpen={() => setColorPickerOpen(i)}
+                            onSetShowNames={(show) => saveShowNames(i, show)}
+                            onImageSearchOpen={() => setImageSearchOpen(i)}
+                            onEditName={() => handleButtonEditName(i)}
+                            isLast={i == profile.buttons.length - 1}
+                            isScreenNarrow={isScreenNarrow}
+                        />
 
-                        return <View key={i} style={[
-                            styles.button, dirStyle,
-                            { borderBottomWidth: (i == profile.buttons.length - 1 ? 0 : 3) },
-                            isScreenNarrow ? { flexDirection: "column", height: 165 } : { height: 105 },
-                        ]}>
-                            <View style={{ flexDirection: isRight2Left ? "row" : "row-reverse" }}>
-                                <View style={{ alignItems: isRTL() ? "flex-start" : "flex-end", justifyContent: "center" }}>
-                                    <RecordButton name={i} backgroundColor={profile.buttons[i].color}
-                                        size={60} height={60} revision={revision} />
-                                    <View style={{ marginEnd: 5, flexDirection: isRTL() ? "row-reverse" : "row" }}>
-                                        {buttonBusy == i && <ActivityIndicator size="large" color="#0000ff" />}
-                                        <Icon name="folder1" style={{ fontSize: 30, color: BTN_COLOR, marginEnd: 15 }} onPress={() => setOpenLoadButton(i)} />
-                                        <Icon name="save" style={{ fontSize: 30, color: BTN_COLOR, marginEnd: 15 }} onPress={() => handleSaveButton(profile.buttons[i].name, i)} />
-                                    </View>
-                                </View>
-
-                                {/*middle buttons (color, image and search) and preview */}
-                                <View style={{ alignItems: "center", height: 100 }}>
-                                    <View style={[{ borderColor: profile.buttons[i].color }, styles.buttonPreview]}>
-                                        {profile.buttons[i]?.imageUrl.length > 0 && <>
-                                            <Image source={{ uri: profile.buttons[i].imageUrl }} style={styles.buttonImage} />
-                                            <IconIonic name="close" style={{ position: "absolute", right: -15, top: -10, fontSize: 30, color: "red" }} onPress={() => {
-                                                deleteFile(profile.buttons[i].imageUrl);
-                                                saveImageUrl(i, "")
-                                            }} />
-                                        </>}
-                                    </View>
-                                    <View style={{ flex: 1, flexDirection: "row", justifyContent: "center" }}>
-                                        <IconIonic name="color-palette-outline" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => {
-                                            setColorPickerOpen(curr => (curr === i) ? -1 : i)
-                                        }} />
-                                        <Spacer w={20} />
-                                        <IconIonic name="image-outline" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => {
-                                            SelectFromGallery().then((url) => {
-                                                if (url !== "") {
-                                                    saveImageUrl(i, url);
-                                                }
-                                            })
-                                        }} />
-                                        <Spacer w={20} />
-                                        <IconMCI name="image-search-outline" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => {
-                                            setImageSearchOpen(i);
-                                        }} />
-
-                                    </View>
-                                </View>
-                            </View>
-
-                            <View style={[
-                                styles.buttonRight,
-                                { alignItems: isRTL() ? "flex-end" : "flex-start" },
-                                { flexDirection: "column" }
-                            ]}>
-                                {textInput}
-                                <TouchableOpacity style={{ flexDirection: isRight2Left ? "row-reverse" : "row", alignItems: "center", }}
-                                    onPress={() => saveShowNames(i, !profile.buttons[i].showName)}>
-                                    {profile.buttons[i].showName ?
-                                        <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR }} /> :
-                                        <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR }} />
-                                    }
-                                    <Text allowFontScaling={false} >{translate("ShowName")}</Text>
-                                </TouchableOpacity>
-                            </View>
-
-                        </View>
-                    })
+                    ))
                 }
             </View>
             {textInEdit.find(t => t) && <Spacer h={keyboardHeight} />}
         </ScrollView >
     </View>
+}
+
+function ButtonSettings({ index, revision, profileButton, isBusy,
+    onOpenLoadButtons, onSaveButton, onSetImageUrl, onSetColorPickerOpen, onSetShowNames,
+    onEditName,
+    onImageSearchOpen, isLast, isScreenNarrow }: {
+        index: 0 | 1 | 2 | 3,
+        revision: number;
+        profileButton: Button;
+        isBusy: boolean;
+        onOpenLoadButtons: () => void;
+        onSaveButton: () => void;
+        onSetImageUrl: (url: string) => void;
+        onSetColorPickerOpen: () => void;
+        onImageSearchOpen: () => void;
+        onSetShowNames: (show: boolean) => void;
+        onEditName: () => void;
+        isLast: boolean;
+        isScreenNarrow: boolean;
+    }) {
+
+
+    return <View style={[{
+        direction: isRTL() ? "rtl" : "ltr",
+        width: "100%",
+        //height: 160,
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        borderBottomColor: "lightgray",
+        borderBottomWidth: isLast ? 0 : 2,
+        paddingBottom: 15,
+        paddingTop: 15,
+    }, isScreenNarrow && { flexDirection: "column", alignItems: "flex-start" }]}>
+        {/* Buttons */}
+        <View style={{ flexDirection: "column" }}>
+            {/* Top Row */}
+            <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "flex-start", height: 60 }}>
+                <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", marginEnd: 15 }}
+                    onPress={() => onSetShowNames(!profileButton.showName)}>
+                    {profileButton.showName ?
+                        <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR }} /> :
+                        <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR }} />
+                    }
+                    <Text allowFontScaling={false}style={{ fontSize: 20}} >{translate("ShowName")}</Text>
+                </TouchableOpacity>
+
+                {isBusy && <ActivityIndicator size="large" color="#0000ff" />}
+                <IconButton text={translate("Load")} onPress={() => onOpenLoadButtons()} />
+                <IconButton text={translate("Save")} onPress={() => onSaveButton()} />
+            </View>
+            {/* Bottom Row */}
+            <View style={{ flexDirection: "row", alignItems: "center", height: 60 }}>
+                <IconMCI name="palette-outline" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => {
+                    onSetColorPickerOpen()
+                }} />
+                <Spacer w={20} />
+                <IconMCI name="image-outline" style={{ fontSize: 31, color: BTN_COLOR }} onPress={() => {
+                    SelectFromGallery().then((url) => {
+                        if (url !== "") {
+                            onSetImageUrl(url);
+                        }
+                    })
+                }} />
+                <Spacer w={20} />
+
+                <TouchableOpacity onPress={() => onSetImageUrl("")}>
+                    {removeIcon}
+                </TouchableOpacity>
+                <Spacer w={20} />
+                <IconMCI name="image-search-outline" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => {
+                    onImageSearchOpen();
+                }} />
+                <Spacer w={20} />
+                <View style={styles.verticalSeperator} />
+                <Spacer w={20} />
+                <RecordButton name={index + ""} backgroundColor={"gray"}
+                    size={60} height={60} revision={revision} />
+            </View>
+
+        </View>
+
+        {/* Preview */}
+        <View>
+            <View style={{ flexWrap: "nowrap", overflow: "visible", width: 150 }}>
+                <MainButton
+                    name={profileButton.name}
+                    showName={false}
+                    fontSize={20}
+                    width={80}
+                    raisedLevel={3}
+                    color={profileButton.color}
+                    imageUrl={profileButton.imageUrl}
+                    appBackground={BACKGROUND.LIGHT}
+                    showProgress={false}
+                    recName={"" + index}
+                />
+                <Spacer h={25} />
+            </View>
+            <View style={{ position: "absolute", flexDirection: "row", bottom: 0, [isRTL() ? "left" : "right"]: 0, height: 25, justifyContent: "flex-end" }}>
+                <Text style={{ fontSize: 20, color: profileButton.showName ? "black" : "gray", paddingEnd: profileButton.name.length > 7 ? 0 : 27 }}>
+                    {profileButton.name.length > 0 ? profileButton.name : translate("NoButtonName")}
+                </Text>
+                <IconMI name="edit" size={25} onPress={onEditName} />
+            </View>
+        </View>
+
+    </View >
+
 }
 
 
@@ -614,9 +690,22 @@ const styles = StyleSheet.create({
     },
     settingTitleText: {
         fontSize: 35,
-
     },
-
+    verticalSeperator: {
+        width: 2,
+        height: "80%",
+        backgroundColor: "lightgray",
+    },
+    sectionTitle: {
+        fontSize: 20,
+        fontWeight: "bold",
+        color: "#0D3D63",
+    },
+    horizontalSeperator: {
+        height: 2,
+        width: "80%",
+        backgroundColor: "lightgray",
+    },
     settingButtonHost: {
         position: "absolute",
         right: 25,
@@ -647,42 +736,22 @@ const styles = StyleSheet.create({
         padding: 20,
         flexDirection: "column",
         alignItems: "center",
-        //justifyContent: "space-between",
         borderRadius: 45,
         marginTop: 15,
         marginHorizontal: 40,
-        //backgroundColor: "green",
-        height: "60%"
-    },
-    button: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        width: "100%",
-        //margin: 10,
-        borderBottomColor: '#E6E6E6',
-        marginBottom: 10,
+        height: "auto"
     },
     buttonRight: {
         justifyContent: "space-between",
 
     },
-
     numberSelector: {
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
         height: "100%"
     },
-    circle: {
-        height: 20,
-        width: 20,
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: '#ACACAC',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
+
     checkedCircle: {
         width: 14,
         height: 14,

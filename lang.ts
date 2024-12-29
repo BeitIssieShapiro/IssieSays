@@ -28,6 +28,7 @@ var strings: any = {
         "BtnSearch": "חפש",
         "Vibrate": "רטט",
         "ProfileName": "פרופיל",
+        "NoButtonName": "ללא שם",
         "SelectProfileTitle": "פרופילים שמורים",
         "SelectButtonTitle": "כפתורים שמורים",
         "ProfileNoName": "אין פרופיל פעיל",
@@ -42,6 +43,7 @@ var strings: any = {
         "Save": "שמירה",
         "Close": "סגירה",
         "Browse": "עיון",
+        "Load": "טעינה...",
         "Create": "יצירה",
         "Rename": "ערוך שם",
         "Delete": "מחיקה",
@@ -74,6 +76,7 @@ var strings: any = {
         "SelectProfileTitle": "Saved Profiles",
         "SelectButtonTitle": "Saved Buttons",
         "ProfileName": "Profile",
+        "NoButtonName": "No Name",
         "NoItemsFound": "Empty",
         "SetProfileName": "Save Profile As",
         "RenameProfile": "Rename Profile",
@@ -92,6 +95,7 @@ var strings: any = {
         "ButtonSaveFailed": "Failed to save the button",
         "Close": "Close",
         "Browse": "Browse",
+        "Load": "Load...",
         "Create": "Create",
         "Rename": "Rename",
         "Delete": "Delete",
@@ -106,6 +110,8 @@ var strings: any = {
         "ButtonTitle": "زر {1}",
         "Settings": "الإعدادات",
         "About": "حول",
+        "Load": "جارِ التحميل...",
+        "NoButtonName": "بدون اسم",
         "BackgroundColor": "لون الخلفية",
         "Buttons": "الأزرار",
         "EnterSearchHere": "أدخل كلمات البحث",
@@ -176,7 +182,7 @@ function findMissing() {
     console.log(missing);
 
 }
-//findMissing();
+findMissing();
 
 
 const currStrings = strings[deviceLanguage];

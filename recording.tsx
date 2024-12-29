@@ -5,10 +5,11 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import * as RNFS from 'react-native-fs';
 import { TouchableOpacity, View, Text } from "react-native";
 import { AudioWaveForm } from "./audio-progress";
-import { BTN_BACK_COLOR, audioRecorderPlayer } from "./App";
+import { audioRecorderPlayer } from "./App";
 import { PlayBackType } from "react-native-audio-recorder-player";
 import { isRTL } from "./lang";
 import { getRecordingFileName } from "./profile";
+export const BTN_BACK_COLOR = "#C8572A";
 
 
 
@@ -122,7 +123,7 @@ export function RecordButton({ name, backgroundColor, size, height, revision }:
     };
 
     return <View style={{ flexDirection: "column", width: size * 4, height }}>
-        <View style={{ flexDirection: isRTL() ? "row" : "row-reverse", justifyContent: "flex-start", alignItems: "center" }}>
+        <View style={{ flexDirection: "row", justifyContent: "flex-start", alignItems: "center" }}>
             <TouchableOpacity style={{
 
                 width: size,
@@ -159,7 +160,7 @@ export function RecordButton({ name, backgroundColor, size, height, revision }:
 
             </TouchableOpacity>
 
-            <TouchableOpacity style={[{
+            {/* <TouchableOpacity style={[{
 
                 width: size / 2,
                 height: size / 2,
@@ -214,7 +215,7 @@ export function RecordButton({ name, backgroundColor, size, height, revision }:
                     size={size / 4}
                     style={{ marginLeft: 6, marginRight: 3 }}
                 />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             <View style={{ flexDirection: "column", height: 70, width: size * 2 }}>
                 {recording && <AudioWaveForm width={size * 2} height={40} infiniteProgress={recordProgress} color={BTN_BACK_COLOR} baseColor={"lightgray"} />}
                 {recording && <Text allowFontScaling={false} style={{ fontSize: 16, width: size * 2, height: 30, textAlign: "center" }}>{state.recordTime?.substring(0, 5) || ""}</Text>}

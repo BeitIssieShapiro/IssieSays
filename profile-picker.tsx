@@ -7,10 +7,10 @@ import Icon from 'react-native-vector-icons/AntDesign';
 import { IconButton } from "./uielements";
 
 
-function Seperator() {
+function Seperator({width}:{width:string}) {
     return <View
         style={{
-            width: "100%",
+            width,
             marginTop: 4,
             borderBottomColor: 'gray',
             borderBottomWidth: 1,
@@ -48,20 +48,20 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
             folder == Folders.Profiles ?
                 translate("SelectProfileTitle") : translate("SelectButtonTitle")
         }</Text>
-        <Seperator />
+        <Seperator width="90%"/>
         <View style={styles.closeButton}>
             <Icon name="close" size={45} onPress={onClose} />
         </View>
         {!profiles || profiles.length == 0 ?
-            <Text allowFontScaling={false}>{translate("NoItemsFound")}</Text> :
+            <Text allowFontScaling={false} style={{ fontSize: 25, margin: 25 }}>{translate("NoItemsFound")}</Text> :
             <ScrollView style={styles.listHost}>
                 {profiles.map(pName => (
                     <Fragment key={pName}>
-                        <View style={{ 
-                            flexDirection: isRTL() ? "row-reverse" : "row", 
-                            width: "90%", 
-                            justifyContent:"space-between",
-                            }}>
+                        <View style={{
+                            flexDirection: isRTL() ? "row-reverse" : "row",
+                            width: "90%",
+                            justifyContent: "space-between",
+                        }}>
                             <View style={styles.listItem} key={pName} >
                                 <Text
                                     allowFontScaling={false}
@@ -78,7 +78,7 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                                 {onEdit && <IconButton icon="edit" text={translate("Rename")} onPress={() => onEdit(pName, () => setRevision(prev => prev + 1))} />}
                             </View>
                         </View>
-                        <Seperator />
+                        <Seperator  width="100%"/>
                     </Fragment>
 
                 ))}
@@ -97,7 +97,8 @@ const styles = StyleSheet.create({
     pickerView: {
         flexDirection: 'column',
         position: 'absolute',
-        backgroundColor: '#EBEBEB',
+        //backgroundColor: '#EBEBEB',
+        backgroundColor: "white",
         zIndex: 99999,
         left: 0,
         borderColor: 'gray',
@@ -107,11 +108,15 @@ const styles = StyleSheet.create({
         borderTopRightRadius: 30,
         paddingTop: 2,
         alignItems: 'center',
+        shadowColor: 'black',
+        shadowOffset: { width: 0, height: -3 },
+        shadowOpacity: 0.35,
+        shadowRadius: 3.84,
     },
     listItem: {
         paddingLeft: "10%",
         paddingRight: "10%",
-        flex:1,
+        flex: 1,
     },
     listHost: {
         padding: 20,

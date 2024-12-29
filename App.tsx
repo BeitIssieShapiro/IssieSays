@@ -18,7 +18,7 @@ import {
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import AwesomeButton from "react-native-really-awesome-button";
 import { AudioWaveForm } from './audio-progress';
-import { RectView, Spacer } from './uielements';
+import { MainButton, RectView, Spacer } from './uielements';
 import { BACKGROUND, BUTTONS, BUTTONS_COLOR, BUTTONS_IMAGE_URLS, BUTTONS_NAMES, BUTTONS_SHOW_NAMES, SettingsButton, SettingsPage } from './settings';
 import { About } from './about';
 import { playRecording } from './recording';
@@ -29,21 +29,21 @@ import { readCurrentProfile } from './profile';
 
 
 const toastConfig = {
- 
-  success: (props:any) => (
+
+  success: (props: any) => (
     <BaseToast
       {...props}
-      style={{width:"80%"}}
+      style={{ width: "80%" }}
     />
   ),
   /*
     Overwrite 'error' type,
     by modifying the existing `ErrorToast` component
   */
-  error: (props:any) => (
+  error: (props: any) => (
     <ErrorToast
       {...props}
-      style={{width:"80%"}}
+      style={{ width: "80%" }}
     />
   )
 };
@@ -134,7 +134,7 @@ function App(): React.JSX.Element {
           onClose={() => setShowSettings(false)}
         />
       </SafeAreaView >
-      <Toast position='bottom' bottomOffset={30} config={toastConfig}/>
+      <Toast position='bottom' bottomOffset={30} config={toastConfig} />
     </>
   }
 
@@ -162,56 +162,19 @@ function App(): React.JSX.Element {
       <RectView buttonWidth={bottonWidth} width={windowSize.width} height={windowSize.height} isLandscape={isLandscape()}>
 
         {Array.from(Array(p.buttons.length).keys()).map((i: any) => (
-          <View key={i}>
-            <View style={{
-              backgroundColor: p.buttons[i].color,
-              width: bottonWidth * 1.3,
-              height: bottonWidth * 1.3,
-              padding: bottonWidth * .15,
-              // marginTop: isLandscape() ? "15%" : "40%",
-              borderRadius: bottonWidth * 1.3 / 2,
-            }}>
-              <AwesomeButton
-                borderColor={p.buttons[i].color}
-                borderWidth={3}
-                backgroundColor={increaseColor(p.buttons[i].color, 15)}
-                backgroundDarker={p.buttons[i].color}
-                raiseLevel={10}
-                width={bottonWidth}
-                height={bottonWidth}
-                borderRadius={bottonWidth / 2}
-                onPress={() => onStartPlay(i)}
-                animatedPlaceholder={false}
-              >
-                {p.buttons[i].imageUrl?.length > 0 ? <View
-                  style={{
-                    justifyContent: "center", alignItems: "center",
-                    width: bottonWidth * 5 / 6,
-                    height: bottonWidth * 5 / 6,
-                    backgroundColor: "white",
-                    borderRadius: bottonWidth * 5 / 12,
-                  }} >
-                  <Image source={{ uri: p.buttons[i].imageUrl}}
-                    style={{
-                      borderRadius: bottonWidth * (5 / 12),
-                      height: bottonWidth * (5 / 6), width: bottonWidth * (5 / 6),
-                      transform: [{ scale: 0.9 }]
-                    }} />
-                </View> :
-                  " "}
-
-              </AwesomeButton>
-            </View>
-
-            <View style={{ height: 30 }}>{p.buttons[i].showName == true && <Text allowFontScaling={false} style={{
-              fontSize: 27, textAlign: "center",
-              color: mainBackgroundColor == BACKGROUND.LIGHT ? "black" : "white"
-            }}>{p.buttons[i].name}</Text>}</View>
-
-            {playing === i ? <AudioWaveForm width={bottonWidth} height={50} progress={duration && curr && curr / duration || 0} color={BTN_FOR_COLOR} baseColor={"lightgray"} /> :
-              <Spacer h={50} />}
-
-          </View>
+          <MainButton
+            key={i}
+            name={p.buttons[i].name}
+            fontSize={27}
+            showName={p.buttons[i].showName}
+            width={bottonWidth}
+            raisedLevel={10}
+            color={p.buttons[i].color}
+            imageUrl={p.buttons[i].imageUrl}
+            appBackground={mainBackgroundColor}
+            showProgress={true}
+            recName={i+""}
+          />
         ))
         }
 

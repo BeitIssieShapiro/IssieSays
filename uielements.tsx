@@ -1,10 +1,20 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome';
 import IconAnt from 'react-native-vector-icons/AntDesign';
+import IconMI from 'react-native-vector-icons/MaterialIcons';
 
-import { isRTL } from "./lang";
+import AwesomeButton from "react-native-really-awesome-button";
+
+import { isRTL, translate } from "./lang";
+import { increaseColor } from "./color-picker";
+import { BACKGROUND } from "./settings";
+import { AudioWaveForm } from "./audio-progress";
+import { useCallback, useState } from "react";
+import { audioRecorderPlayer } from "./App";
+import { playRecording } from "./recording";
 
 export const BTN_COLOR = "#6E6E6E";
+const BTN_FOR_COLOR = "#CD6438";
 
 export function Spacer({ h, w, bc }: { h?: Number, w?: Number, bc?: string }) {
     return <View style={{ height: h, width: w, backgroundColor: bc }} />
@@ -79,7 +89,117 @@ export function RectView({ children, width, height, buttonWidth, isLandscape }: 
 
 }
 
+export function MainButton({ name, showName, width, fontSize, raisedLevel, color, imageUrl, appBackground,
+    showProgress, recName
+}: {
+    width: number;
+    raisedLevel: number;
+    fontSize: number;
+    color: string;
+    name: string;
+    showName: boolean;
+    imageUrl?: string;
+    appBackground: string;
+    showProgress: boolean;
+    recName: string;
+}) {
+    const [playing, setPlaying] = useState<string | undefined>(undefined);
+    const [playingInProgress, setPlayingInProgress] = useState(false);
+    const [currDuration, setCurrDuration] = useState(0.0);
+    const [duration, setDuration] = useState(0.0);
 
+
+    const onStartPlay = useCallback(async () => {
+        if (playingInProgress) return;
+
+        const success = await playRecording(recName, (e) => {
+            setCurrDuration(e.currentPosition);
+            setDuration(e.duration);
+            const newState = {
+                currentPositionSec: e.currentPosition,
+                currentDurationSec: e.duration,
+                playTime: audioRecorderPlayer.mmssss(Math.floor(e.currentPosition)),
+                duration: audioRecorderPlayer.mmssss(Math.floor(e.duration)),
+            }
+            if (newState.playTime == newState.duration) {
+                setPlaying(undefined);
+                setPlayingInProgress(false)
+            }
+            //setState(newState);
+            console.log(newState)
+            return;
+        })
+        if (success) {
+            setPlaying(recName);
+            setPlayingInProgress(true)
+        }
+
+
+    }, [playing, playingInProgress, recName]);
+
+
+    return (
+        <View style={{ alignItems: "center", justifyContent: "center" }}>
+            <View style={{
+                backgroundColor: color,
+                width: width * 1.3,
+                height: width * 1.3,
+                padding: width * .15,
+                // marginTop: isLandscape() ? "15%" : "40%",
+                borderRadius: width * 1.3 / 2,
+            }}>
+                <AwesomeButton
+                    borderColor={color}
+                    borderWidth={3}
+                    backgroundColor={increaseColor(color, 15)}
+                    backgroundDarker={color}
+                    raiseLevel={raisedLevel}
+                    width={width}
+                    height={width}
+                    borderRadius={width / 2}
+                    onPress={onStartPlay}
+                    animatedPlaceholder={false}
+                    paddingHorizontal={0}
+                >
+                    {imageUrl && imageUrl.length > 0 ? <View
+                        style={{
+                            justifyContent: "center", alignItems: "center",
+                            width: width * 5 / 6,
+                            height: width * 5 / 6,
+                            backgroundColor: "white",
+                            borderRadius: width * 5 / 12,
+                        }}
+                    >
+                        <Image source={{ uri: imageUrl }}
+                            style={{
+                                borderRadius: width * (5 / 12),
+                                height: width * (5 / 6), width: width * (5 / 6),
+                                transform: [{ scale: 0.9 }]
+                            }} />
+                    </View> :
+                        " "}
+
+                </AwesomeButton>
+            </View>
+
+            {/* <View style={{ height: fontSize * 1.1, flexDirection: "row", alignItems: "center", justifyContent: "center" }}> */}
+            {showName &&
+                <Text allowFontScaling={false} style={{
+                    fontSize,
+                    textAlign: "center",
+                    color: appBackground == BACKGROUND.LIGHT ? "black" : "white"
+                }}>{name}</Text>
+            }
+            {/* </View> */}
+
+
+            {showProgress && (playing ? <AudioWaveForm width={width} height={50} progress={duration && currDuration && currDuration / duration || 0} color={BTN_FOR_COLOR} baseColor={"lightgray"} /> :
+                <Spacer h={50} />)}
+
+        </View>
+
+    )
+}
 
 
 export function isTooWhite(color: string) {
@@ -95,11 +215,11 @@ export function isTooWhite(color: string) {
     }
     return false;
 }
-export function IconButton({ icon, onPress, text }: { icon: string, text: string, onPress: () => void }) {
+export function IconButton({ icon, onPress, text }: { icon?: string, text: string, onPress: () => void }) {
 
-    return <TouchableOpacity style={[styles.iconButton, { flexDirection: isRTL() ? "row" : "row-reverse" }]} onPress={onPress} >
-        <Text allowFontScaling={false} style={{ fontSize: 22, marginInlineStart: 5, marginInlineEnd:5 }}>{text}</Text>
-        <IconAnt name={icon} style={{ fontSize: 30, color: BTN_COLOR }} />
+    return <TouchableOpacity style={[styles.iconButton, { flexDirection: isRTL() ? "row" : "row-reverse", justifyContent: "center" }]} onPress={onPress} >
+        <Text allowFontScaling={false} style={{ fontSize: 22, marginInlineStart: 5, marginInlineEnd: 5 }}>{text}</Text>
+        {icon && <IconAnt name={icon} style={{ fontSize: 30, color: BTN_COLOR }} />}
     </TouchableOpacity>
 }
 
@@ -107,15 +227,15 @@ export function IconButton({ icon, onPress, text }: { icon: string, text: string
 const styles = StyleSheet.create({
 
     iconButton: {
-        
+
         marginInlineEnd: 10,
-        maxHeight:39,
+        maxHeight: 39,
+        minWidth: 80,
         alignItems: "center",
-        justifyContent: "flex-end",
         borderColor: "gray",
         borderStyle: "solid",
         borderWidth: 1,
-        padding: 4,
-        borderRadius: 10,
+        padding: 2,
+        borderRadius: 20,
     }
 });
