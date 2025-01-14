@@ -6,6 +6,7 @@ import Button from 'react-native-really-awesome-button';
 import { Settings } from './setting-storage';
 import { Platform, Settings as RNSettings } from 'react-native'
 import { MMKV } from 'react-native-mmkv';
+import { ensureAndroidCompatible, joinPaths } from './utils';
 
 export const enum Folders {
     Profiles = "profiles",
@@ -30,8 +31,8 @@ export interface Profile {
     buttons: Button[]
 }
 
-export const getRecordingFileName = (recName: string | number) => {
-    return RNFS.DocumentDirectoryPath + "/" + recName + ".mp4";
+export const getRecordingFileName = (recName: string | number, forceFilePrefix?:boolean) => {
+    return ensureAndroidCompatible(joinPaths(RNFS.DocumentDirectoryPath , recName + ".mp4"), forceFilePrefix);
 }
 
 export let storage: MMKV;
@@ -50,8 +51,8 @@ export async function Init() {
         console.log("Initializing MMKV failed", e);
     }
 
-    const profilesPath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles);
-    const buttonsPath = path.join(RNFS.DocumentDirectoryPath, Folders.Buttons);
+    const profilesPath = ensureAndroidCompatible(path.join(RNFS.DocumentDirectoryPath, Folders.Profiles));
+    const buttonsPath = ensureAndroidCompatible(path.join(RNFS.DocumentDirectoryPath, Folders.Buttons));
     let exists = await RNFS.exists(profilesPath);
     if (!exists) {
         await RNFS.mkdir(profilesPath);
@@ -123,7 +124,7 @@ export async function SaveProfile(name: string, p: Profile, overwrite = false) {
     // todo verify name is a valid file name
     const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
     if (!overwrite) {
-        if (await RNFS.exists(profilePath)) {
+        if (await RNFS.exists(ensureAndroidCompatible(profilePath))) {
             throw new AlreadyExists(name);
         }
     }
@@ -143,31 +144,31 @@ export async function SaveProfile(name: string, p: Profile, overwrite = false) {
     }
 
     const str = JSON.stringify(profileToSave);
-    return RNFS.writeFile(profilePath, str, 'utf8');
+    return RNFS.writeFile(ensureAndroidCompatible(profilePath), str, 'utf8');
 }
 
 export async function renameProfile(previousName: string, newName: string, overwrite = false) {
     const prevPath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${previousName}.json`);
     const newPath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${newName}.json`);
-    if (!overwrite && await RNFS.exists(newPath)) {
+    if (!overwrite && await RNFS.exists(ensureAndroidCompatible(newPath))) {
         throw new AlreadyExists(newName);
     }
 
     // only rename if file existed
-    if (await RNFS.exists(prevPath)) {
-        await RNFS.moveFile(prevPath, newPath);
+    if (await RNFS.exists(ensureAndroidCompatible(prevPath))) {
+        await RNFS.moveFile(ensureAndroidCompatible(prevPath), ensureAndroidCompatible(newPath));
     }
 }
 
 export async function deleteProfile(name:string) {
     const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
-    return RNFS.unlink(profilePath);
+    return RNFS.unlink(ensureAndroidCompatible(profilePath));
 }
 
 export async function verifyProfileNameFree(name: string) {
     console.log("verifyProfileNameFree", name)
     const p = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
-    if (await RNFS.exists(p)) {
+    if (await RNFS.exists(ensureAndroidCompatible(p))) {
         throw new AlreadyExists(name);
     }
     console.log("verifyProfileNameFree OK")
@@ -190,7 +191,7 @@ export async function LoadProfile(name: string) {
     }
 
     const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
-    const fileContents = await RNFS.readFile(profilePath, 'utf8');
+    const fileContents = await RNFS.readFile(ensureAndroidCompatible(profilePath), 'utf8');
     const p: Profile = JSON.parse(fileContents);
 
     return writeCurrentProfile(p, name);
@@ -283,7 +284,7 @@ export function readCurrentProfile(): Profile {
 export async function loadButton(name: string, index: number) {
     console.log("Load Button", name, index)
     const buttonPath = path.join(RNFS.DocumentDirectoryPath, Folders.Buttons, `${name}.json`);
-    const fileContents = await RNFS.readFile(buttonPath, 'utf8');
+    const fileContents = await RNFS.readFile(ensureAndroidCompatible(buttonPath), 'utf8');
     const newBtn: Button = JSON.parse(fileContents);
 
     const p = readCurrentProfile();
@@ -302,7 +303,7 @@ export async function saveButton(name: string, index: number, overwrite = false)
 
     const buttonPath = path.join(RNFS.DocumentDirectoryPath, Folders.Buttons, `${name}.json`);
     console.log("save button", name)
-    if (!overwrite && await RNFS.exists(buttonPath)) {
+    if (!overwrite && await RNFS.exists(ensureAndroidCompatible(buttonPath))) {
         throw new AlreadyExists(name);
     }
 
@@ -319,20 +320,20 @@ export async function saveButton(name: string, index: number, overwrite = false)
         }
 
         const str = JSON.stringify(btnToSave);
-        return RNFS.writeFile(buttonPath, str, 'utf8');
+        return RNFS.writeFile(ensureAndroidCompatible(buttonPath), str, 'utf8');
     }
 }
 
 export async function deleteButton(name: string) {
     const buttonPath = path.join(RNFS.DocumentDirectoryPath, Folders.Buttons, `${name}.json`);
-    return RNFS.unlink(buttonPath);
+    return RNFS.unlink(ensureAndroidCompatible(buttonPath));
 }
 
 
 export async function ListElements(folder: Folders): Promise<string[]> {
     const listPath = path.join(RNFS.DocumentDirectoryPath, folder);
     console.log("List Path", folder);
-    const dir = await RNFS.readDir(listPath);
+    const dir = await RNFS.readDir(ensureAndroidCompatible(listPath));
 
     const list = [];
     for (const elem of dir) {

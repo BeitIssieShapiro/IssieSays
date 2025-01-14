@@ -9,7 +9,7 @@ import { BTN_COLOR, IconButton, MainButton, Spacer } from "./uielements";
 import { useEffect, useRef, useState } from "react";
 import { RecordButton } from "./recording";
 import { MyColorPicker } from "./color-picker";
-import { fTranslate, isRight2Left, isRTL, translate } from "./lang";
+import { fTranslate, isRTL, translate } from "./lang";
 import { deleteFile, SearchImage, SelectFromGallery } from "./search-image";
 import { AnimatedButton } from "./animatedButton";
 import { ProfilePicker } from "./profile-picker";
@@ -469,16 +469,18 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             }}
             isScreenNarrow={isScreenNarrow}
         />
-
-        <ScrollView style={styles.settingHost}
-            ref={scrollViewRef} >
-
+        <View style={styles.settingTitleHost}>
             <View style={styles.settingTitle}>
                 <Text allowFontScaling={false} style={styles.settingTitleText}>{translate("Settings")}</Text>
             </View>
             <View style={styles.closeButtonHost}>
                 <Icon name="close" size={45} color={BTN_COLOR} onPress={() => onClose()} />
             </View>
+        </View>
+        <ScrollView style={styles.settingHost}
+            ref={scrollViewRef} >
+
+
             <TouchableOpacity style={[styles.section, marginHorizontal, dirStyle]} onPress={() => onAbout()}>
                 <Icon name="infocirlceo" color={BTN_COLOR} size={35} />
                 <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("About")}</Text>
@@ -602,7 +604,7 @@ function ButtonSettings({ index, revision, profileButton, isBusy,
                         <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR }} /> :
                         <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR }} />
                     }
-                    <Text allowFontScaling={false}style={{ fontSize: 20}} >{translate("ShowName")}</Text>
+                    <Text allowFontScaling={false} style={{ fontSize: 20 }} >{translate("ShowName")}</Text>
                 </TouchableOpacity>
 
                 {isBusy && <ActivityIndicator size="large" color="#0000ff" />}
@@ -634,16 +636,16 @@ function ButtonSettings({ index, revision, profileButton, isBusy,
                 <Spacer w={20} />
                 <View style={styles.verticalSeperator} />
                 <Spacer w={20} />
-                <RecordButton name={index + ""} backgroundColor={"gray"}
-                    size={60} height={60} revision={revision} />
+                <RecordButton name={index + ""} backgroundColor={"#013D76"}
+                    size={40} height={60} revision={revision} />
             </View>
 
         </View>
 
         {/* Preview */}
         <View>
-            <View style={{ flexWrap: "nowrap", overflow: "visible", width: 150 }}>
-                <MainButton
+            <View style={{ flexWrap: "nowrap", overflow: "visible", width: 140 }}>
+                {/* <MainButton
                     name={profileButton.name}
                     showName={false}
                     fontSize={20}
@@ -654,7 +656,15 @@ function ButtonSettings({ index, revision, profileButton, isBusy,
                     appBackground={BACKGROUND.LIGHT}
                     showProgress={false}
                     recName={"" + index}
-                />
+                /> */}
+                <View style={[styles.buttonPreview, { borderColor: profileButton.color }]} >
+                    {profileButton.imageUrl?.length > 0 && <Image source={{ uri: profileButton.imageUrl }}
+                        style={{
+                            borderRadius: 80 * (5 / 12),
+                            height: 80 * (5 / 6), width: 80 * (5 / 6),
+                            transform: [{ scale: 0.9 }]
+                        }} />}
+                </View>
                 <Spacer h={25} />
             </View>
             <View style={{ position: "absolute", flexDirection: "row", bottom: 0, [isRTL() ? "left" : "right"]: 0, height: 25, justifyContent: "flex-end" }}>
@@ -674,6 +684,11 @@ const styles = StyleSheet.create({
     settingHost: {
         width: "100%",
         flex: 1,
+        backgroundColor: "#F5F5F5",
+        position: "relative"
+    },
+    settingTitleHost: {
+        width: "100%",
         backgroundColor: "#F5F5F5",
         position: "relative"
     },
@@ -768,11 +783,11 @@ const styles = StyleSheet.create({
     buttonPreview: {
         alignItems: "center",
         justifyContent: "center",
-        height: 64,
-        width: 64,
-        borderWidth: 5,
+        height: 80,
+        width: 80,
+        borderWidth: 2,
         borderStyle: "solid",
-        borderRadius: 32,
+        borderRadius: 40,
         marginBottom: 5,
     },
     buttonImage: {

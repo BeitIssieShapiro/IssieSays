@@ -11,7 +11,7 @@ import { BACKGROUND } from "./settings";
 import { AudioWaveForm } from "./audio-progress";
 import { useCallback, useState } from "react";
 import { audioRecorderPlayer } from "./App";
-import { playRecording } from "./recording";
+import { playRecording, stopPlayback } from "./recording";
 
 export const BTN_COLOR = "#6E6E6E";
 const BTN_FOR_COLOR = "#CD6438";
@@ -121,9 +121,11 @@ export function MainButton({ name, showName, width, fontSize, raisedLevel, color
                 playTime: audioRecorderPlayer.mmssss(Math.floor(e.currentPosition)),
                 duration: audioRecorderPlayer.mmssss(Math.floor(e.duration)),
             }
-            if (newState.playTime == newState.duration) {
+            if (e.currentPosition >= e.duration - 100) {
+                // We’re within 100ms of the end → treat it as “finished”.
                 setPlaying(undefined);
-                setPlayingInProgress(false)
+                setPlayingInProgress(false);
+                stopPlayback();
             }
             //setState(newState);
             console.log(newState)
@@ -230,6 +232,7 @@ const styles = StyleSheet.create({
 
         marginInlineEnd: 10,
         maxHeight: 39,
+        minHeight: 39,
         minWidth: 80,
         alignItems: "center",
         borderColor: "gray",

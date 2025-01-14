@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-//import { AnimatedButton } from "./animatedButton";
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 import * as RNFS from 'react-native-fs';
@@ -7,14 +6,18 @@ import { TouchableOpacity, View, Text } from "react-native";
 import { AudioWaveForm } from "./audio-progress";
 import { audioRecorderPlayer } from "./App";
 import { PlayBackType } from "react-native-audio-recorder-player";
-import { isRTL } from "./lang";
 import { getRecordingFileName } from "./profile";
+import { ensureAndroidCompatible } from "./utils";
 export const BTN_BACK_COLOR = "#C8572A";
 
+export async function stopPlayback() {
+    await audioRecorderPlayer.stopPlayer();
+    audioRecorderPlayer.removePlayBackListener();
+}
 
 
 export async function playRecording(name: string, playbackListner?: (playbackMeta: PlayBackType) => void): Promise<boolean> {
-    const filePath = "file://" + getRecordingFileName(name);
+    const filePath = getRecordingFileName(name, true);
     return RNFS.exists(filePath).then(exists => {
         if (exists) {
             console.log('Start playing ', name, filePath);
@@ -32,7 +35,7 @@ export async function playRecording(name: string, playbackListner?: (playbackMet
 }
 
 export function RecordButton({ name, backgroundColor, size, height, revision }:
-    { name: string, backgroundColor: string, size: number, height: number, revision:number }) {
+    { name: string, backgroundColor: string, size: number, height: number, revision: number }) {
     const [recordProgress, setRecordProgress] = useState(0);
     const [_, setRecordProgressInterval] = useState<NodeJS.Timeout | undefined>(undefined);
     const [state, setState] = useState<any>({ recordSecs: 0 })
@@ -110,12 +113,13 @@ export function RecordButton({ name, backgroundColor, size, height, revision }:
             tmpFileName = result.substring(7);
             console.log("Saving...", getFileName())
             // Save to the Document path
-            RNFS.moveFile(tmpFileName, getFileName())
+            RNFS.moveFile(ensureAndroidCompatible(tmpFileName), getFileName())
                 .then(() => {
-                    setLog(prev => prev + "\nresult: " + result)
+                    console.log("Saving done", getFileName())
+                    //setLog(prev => prev + "\nresult: " + result)
                     setRecordingExists(true);
                 })
-                .catch((err) => setLog(prev => prev + "\nerr move file: " + err));
+                .catch((err) => console.log("err save", err));
         } else {
             setLog(prev => prev + "\nnot a file: " + result);
         }
@@ -147,7 +151,7 @@ export function RecordButton({ name, backgroundColor, size, height, revision }:
                     }
 
                     onStopRecord().then((res) => {
-                       
+
                     });
                 }}
 
@@ -155,22 +159,22 @@ export function RecordButton({ name, backgroundColor, size, height, revision }:
                 <Icon
                     name={recording ? "stop" : "microphone"}
                     color={"white"}
-                    size={size / 2}
+                    size={size * 3 / 5}
                 />
 
             </TouchableOpacity>
 
-            {/* <TouchableOpacity style={[{
-
-                width: size / 2,
-                height: size / 2,
-                borderRadius: size / 4,
+            <TouchableOpacity style={{
+                width: size,
+                height: size,
+                borderRadius: size / 2,
                 alignItems: "center",
                 backgroundColor: recordingExists ? backgroundColor : "lightgray",
                 justifyContent: "center",
                 marginLeft: size / 2,
+                marginRight: size / 2,
                 marginBottom: 10
-            }, isRTL() ? { marginLeft: size / 2 } : { marginRight: size / 2 }]}
+            }}
                 onPress={async () => {
                     if (recording) {
                         return;
@@ -196,9 +200,13 @@ export function RecordButton({ name, backgroundColor, size, height, revision }:
                             playTime: audioRecorderPlayer.mmssss(Math.floor(e.currentPosition)),
                             duration: audioRecorderPlayer.mmssss(Math.floor(e.duration)),
                         }
-                        if (newState.playTime == newState.duration) {
+
+                        if (e.currentPosition >= e.duration - 100) {
+                            // We’re within 100ms of the end → treat it as “finished”.
                             setPlaying(false);
+                            stopPlayback();
                         }
+
                         //setState(newState);
                         console.log("play progress", newState)
                         return;
@@ -212,11 +220,11 @@ export function RecordButton({ name, backgroundColor, size, height, revision }:
                 <Icon
                     name={!playing ? "play" : "pause"}
                     color={"white"}
-                    size={size / 4}
+                    size={size * 2 / 5}
                     style={{ marginLeft: 6, marginRight: 3 }}
                 />
-            </TouchableOpacity> */}
-            <View style={{ flexDirection: "column", height: 70, width: size * 2 }}>
+            </TouchableOpacity>
+            <View style={{ flexDirection: "column", height: 70, width: size * 2, marginTop: 5 }}>
                 {recording && <AudioWaveForm width={size * 2} height={40} infiniteProgress={recordProgress} color={BTN_BACK_COLOR} baseColor={"lightgray"} />}
                 {recording && <Text allowFontScaling={false} style={{ fontSize: 16, width: size * 2, height: 30, textAlign: "center" }}>{state.recordTime?.substring(0, 5) || ""}</Text>}
             </View>

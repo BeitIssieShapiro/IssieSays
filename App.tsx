@@ -1,32 +1,17 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Alert,
-  Button,
-  SafeAreaView,
-  ScrollView,
+  SafeAreaView, 
   StyleSheet,
-  Text,
-  TouchableOpacity,
-  useColorScheme,
-  View,
-  Image
 } from 'react-native';
 
-
-
-//import Icon from 'react-native-vector-icons/FontAwesome';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
-import AwesomeButton from "react-native-really-awesome-button";
-import { AudioWaveForm } from './audio-progress';
-import { MainButton, RectView, Spacer } from './uielements';
-import { BACKGROUND, BUTTONS, BUTTONS_COLOR, BUTTONS_IMAGE_URLS, BUTTONS_NAMES, BUTTONS_SHOW_NAMES, SettingsButton, SettingsPage } from './settings';
+import { MainButton, RectView } from './uielements';
+import { BACKGROUND, SettingsButton, SettingsPage } from './settings';
 import { About } from './about';
 import { playRecording } from './recording';
-import { increaseColor } from './color-picker';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import { Settings } from './setting-storage';
 import { readCurrentProfile } from './profile';
-
 
 const toastConfig = {
 
@@ -51,7 +36,6 @@ const toastConfig = {
 
 export const audioRecorderPlayer = new AudioRecorderPlayer();
 
-const BTN_FOR_COLOR = "#CD6438";
 export const BTN_BACK_COLOR = "#C8572A";
 
 
@@ -60,8 +44,8 @@ function App(): React.JSX.Element {
   const [windowSize, setWindowSize] = useState({ width: 500, height: 500 });
   const [playing, setPlaying] = useState<string | undefined>(undefined);
   const [playingInProgress, setPlayingInProgress] = useState(false);
-  const [curr, setCurr] = useState(0.0);
-  const [duration, setDuration] = useState(0.0);
+  // const [curr, setCurr] = useState(0.0);
+  // const [duration, setDuration] = useState(0.0);
   // const [profile, setProfile] = useState<Profile>(readDefaultProfile());
 
   const [log, setLog] = useState("");
@@ -70,7 +54,7 @@ function App(): React.JSX.Element {
 
   const isLandscape = () => windowSize.height < windowSize.width;
 
-  console.log("Setting is ", Settings.getNumber(BUTTONS.name, 8))
+  //console.log("Setting is ", Settings.getNumber(BUTTONS.name, 8))
 
 
   const mainBackgroundColor = Settings.getString(BACKGROUND.name, BACKGROUND.LIGHT);
@@ -104,6 +88,7 @@ function App(): React.JSX.Element {
 
   }, [playing, playingInProgress]);
   const backgroundStyle = {
+    direction:"ltr",
     width: "100%",
     height: "100%",
     // margin: 20,
@@ -156,7 +141,8 @@ function App(): React.JSX.Element {
     <SafeAreaView style={backgroundStyle} onLayout={(e) => {
       let wz = e.nativeEvent.layout;
       setWindowSize(wz);
-    }}>
+    }}
+    >
       <SettingsButton onPress={() => setShowSettings(true)} backgroundColor={mainBackgroundColor} />
 
       <RectView buttonWidth={bottonWidth} width={windowSize.width} height={windowSize.height} isLandscape={isLandscape()}>
@@ -189,24 +175,5 @@ function App(): React.JSX.Element {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
 
 export default App;
