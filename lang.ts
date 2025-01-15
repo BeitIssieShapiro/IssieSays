@@ -1,6 +1,6 @@
 import * as RNLocalize from 'react-native-localize';
 const locales = RNLocalize.getLocales();
-const bestLanguage = "he"//locales[0]?.languageTag || 'en';
+const bestLanguage = locales[0]?.languageTag || 'en';
 const deviceLanguageRaw = bestLanguage;
 
 const supportedLanguages = ['he', 'en', 'ar'];
