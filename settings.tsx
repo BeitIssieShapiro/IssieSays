@@ -71,6 +71,13 @@ export const BACKGROUND = {
     LIGHT: "white"
 }
 
+export const INSTALL = {
+    fresh: 'fresh-install',
+    firstTimeSettings: 'firstTimeSettings'
+}
+
+
+
 const disabledColor = "gray";
 
 export function SettingsButton({ onPress, backgroundColor }: { onPress: () => void, backgroundColor: string }) {

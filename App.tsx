@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   SafeAreaView, 
-  StyleSheet,
+  
 } from 'react-native';
 
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
@@ -11,7 +11,7 @@ import { About } from './about';
 import { playRecording } from './recording';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import { Settings } from './setting-storage';
-import { readCurrentProfile } from './profile';
+import {  readCurrentProfile } from './profile';
 
 const toastConfig = {
 
@@ -40,6 +40,7 @@ export const BTN_BACK_COLOR = "#C8572A";
 
 
 
+
 function App(): React.JSX.Element {
   const [windowSize, setWindowSize] = useState({ width: 500, height: 500 });
   const [playing, setPlaying] = useState<string | undefined>(undefined);
@@ -58,6 +59,8 @@ function App(): React.JSX.Element {
 
 
   const mainBackgroundColor = Settings.getString(BACKGROUND.name, BACKGROUND.LIGHT);
+  
+
   const onStartPlay = useCallback(async (recName: string) => {
     if (playingInProgress) return;
 

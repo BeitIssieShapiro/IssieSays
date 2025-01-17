@@ -1,12 +1,13 @@
 import * as RNFS from 'react-native-fs';
 import * as path from 'path';
-import { BACKGROUND, BUTTONS, BUTTONS_COLOR, BUTTONS_IMAGE_URLS, BUTTONS_NAMES, BUTTONS_SHOW_NAMES, CURRENT_PROFILE, LAST_COLORS } from './settings';
+import { BACKGROUND, BUTTONS, BUTTONS_COLOR, BUTTONS_IMAGE_URLS, BUTTONS_NAMES, BUTTONS_SHOW_NAMES, CURRENT_PROFILE, INSTALL, LAST_COLORS } from './settings';
 import { BTN_BACK_COLOR } from './App';
 import Button from 'react-native-really-awesome-button';
 import { Settings } from './setting-storage';
 import { Platform, Settings as RNSettings } from 'react-native'
 import { MMKV } from 'react-native-mmkv';
 import { ensureAndroidCompatible, joinPaths } from './utils';
+import { gCurrentLang } from './lang';
 
 export const enum Folders {
     Profiles = "profiles",
@@ -114,6 +115,12 @@ export async function Init() {
         }
     }
 
+    const isFreshInstall = Settings.getBoolean(INSTALL.fresh, true);
+    if (isFreshInstall) {
+        const filePath = getRecordingFileName(0);
+        RNFS.copyFileAssets(`welcome_${gCurrentLang}.mp4`, filePath)
+        Settings.set(INSTALL.fresh, false);
+    }
 }
 
 

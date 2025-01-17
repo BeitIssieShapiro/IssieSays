@@ -60,6 +60,7 @@ var strings: any = {
         "DeleteProfileWarnning": "האם למחוק את הפרופיל ׳{1}׳?",
         "DeleteButtonTitle": "מחיקת כפתור שמור",
         "DeleteButtonWarnning": "האם למחוק את הכפתור השמור ׳{1}׳",
+        "OpenIn": "יפתח בעוד {1}",
     },
     "en": {
         "ButtonTitle": "Button {1}",
@@ -104,7 +105,8 @@ var strings: any = {
         "DeleteCurrentProfileWarnning": "Deleting Profile '{1}'. Are you sure? Note: it is the current profile",
         "DeleteProfileWarnning": "Deleting Profile '{1}'. Are you sure?",
         "DeleteButtonTitle": "Delete Saved Button",
-        "DeleteButtonWarnning": "Deleting Saved Button '{1}'. Are you sure"
+        "DeleteButtonWarnning": "Deleting Saved Button '{1}'. Are you sure",
+        "OpenIn": "Open In {1}",
     },
     "ar": {
         "ButtonTitle": "زر {1}",
@@ -149,7 +151,8 @@ var strings: any = {
         "DeleteCurrentProfileWarnning": "حذف الملف الشخصي '{1}'. هل أنت متأكد؟ ملاحظة: هذا هو الملف الشخصي الحالي",
         "DeleteProfileWarnning": "حذف الملف الشخصي '{1}'. هل أنت متأكد؟",
         "DeleteButtonTitle": "حذف الزر المحفوظ",
-        "DeleteButtonWarnning": "حذف الزر المحفوظ '{1}'. هل أنت متأكد؟"
+        "DeleteButtonWarnning": "حذف الزر المحفوظ '{1}'. هل أنت متأكد؟",
+        "OpenIn": "Open In {1}",
     }
 };
 

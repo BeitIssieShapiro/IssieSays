@@ -7,7 +7,9 @@ import { AudioWaveForm } from "./audio-progress";
 import { audioRecorderPlayer } from "./App";
 import { PlayBackType } from "react-native-audio-recorder-player";
 import { getRecordingFileName } from "./profile";
-import { ensureAndroidCompatible } from "./utils";
+import { ensureAndroidCompatible, requestAudioPermission } from "./utils";
+import { Settings } from "./setting-storage";
+import {  INSTALL } from "./settings";
 export const BTN_BACK_COLOR = "#C8572A";
 
 export async function stopPlayback() {
@@ -18,7 +20,7 @@ export async function stopPlayback() {
 
 export async function playRecording(name: string, playbackListner?: (playbackMeta: PlayBackType) => void): Promise<boolean> {
     const filePath = getRecordingFileName(name, true);
-    return RNFS.exists(filePath).then(exists => {
+    return RNFS.exists(filePath).then(async (exists) => {
         if (exists) {
             console.log('Start playing ', name, filePath);
             audioRecorderPlayer.startPlayer(filePath);
@@ -28,7 +30,7 @@ export async function playRecording(name: string, playbackListner?: (playbackMet
 
             return true;
         } else {
-            console.log("No recording exists", name)
+            console.log("No recording exists", name);
             return false;
         }
     });
@@ -60,32 +62,35 @@ export function RecordButton({ name, backgroundColor, size, height, revision }:
 
     const onStartRecord = async () => {
         console.log("about to start recording")
-        const result = await audioRecorderPlayer.startRecorder()
-            .then(() => {
-                setLog(prev => prev + "\nRecording started...");
-                console.log("Recording started...");
-            })
-            .catch((err) => {
-                setLog(prev => prev + "\nerr start record" + err)
-                console.log("Failed to start recording...", err);
-            });
-        RNFS.unlink(getFileName()).then(() => setRecordingExists(false))
-            .catch((e) => {/*ignore*/ });
+        if (await requestAudioPermission()) {
+            await audioRecorderPlayer.startRecorder()
+                .then(() => {
+                    setLog(prev => prev + "\nRecording started...");
+                    console.log("Recording started...");
+                    Settings.set(INSTALL.firstTimeSettings, false);
+                })
+                .catch((err) => {
+                    setLog(prev => prev + "\nerr start record" + err)
+                    console.log("Failed to start recording...", err);
+                });
+            RNFS.unlink(getFileName()).then(() => setRecordingExists(false))
+                .catch((e) => {/*ignore*/ });
 
-        setRecordProgressInterval((prevInterval) => {
-            if (prevInterval) clearInterval(prevInterval);
-            return setInterval(() => setRecordProgress(old => old + 1), 100);
-        });
-        audioRecorderPlayer.addRecordBackListener((e) => {
-            setState({
-                recordSecs: e.currentPosition,
-                recordTime: audioRecorderPlayer.mmssss(
-                    Math.floor(e.currentPosition),
-                ),
+            setRecordProgressInterval((prevInterval) => {
+                if (prevInterval) clearInterval(prevInterval);
+                return setInterval(() => setRecordProgress(old => old + 1), 100);
             });
-            return;
-        });
-        setRecording(true);
+            audioRecorderPlayer.addRecordBackListener((e) => {
+                setState({
+                    recordSecs: e.currentPosition,
+                    recordTime: audioRecorderPlayer.mmssss(
+                        Math.floor(e.currentPosition),
+                    ),
+                });
+                return;
+            });
+            setRecording(true);
+        }
     };
 
     const onStopRecord = async () => {

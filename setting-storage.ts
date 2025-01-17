@@ -21,7 +21,7 @@ export class Settings {
     static getBoolean(key: string, defValue: boolean): boolean {
         if (!storage) throw "Missing Storage"
         const val = storage.getBoolean(key);
-        if (!val) return defValue;
+        if (val == undefined || val == null) return defValue;
         return val;
     }
 
