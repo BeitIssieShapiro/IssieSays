@@ -1,23 +1,18 @@
 import { Keyboard, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, ActivityIndicator } from "react-native";
-import Icon from 'react-native-vector-icons/AntDesign';
-import IconIonic from 'react-native-vector-icons/Ionicons';
-
-import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
-import IconMI from 'react-native-vector-icons/MaterialIcons';
-
 import { BTN_COLOR, IconButton, MainButton, Spacer } from "./uielements";
 import { useEffect, useRef, useState } from "react";
 import { RecordButton } from "./recording";
 import { MyColorPicker } from "./color-picker";
 import { fTranslate, isRTL, translate } from "./lang";
-import { deleteFile, SearchImage, SelectFromGallery } from "./search-image";
-import { AnimatedButton } from "./animatedButton";
+import { SearchImage, SelectFromGallery } from "./search-image";
 import { ProfilePicker } from "./profile-picker";
 import { AlreadyExists, Button, deleteButton, deleteProfile, Folders, InvalidCharachters, InvalidFileName, isValidFilename, loadButton, LoadProfile, Profile, readCurrentProfile, renameProfile, saveButton, SaveProfile, verifyProfileNameFree } from "./profile";
 import Toast from 'react-native-toast-message';
 import { Settings } from './setting-storage';
 import prompt from 'react-native-prompt-android';
 import Svg, { G, Path, Polygon } from "react-native-svg";
+import { MyCloseIcon, MyIcon } from "./common/icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const removeIcon = <Svg width="23px" height="23px" viewBox="0 0 27 27">
     <G id="Design-IssieSays" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -83,7 +78,10 @@ const disabledColor = "gray";
 export function SettingsButton({ onPress, backgroundColor }: { onPress: () => void, backgroundColor: string }) {
     const color = (backgroundColor === BACKGROUND.DARK ? BACKGROUND.LIGHT : BACKGROUND.DARK);
     return <View style={styles.settingButtonHost}>
-        <AnimatedButton size={45} color={color} icon="setting" onPress={onPress} duration={__DEV__ ? 100 : 3000} />
+        <MyIcon
+            info={{ type: "AntDesign", name: "setting", color, size: 45 }}
+            onPress={onPress} />
+        {/* <AnimatedButton size={45} color={color} icon="setting" onPress={onPress} duration={__DEV__ ? 100 : 3000} /> */}
     </View>
 }
 
@@ -416,7 +414,10 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         afterDelete();
     }
 
-    return <View style={{ position: "relative", width: windowSize.width, height: windowSize.height - 50 }}>
+    const safeAreaInsets = useSafeAreaInsets();
+
+
+    return <View style={{ top:safeAreaInsets.top, position: "relative", width: windowSize.width, height: windowSize.height - 50 - safeAreaInsets.top }}>
         <ProfilePicker
 
             folder={Folders.Profiles}
@@ -481,7 +482,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                 <Text allowFontScaling={false} style={styles.settingTitleText}>{translate("Settings")}</Text>
             </View>
             <View style={styles.closeButtonHost}>
-                <Icon name="close" size={45} color={BTN_COLOR} onPress={() => onClose()} />
+                <MyCloseIcon onClose={onClose} />
             </View>
         </View>
         <ScrollView style={styles.settingHost}
@@ -489,19 +490,23 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
 
             <TouchableOpacity style={[styles.section, marginHorizontal, dirStyle]} onPress={() => onAbout()}>
-                <Icon name="infocirlceo" color={BTN_COLOR} size={35} />
+                <MyIcon info={{ type: "AntDesign", name: "info-circle", size: 30 }} />
                 <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("About")}</Text>
             </TouchableOpacity>
             <View style={[styles.section, marginHorizontal, dirStyle]} >
                 <View style={{ flexDirection: "row" }}>
                     <TouchableOpacity style={{ width: 25, height: 25, backgroundColor: BACKGROUND.DARK, borderRadius: 12.5 }}
                         onPress={() => changeBackgroundColor(BACKGROUND.DARK)}>
-                        {backgroundColor === BACKGROUND.DARK && <Icon name="check" color="white" size={25} />}
+                        {backgroundColor === BACKGROUND.DARK &&
+                            <MyIcon info={{ type: "AntDesign", name: "check", size: 25 }} />
+                        }
                     </TouchableOpacity>
                     <Spacer w={25} />
                     <TouchableOpacity style={{ width: 25, height: 25, backgroundColor: BACKGROUND.LIGHT, borderColor: "black", borderWidth: 1, borderRadius: 12.5 }}
                         onPress={() => changeBackgroundColor(BACKGROUND.LIGHT)}>
-                        {backgroundColor === BACKGROUND.LIGHT && <Icon name="check" color="black" size={25} />}
+                        {backgroundColor === BACKGROUND.LIGHT &&
+                            <MyIcon info={{ type: "AntDesign", name: "check", color: "black", size: 25 }} />
+                        }
                     </TouchableOpacity>
                     <Spacer w={5} />
                 </View>
@@ -534,9 +539,12 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
             <View style={[styles.section, marginHorizontal, dirStyle]} >
                 <View style={styles.numberSelector}>
-                    <Icon name="minuscircleo" color={profile.buttons.length == 1 ? "lightgray" : BTN_COLOR} size={35} onPress={() => changeNumOfButton(-1)} />
+                    <MyIcon info={{ type: "AntDesign", name: "minus-circle", color: profile.buttons.length == 1 ? "lightgray" : BTN_COLOR, size: 35 }}
+                        onPress={() => changeNumOfButton(-1)} />
+
                     <Text allowFontScaling={false} style={{ fontSize: 30, marginHorizontal: 10 }}>{profile.buttons.length}</Text>
-                    <Icon name="pluscircleo" color={profile.buttons.length == 4 ? "lightgray" : BTN_COLOR} size={35} onPress={() => changeNumOfButton(1)} />
+                    <MyIcon info={{ type: "AntDesign", name: "plus-circle", color: profile.buttons.length == 4 ? "lightgray" : BTN_COLOR, size: 35 }}
+                        onPress={() => changeNumOfButton(1)} />
                 </View>
                 <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("Buttons")}</Text>
             </View>
@@ -608,8 +616,10 @@ function ButtonSettings({ index, revision, profileButton, isBusy,
                 <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", marginEnd: 15 }}
                     onPress={() => onSetShowNames(!profileButton.showName)}>
                     {profileButton.showName ?
-                        <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR }} /> :
-                        <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR }} />
+                        <MyIcon info={{ type: "MDI", name: "checkbox-outline", size: 30 }} />
+                        :
+                        <MyIcon info={{ type: "MDI", name: "checkbox-blank-outline", size: 30 }} />
+
                     }
                     <Text allowFontScaling={false} style={{ fontSize: 20 }} >{translate("ShowName")}</Text>
                 </TouchableOpacity>
@@ -620,26 +630,26 @@ function ButtonSettings({ index, revision, profileButton, isBusy,
             </View>
             {/* Bottom Row */}
             <View style={{ flexDirection: "row", alignItems: "center", height: 60 }}>
-                <IconMCI name="palette-outline" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => {
-                    onSetColorPickerOpen()
-                }} />
+                <MyIcon info={{ type: "MDI", name: "palette-outline", size: 30 }} onPress={() => onSetColorPickerOpen()} />
                 <Spacer w={20} />
-                <IconMCI name="image-outline" style={{ fontSize: 31, color: BTN_COLOR }} onPress={() => {
+                <MyIcon info={{ type: "MDI", name: "image-outline", size: 30 }} onPress={() => {
                     SelectFromGallery().then((url) => {
                         if (url !== "") {
                             onSetImageUrl(url);
                         }
                     })
                 }} />
+
                 <Spacer w={20} />
 
                 <TouchableOpacity onPress={() => onSetImageUrl("")}>
                     {removeIcon}
                 </TouchableOpacity>
                 <Spacer w={20} />
-                <IconMCI name="image-search-outline" style={{ fontSize: 30, color: BTN_COLOR }} onPress={() => {
+                <MyIcon info={{ type: "MDI", name: "image-search-outline", size: 30 }} onPress={() => {
                     onImageSearchOpen();
                 }} />
+
                 <Spacer w={20} />
                 <View style={styles.verticalSeperator} />
                 <Spacer w={20} />
@@ -678,14 +688,12 @@ function ButtonSettings({ index, revision, profileButton, isBusy,
                 <Text style={{ fontSize: 20, color: profileButton.showName ? "black" : "gray", paddingEnd: profileButton.name.length > 7 ? 0 : 27 }}>
                     {profileButton.name.length > 0 ? profileButton.name : translate("NoButtonName")}
                 </Text>
-                <IconMI name="edit" size={25} onPress={onEditName} />
+                <MyIcon info={{ type: "MI", name: "edit", size: 25 }} onPress={onEditName} />
             </View>
         </View>
 
     </View >
-
 }
-
 
 const styles = StyleSheet.create({
     settingHost: {
@@ -723,11 +731,6 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         color: "#0D3D63",
     },
-    horizontalSeperator: {
-        height: 2,
-        width: "80%",
-        backgroundColor: "lightgray",
-    },
     settingButtonHost: {
         position: "absolute",
         right: 25,
@@ -763,10 +766,6 @@ const styles = StyleSheet.create({
         marginHorizontal: 40,
         height: "auto"
     },
-    buttonRight: {
-        justifyContent: "space-between",
-
-    },
     numberSelector: {
         display: "flex",
         flexDirection: "row",
@@ -774,19 +773,6 @@ const styles = StyleSheet.create({
         height: "100%"
     },
 
-    checkedCircle: {
-        width: 14,
-        height: 14,
-        borderRadius: 7,
-        backgroundColor: '#979797',
-    },
-    SettingsHeaderText: {
-        fontSize: 27,
-        color: "blue",
-        fontWeight: 'bold',
-        paddingRight: 10,
-        paddingLeft: 10
-    },
     buttonPreview: {
         alignItems: "center",
         justifyContent: "center",
@@ -796,10 +782,5 @@ const styles = StyleSheet.create({
         borderStyle: "solid",
         borderRadius: 40,
         marginBottom: 5,
-    },
-    buttonImage: {
-        height: 45,
-        width: 45,
-        margin: 7,
-    },
+    }
 })

@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import Icon from 'react-native-vector-icons/AntDesign';
+//import Icon from 'react-native-vector-icons/AntDesign';
 import ColorPicker from 'react-native-wheel-color-picker'
 import { Settings } from './setting-storage';
 
 import { LAST_COLORS } from "./settings";
 import FadeInView from "./FadeInView";
 import { ColorButton } from "./uielements";
+import { MyCloseIcon } from "./common/icons";
 export const availableColorPicker = [
     '#000000', '#fee100', '#20ad57', '#5db7dd', '#2958af', '#d62796', '#65309c', '#da3242'
 ]
@@ -46,7 +47,7 @@ export function MyColorPicker(props: any) {
         while (lastC.length > LAST_COLORS.max) {
             lastC.pop()
         }
-        Settings.setArray(LAST_COLORS.name, lastC )
+        Settings.setArray(LAST_COLORS.name, lastC)
         setLastColors(lastC)
 
     }, [composedColor, lastColors]);
@@ -62,7 +63,7 @@ export function MyColorPicker(props: any) {
         style={[styles.pickerView, { bottom: 0, left: 0, right: 0 }]}>
         <Text allowFontScaling={false} style={{ fontSize: 25, margin: 25 }}>{props.title}</Text>
         <View style={styles.closeButton}>
-            <Icon name="close" size={45} onPress={() => props.onClose()} />
+            <MyCloseIcon onClose={props.onClose}/>
         </View>
 
 

@@ -3,12 +3,14 @@ import { Folders, ListElements } from "./profile";
 import FadeInView from "./FadeInView";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { isRTL, translate } from "./lang";
-import Icon from 'react-native-vector-icons/AntDesign';
+//import Icon from 'react-native-vector-icons/AntDesign';
 import { IconButton } from "./uielements";
+import { MyCloseIcon } from "./common/icons";
 
 
-function Seperator({width}:{width:string}) {
+function Seperator({ width }: { width: string }) {
     return <View
+        // @ts-ignore
         style={{
             width,
             marginTop: 4,
@@ -48,9 +50,10 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
             folder == Folders.Profiles ?
                 translate("SelectProfileTitle") : translate("SelectButtonTitle")
         }</Text>
-        <Seperator width="90%"/>
+        <Seperator width="90%" />
         <View style={styles.closeButton}>
-            <Icon name="close" size={45} onPress={onClose} />
+            <MyCloseIcon onClose={onClose}/>
+            
         </View>
         {!profiles || profiles.length == 0 ?
             <Text allowFontScaling={false} style={{ fontSize: 25, margin: 25 }}>{translate("NoItemsFound")}</Text> :
@@ -78,7 +81,7 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                                 {onEdit && <IconButton icon="edit" text={translate("Rename")} onPress={() => onEdit(pName, () => setRevision(prev => prev + 1))} />}
                             </View>
                         </View>
-                        <Seperator  width="100%"/>
+                        <Seperator width="100%" />
                     </Fragment>
 
                 ))}

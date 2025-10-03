@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
-import Icon from 'react-native-vector-icons/FontAwesome';
 
 import * as RNFS from 'react-native-fs';
 import { TouchableOpacity, View, Text } from "react-native";
 import { AudioWaveForm } from "./audio-progress";
 import { audioRecorderPlayer } from "./App";
-import { PlayBackType } from "react-native-audio-recorder-player";
+import { PlayBackType } from "react-native-nitro-sound";
 import { getRecordingFileName } from "./profile";
 import { ensureAndroidCompatible, requestAudioPermission } from "./utils";
 import { Settings } from "./setting-storage";
-import {  INSTALL } from "./settings";
+import { INSTALL } from "./settings";
+import { MyIcon } from "./common/icons";
 export const BTN_BACK_COLOR = "#C8572A";
 
 export async function stopPlayback() {
@@ -161,12 +161,7 @@ export function RecordButton({ name, backgroundColor, size, height, revision }:
                 }}
 
             >
-                <Icon
-                    name={recording ? "stop" : "microphone"}
-                    color={"white"}
-                    size={size * 3 / 5}
-                />
-
+                <MyIcon info={{ type: "MDI", name: recording ? "stop" : "microphone", color: "white", size: size * 3 / 5 }} />
             </TouchableOpacity>
 
             <TouchableOpacity style={{
@@ -221,13 +216,8 @@ export function RecordButton({ name, backgroundColor, size, height, revision }:
                     }
                 }}
             >
-
-                <Icon
-                    name={!playing ? "play" : "pause"}
-                    color={"white"}
-                    size={size * 2 / 5}
-                    style={{ marginLeft: 6, marginRight: 3 }}
-                />
+                <MyIcon info={{ type: "MDI", name: !playing ? "play" : "pause", color: "white", size: size * 2 / 5 }} />
+                {/**todo: style={{ marginLeft: 6, marginRight: 3 }} */}
             </TouchableOpacity>
             <View style={{ flexDirection: "column", height: 70, width: size * 2, marginTop: 5 }}>
                 {recording && <AudioWaveForm width={size * 2} height={40} infiniteProgress={recordProgress} color={BTN_BACK_COLOR} baseColor={"lightgray"} />}

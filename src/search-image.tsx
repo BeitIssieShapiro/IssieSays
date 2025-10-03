@@ -1,14 +1,11 @@
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import ImageLibrary from "./image-library"
-import FadeInView from "./FadeInView";
 import { isRight2Left, translate } from "./lang";
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, Modal, View } from "react-native";
 import { TextInput } from "react-native";
-import Icon from 'react-native-vector-icons/AntDesign';
-import { TabView, SceneMap, TabBar } from "react-native-tab-view";
-import { Spacer } from "./uielements";
 import { launchImageLibrary } from "react-native-image-picker";
 import RNFS from 'react-native-fs';
+import { MyCloseIcon } from "./common/icons";
 
 
 // export function SelectImage({ onClose, onSelectImage, open, height }: any) {
@@ -145,7 +142,7 @@ export function SearchImage({ onSelectImage, open, height, onClose, isScreenNarr
         <View style={{ position: "absolute", backgroundColor: "grey", opacity: 0.1, width: "100%", height: "100%" }} />
         <View style={[styles.pickerView, { margin: isScreenNarrow ? 10 : 80 }]}>
             <View style={styles.closeButton}>
-                <Icon name="close" size={45} onPress={onClose} />
+                <MyCloseIcon onClose={onClose}/>
             </View>
             <Text style={styles.pickerTitle}>{translate("SearchImageTitle")}</Text>
             <View style={styles.searchRoot}>

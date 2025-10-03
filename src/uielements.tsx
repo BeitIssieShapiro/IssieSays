@@ -1,7 +1,4 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Icon from 'react-native-vector-icons/FontAwesome';
-import IconAnt from 'react-native-vector-icons/AntDesign';
-import IconMI from 'react-native-vector-icons/MaterialIcons';
 
 import AwesomeButton from "react-native-really-awesome-button";
 
@@ -12,11 +9,13 @@ import { AudioWaveForm } from "./audio-progress";
 import { useCallback, useState } from "react";
 import { audioRecorderPlayer } from "./App";
 import { playRecording, stopPlayback } from "./recording";
+import { MyIcon } from "./common/icons";
 
 export const BTN_COLOR = "#6E6E6E";
 const BTN_FOR_COLOR = "#CD6438";
 
 export function Spacer({ h, w, bc }: { h?: Number, w?: Number, bc?: string }) {
+    {/* @ts-ignore*/}
     return <View style={{ height: h, width: w, backgroundColor: bc }} />
 }
 
@@ -42,7 +41,8 @@ export function ColorButton({ callback, color, size, icon, index, iconColor }: a
         }, borderStyle]}
         >
 
-            {icon && <Icon color={iconColor || "white"} size={size / 2} name={icon}></Icon>}
+            {icon && <MyIcon info={{ type: "AntDesign", color: iconColor || "white", size: size / 2, name: icon }} />}
+
         </View>
     </TouchableOpacity>
 }
@@ -221,7 +221,7 @@ export function IconButton({ icon, onPress, text }: { icon?: string, text: strin
 
     return <TouchableOpacity style={[styles.iconButton, { flexDirection: isRTL() ? "row" : "row-reverse", justifyContent: "center" }]} onPress={onPress} >
         <Text allowFontScaling={false} style={{ fontSize: 22, marginInlineStart: 5, marginInlineEnd: 5 }}>{text}</Text>
-        {icon && <IconAnt name={icon} style={{ fontSize: 30, color: BTN_COLOR }} />}
+        {icon && <MyIcon info={{ type: "AntDesign", size: 30, name: icon }} />}
     </TouchableOpacity>
 }
 

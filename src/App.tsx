@@ -1,17 +1,20 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  SafeAreaView, 
-  
-} from 'react-native';
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 
-import AudioRecorderPlayer from 'react-native-audio-recorder-player';
+import { NewAppScreen } from '@react-native/new-app-screen';
+
+import { createSound, Sound } from 'react-native-nitro-sound';
 import { MainButton, RectView } from './uielements';
-import { BACKGROUND, SettingsButton, SettingsPage } from './settings';
 import { About } from './about';
 import { playRecording } from './recording';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import { Settings } from './setting-storage';
-import {  readCurrentProfile } from './profile';
+import { readCurrentProfile } from './profile';
+import { BACKGROUND, SettingsButton, SettingsPage } from './settings';
+import { View } from 'react-native';
 
 const toastConfig = {
 
@@ -34,7 +37,7 @@ const toastConfig = {
 };
 
 
-export const audioRecorderPlayer = new AudioRecorderPlayer();
+export const audioRecorderPlayer = createSound();
 
 export const BTN_BACK_COLOR = "#C8572A";
 
@@ -59,14 +62,14 @@ function App(): React.JSX.Element {
 
 
   const mainBackgroundColor = Settings.getString(BACKGROUND.name, BACKGROUND.LIGHT);
-  
+
 
   const onStartPlay = useCallback(async (recName: string) => {
     if (playingInProgress) return;
 
     const success = await playRecording(recName, (e) => {
-      setCurr(e.currentPosition);
-      setDuration(e.duration);
+      // setCurr(e.currentPosition);
+      // setDuration(e.duration);
       const newState = {
         currentPositionSec: e.currentPosition,
         currentDurationSec: e.duration,
@@ -91,7 +94,7 @@ function App(): React.JSX.Element {
 
   }, [playing, playingInProgress]);
   const backgroundStyle = {
-    direction:"ltr",
+    direction: "ltr",
     width: "100%",
     height: "100%",
     // margin: 20,
@@ -100,28 +103,31 @@ function App(): React.JSX.Element {
     backgroundColor: mainBackgroundColor
   };
 
-
   if (showAbout) {
     return <About onClose={() => setShowAbout(false)} />
   }
 
   if (showSettings) {
     return <>
-      <SafeAreaView style={backgroundStyle} onLayout={(e) => {
-        let wz = e.nativeEvent.layout;
-        setWindowSize(wz);
-      }}>
-        <SettingsPage
-          windowSize={windowSize}
-          onAbout={() => {
-            console.log("On About")
-            setShowAbout(true);
+      <SafeAreaProvider>
+        {/* @ts-ignore*/}
+        <View style={backgroundStyle} onLayout={(e) => {
+          let wz = e.nativeEvent.layout;
+          setWindowSize(wz);
+        }}>
+          <SettingsPage
+            windowSize={windowSize}
+            onAbout={() => {
+              console.log("On About")
+              setShowAbout(true);
 
-            setShowSettings(false);
-          }}
-          onClose={() => setShowSettings(false)}
-        />
-      </SafeAreaView >
+              setShowSettings(false);
+            }}
+            onClose={() => setShowSettings(false)}
+          />
+        </View >
+      </SafeAreaProvider>
+
       <Toast position='bottom' bottomOffset={30} config={toastConfig} />
     </>
   }
@@ -141,41 +147,43 @@ function App(): React.JSX.Element {
   console.log("w/h", windowSize)
 
   return (
-    <SafeAreaView style={backgroundStyle} onLayout={(e) => {
-      let wz = e.nativeEvent.layout;
-      setWindowSize(wz);
-    }}
-    >
-      <SettingsButton onPress={() => setShowSettings(true)} backgroundColor={mainBackgroundColor} />
+    <SafeAreaProvider>
+      {/* @ts-ignore*/}
+      <View style={backgroundStyle} onLayout={(e) => {
+        let wz = e.nativeEvent.layout;
+        setWindowSize(wz);
+      }}
+      >
+        <SettingsButton onPress={() => setShowSettings(true)} backgroundColor={mainBackgroundColor} />
 
-      <RectView buttonWidth={bottonWidth} width={windowSize.width} height={windowSize.height} isLandscape={isLandscape()}>
+        <RectView buttonWidth={bottonWidth} width={windowSize.width} height={windowSize.height} isLandscape={isLandscape()}>
 
-        {Array.from(Array(p.buttons.length).keys()).map((i: any) => (
-          <MainButton
-            key={i}
-            name={p.buttons[i].name}
-            fontSize={27}
-            showName={p.buttons[i].showName}
-            width={bottonWidth}
-            raisedLevel={10}
-            color={p.buttons[i].color}
-            imageUrl={p.buttons[i].imageUrl}
-            appBackground={mainBackgroundColor}
-            showProgress={true}
-            recName={i+""}
-          />
-        ))
-        }
+          {Array.from(Array(p.buttons.length).keys()).map((i: any) => (
+            <MainButton
+              key={i}
+              name={p.buttons[i].name}
+              fontSize={27}
+              showName={p.buttons[i].showName}
+              width={bottonWidth}
+              raisedLevel={10}
+              color={p.buttons[i].color}
+              imageUrl={p.buttons[i].imageUrl}
+              appBackground={mainBackgroundColor}
+              showProgress={true}
+              recName={i + ""}
+            />
+          ))
+          }
 
-      </RectView>
+        </RectView>
 
 
-      {/* <ScrollView style={{ maxHeight: 200, width: "100%" }}>
+        {/* <ScrollView style={{ maxHeight: 200, width: "100%" }}>
         <Text style={{ margin: 20, width: "100%" }}>Log:{"\n" + log}</Text>
       </ScrollView>
       <Button onPress={() => setLog("")} title="Clear" /> */}
-
-    </SafeAreaView>
+      </View>
+    </SafeAreaProvider>
   );
 }
 

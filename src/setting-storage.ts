@@ -75,7 +75,7 @@ export class Settings {
                 retValue.push(val);
             }
             return retValue;
-        } 
+        }
         return defValue;
     }
 }

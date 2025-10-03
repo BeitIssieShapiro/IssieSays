@@ -1,14 +1,13 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import Icon from 'react-native-vector-icons/AntDesign';
-
+import { MyCloseIcon } from "./common/icons";
 
 export function About({ onClose }: { onClose: () => void }) {
     return <View>
         <View style={{ position: "absolute", top: 30, right: 10 }}>
-            <Icon name="close" color='black' size={40} onPress={(e) => onClose()} />
+            <MyCloseIcon onClose={onClose}/>
         </View>
-        
-        <ScrollView style={{ margin: 30, marginTop: 50, width:"80%" }}>
+
+        <ScrollView style={{ margin: 30, marginTop: 50, width: "80%" }}>
             <Text style={styles.textHE}>IssieSays היא אפליקציה המשמשת כפלט קולי ומאפשרת הקלטה מהיר של מסר והשמעתו באמצעות לחיצה על המסך.
             </Text>
             <View style={{ height: 10 }} />
