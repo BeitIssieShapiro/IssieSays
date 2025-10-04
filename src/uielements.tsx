@@ -6,7 +6,7 @@ import { isRTL, translate } from "./lang";
 import { increaseColor } from "./color-picker";
 import { BACKGROUND } from "./settings";
 import { AudioWaveForm } from "./audio-progress";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { audioRecorderPlayer } from "./App";
 import { playRecording, stopPlayback } from "./recording";
 import { MyIcon } from "./common/icons";
@@ -15,7 +15,7 @@ export const BTN_COLOR = "#6E6E6E";
 const BTN_FOR_COLOR = "#CD6438";
 
 export function Spacer({ h, w, bc }: { h?: Number, w?: Number, bc?: string }) {
-    {/* @ts-ignore*/}
+    {/* @ts-ignore*/ }
     return <View style={{ height: h, width: w, backgroundColor: bc }} />
 }
 
@@ -90,7 +90,7 @@ export function RectView({ children, width, height, buttonWidth, isLandscape }: 
 }
 
 export function MainButton({ name, showName, width, fontSize, raisedLevel, color, imageUrl, appBackground,
-    showProgress, recName
+    showProgress, recName, onPlayComplete
 }: {
     width: number;
     raisedLevel: number;
@@ -102,19 +102,23 @@ export function MainButton({ name, showName, width, fontSize, raisedLevel, color
     appBackground: string;
     showProgress: boolean;
     recName: string;
+    onPlayComplete?: () => void
 }) {
     const [playing, setPlaying] = useState<string | undefined>(undefined);
     const [playingInProgress, setPlayingInProgress] = useState(false);
     const [currDuration, setCurrDuration] = useState(0.0);
     const [duration, setDuration] = useState(0.0);
+    const playCompleteSent = useRef<boolean>(false);
 
 
     const onStartPlay = useCallback(async () => {
         if (playingInProgress) return;
+        playCompleteSent.current = false;
 
         const success = await playRecording(recName, (e) => {
             setCurrDuration(e.currentPosition);
             setDuration(e.duration);
+
             const newState = {
                 currentPositionSec: e.currentPosition,
                 currentDurationSec: e.duration,
@@ -126,6 +130,11 @@ export function MainButton({ name, showName, width, fontSize, raisedLevel, color
                 setPlaying(undefined);
                 setPlayingInProgress(false);
                 stopPlayback();
+                if (onPlayComplete && !playCompleteSent.current) {
+                    onPlayComplete();
+                    playCompleteSent.current = true;
+                }
+
             }
             //setState(newState);
             console.log(newState)
@@ -134,9 +143,11 @@ export function MainButton({ name, showName, width, fontSize, raisedLevel, color
         if (success) {
             setPlaying(recName);
             setPlayingInProgress(true)
+        } else {
+            if (onPlayComplete) {
+                onPlayComplete();
+            }
         }
-
-
     }, [playing, playingInProgress, recName]);
 
 
@@ -217,28 +228,5 @@ export function isTooWhite(color: string) {
     }
     return false;
 }
-export function IconButton({ icon, onPress, text }: { icon?: string, text: string, onPress: () => void }) {
-
-    return <TouchableOpacity style={[styles.iconButton, { flexDirection: isRTL() ? "row" : "row-reverse", justifyContent: "center" }]} onPress={onPress} >
-        <Text allowFontScaling={false} style={{ fontSize: 22, marginInlineStart: 5, marginInlineEnd: 5 }}>{text}</Text>
-        {icon && <MyIcon info={{ type: "AntDesign", size: 30, name: icon }} />}
-    </TouchableOpacity>
-}
 
 
-const styles = StyleSheet.create({
-
-    iconButton: {
-
-        marginInlineEnd: 10,
-        maxHeight: 39,
-        minHeight: 39,
-        minWidth: 80,
-        alignItems: "center",
-        borderColor: "gray",
-        borderStyle: "solid",
-        borderWidth: 1,
-        padding: 2,
-        borderRadius: 20,
-    }
-});

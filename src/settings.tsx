@@ -1,18 +1,22 @@
 import { Keyboard, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, ActivityIndicator } from "react-native";
-import { BTN_COLOR, IconButton, MainButton, Spacer } from "./uielements";
+import { BTN_COLOR, MainButton, Spacer } from "./uielements";
 import { useEffect, useRef, useState } from "react";
 import { RecordButton } from "./recording";
 import { MyColorPicker } from "./color-picker";
 import { fTranslate, isRTL, translate } from "./lang";
 import { SearchImage, SelectFromGallery } from "./search-image";
-import { ProfilePicker } from "./profile-picker";
-import { AlreadyExists, Button, deleteButton, deleteProfile, Folders, InvalidCharachters, InvalidFileName, isValidFilename, loadButton, LoadProfile, Profile, readCurrentProfile, renameProfile, saveButton, SaveProfile, verifyProfileNameFree } from "./profile";
+import { ButtonPicker, DefaultProfileName, ProfilePicker } from "./profile-picker";
+import { AlreadyExists, Button, deleteButton, deleteProfile, Folders, InvalidCharachters, InvalidFileName, isValidFilename, loadButton, LoadProfile, Profile, readCurrentProfile, renameProfile, ReservedFileName, saveButton, SaveProfile, verifyProfileNameFree } from "./profile";
 import Toast from 'react-native-toast-message';
 import { Settings } from './setting-storage';
 import prompt from 'react-native-prompt-android';
 import Svg, { G, Path, Polygon } from "react-native-svg";
 import { MyCloseIcon, MyIcon } from "./common/icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ScreenSubTitle, ScreenTitle } from "./common/settings-elements";
+import { colors } from "./common/common-style";
+import { IconButton } from "./common/components";
+import { Checkbox } from "./common/check-box";
 
 const removeIcon = <Svg width="23px" height="23px" viewBox="0 0 27 27">
     <G id="Design-IssieSays" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -28,6 +32,9 @@ const removeIcon = <Svg width="23px" height="23px" viewBox="0 0 27 27">
 
 export const BUTTONS = {
     name: 'buttons'
+}
+export const ONE_AFTER_THE_OTHER = {
+    name: 'one_after_the_other'
 }
 
 export const CURRENT_PROFILE = {
@@ -71,19 +78,6 @@ export const INSTALL = {
     firstTimeSettings: 'firstTimeSettings'
 }
 
-
-
-const disabledColor = "gray";
-
-export function SettingsButton({ onPress, backgroundColor }: { onPress: () => void, backgroundColor: string }) {
-    const color = (backgroundColor === BACKGROUND.DARK ? BACKGROUND.LIGHT : BACKGROUND.DARK);
-    return <View style={styles.settingButtonHost}>
-        <MyIcon
-            info={{ type: "AntDesign", name: "setting", color, size: 45 }}
-            onPress={onPress} />
-        {/* <AnimatedButton size={45} color={color} icon="setting" onPress={onPress} duration={__DEV__ ? 100 : 3000} /> */}
-    </View>
-}
 
 export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => void, onClose: () => void, windowSize: { width: number, height: number } }) {
     const [revision, setRevision] = useState<number>(0);
@@ -165,6 +159,11 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         setRevision(old => old + 1);
     }
 
+    const changeOneAfterTheOther = (newVal: boolean) => {
+        Settings.set(ONE_AFTER_THE_OTHER.name, newVal);
+        setRevision(old => old + 1);
+    }
+
     const changeNumOfButton = (delta: number) => {
         const current = Settings.getNumber(BUTTONS.name, 1);
         let newVal = current + delta;
@@ -211,14 +210,6 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         })
     }
 
-    const closeProfile = async () => {
-        const currName = Settings.getString(CURRENT_PROFILE.name, "");
-        if (currName.length > 0) {
-            await LoadProfile("");
-            setTimeout(() => setRevision(prev => prev + 1), 100);
-        }
-    }
-
     const saveAsNewProfile = async () => {
         handleProfileEditName("", false, () => setRevision(prev => prev + 1))
     }
@@ -234,6 +225,10 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         console.log("doProfileSave")
         if (!isValidFilename(name)) {
             throw new InvalidFileName(name);
+        }
+
+        if (name.trim() == DefaultProfileName || name.trim() == translate(DefaultProfileName)) {
+            throw new ReservedFileName();
         }
         if (previousName == "") {
             // new profile
@@ -275,7 +270,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         }
 
         if (isCurrent) {
-            await LoadProfile("");
+            await LoadProfile(DefaultProfileName);
             setTimeout(() => setRevision(prev => prev + 1), 100);
         }
         await deleteProfile(name);
@@ -321,7 +316,10 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                                         ])
                                 } else if (err instanceof InvalidFileName) {
                                     Alert.alert(fTranslate("InvalidName", InvalidCharachters));
+                                } else if (err instanceof ReservedFileName) {
+                                    Alert.alert(translate("ReservedName"));
                                 } else {
+
                                     Toast.show({
                                         autoHide: true,
                                         type: 'error',
@@ -417,9 +415,42 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     const safeAreaInsets = useSafeAreaInsets();
 
 
-    return <View style={{ top:safeAreaInsets.top, position: "relative", width: windowSize.width, height: windowSize.height - 50 - safeAreaInsets.top }}>
+    return <View style={{ top: safeAreaInsets.top, position: "relative", width: windowSize.width, height: windowSize.height - 50 - safeAreaInsets.top }}>
         <ProfilePicker
+            folder={Folders.Profiles}
+            currentProfile={profileName}
+            open={openLoadProfile}
+            loadButton={{ name: translate("Load"), icon: "upload" }}
+            exportButton={{ name: translate("Export") }}
+            height={windowSize.height * .6}
+            onSelect={async (name) => {
+                console.log("Loading profile ", name)
+                setProfileBusy(true);
+                setOpenLoadProfile(false);
+                await LoadProfile(name).finally(() => {
+                    setProfileBusy(false)
+                    setRevision(prev => prev + 1);
+                });
+            }}
+            editButton={{ name: translate("Rename") }}
+            onCreate={() => {
+                saveAsNewProfile()
+                //setShowEditProfileName({ name: "", afterSave: () => setRevision(prev => prev + 1) })
+                setOpenLoadProfile(false);
+            }}
 
+            onEdit={(name, afterSave) => { }}
+
+            //     setShowEditProfileName({
+            //     name,
+            //     afterSave
+            // })}
+            onDelete={(name, afterDelete) => handleProfileDelete(name, afterDelete)}
+            onClose={() => setOpenLoadProfile(false)}
+            //onExport={handleExportProfile}
+            isNarrow={isScreenNarrow}
+        />
+        {/* <ProfilePicker
             folder={Folders.Profiles}
             open={openLoadProfile}
             height={windowSize.height * .6}
@@ -434,8 +465,10 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                 handleProfileEditName(name, true, onFinishEditing);
             }}
             onDelete={handleProfileDelete}
-        />
-        <ProfilePicker
+            currentProfile={profileName}
+
+        /> */}
+        <ButtonPicker
             folder={Folders.Buttons}
             open={openLoadButton > -1}
             height={windowSize.height * .6}
@@ -477,22 +510,23 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             }}
             isScreenNarrow={isScreenNarrow}
         />
-        <View style={styles.settingTitleHost}>
-            <View style={styles.settingTitle}>
-                <Text allowFontScaling={false} style={styles.settingTitleText}>{translate("Settings")}</Text>
-            </View>
-            <View style={styles.closeButtonHost}>
-                <MyCloseIcon onClose={onClose} />
-            </View>
-        </View>
+
+        <ScreenTitle title={translate("Settings")} onClose={() => onClose()} onAbout={onAbout} icon={{ name: "check-bold", type: "MDI", size: 30, color: colors.titleBlue }} />
+
+        {/* Profile Name */}
+        <ScreenSubTitle
+            titleIcon={{ name: "person-circle-outline", size: 45, color: colors.titleBlue, type: "Ionicons" }}
+            elementTitle={translate("ProfileName")} elementName={profileName == DefaultProfileName ? translate(DefaultProfileName) : profileName}
+            actionName={translate("ListProfiles")}
+            actionIcon={{ name: "list", type: "Ionicons", color: colors.titleBlue, size: 25 }}
+            onAction={() => setOpenLoadProfile(true)}
+        />
+
         <ScrollView style={styles.settingHost}
             ref={scrollViewRef} >
 
 
-            <TouchableOpacity style={[styles.section, marginHorizontal, dirStyle]} onPress={() => onAbout()}>
-                <MyIcon info={{ type: "AntDesign", name: "info-circle", size: 30 }} />
-                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("About")}</Text>
-            </TouchableOpacity>
+
             <View style={[styles.section, marginHorizontal, dirStyle]} >
                 <View style={{ flexDirection: "row" }}>
                     <TouchableOpacity style={{ width: 25, height: 25, backgroundColor: BACKGROUND.DARK, borderRadius: 12.5 }}
@@ -513,38 +547,20 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                 <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("BackgroundColor")}</Text>
             </View>
 
-            {/* Profile Name */}
-            <View style={[styles.section, marginHorizontal, isScreenNarrow ? {
-                flexDirection: "column-reverse", alignItems: "flex-start", height: 90,
-            } : dirStyle]} >
-                <View style={{ flexDirection: isRTL() ? "row-reverse" : "row" }}>
-                    {profileBusy && <ActivityIndicator color="#0000ff" size="large" />}
-                    <IconButton text={translate("Load")} onPress={() => setOpenLoadProfile(true)} />
-                    {profileName.length > 0 ?
-                        <IconButton text={translate("Close")} onPress={() => closeProfile()} /> :
-                        <IconButton text={translate("Create")} onPress={() => saveAsNewProfile()} />
-                    }
-                </View>
-                <View style={{ flexDirection: isRTL() ? "row-reverse" : "row" }}>
-                    <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("ProfileName")}:</Text>
-                    <Text allowFontScaling={false} style={{
-                        marginEnd: 10, marginStart: 10, fontSize: 20,
-                        textAlign: isRTL() ? "right" : "left",
-                        color: profileName.length == 0 ? disabledColor : "black"
-                    }}>
-                        {profileName.length > 0 ? profileName : translate("ProfileNoName")}
-                    </Text>
-                </View>
-            </View>
-
             <View style={[styles.section, marginHorizontal, dirStyle]} >
-                <View style={styles.numberSelector}>
-                    <MyIcon info={{ type: "AntDesign", name: "minus-circle", color: profile.buttons.length == 1 ? "lightgray" : BTN_COLOR, size: 35 }}
-                        onPress={() => changeNumOfButton(-1)} />
+                <View style={{ direction: isRTL() ? "rtl" : "ltr", flexDirection: "row", alignItems: "center" }} >
+                    <Checkbox size={30} caption={translate("OneAfterTheOther")} checked={profile.oneAfterTheOther}
+                        onToggle={() => changeOneAfterTheOther(!profile.oneAfterTheOther)} />
+                    <Spacer w={20} />
+                    <View style={styles.numberSelector}>
+                        <MyIcon info={{ type: "AntDesign", name: "minus-circle", color: profile.buttons.length == 1 ? "lightgray" : BTN_COLOR, size: 35 }}
+                            onPress={() => changeNumOfButton(-1)} />
 
-                    <Text allowFontScaling={false} style={{ fontSize: 30, marginHorizontal: 10 }}>{profile.buttons.length}</Text>
-                    <MyIcon info={{ type: "AntDesign", name: "plus-circle", color: profile.buttons.length == 4 ? "lightgray" : BTN_COLOR, size: 35 }}
-                        onPress={() => changeNumOfButton(1)} />
+                        <Text allowFontScaling={false} style={{ fontSize: 30, marginHorizontal: 10 }}>{profile.buttons.length}</Text>
+                        <MyIcon info={{ type: "AntDesign", name: "plus-circle", color: profile.buttons.length == 4 ? "lightgray" : BTN_COLOR, size: 35 }}
+                            onPress={() => changeNumOfButton(1)} />
+                    </View>
+
                 </View>
                 <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("Buttons")}</Text>
             </View>
@@ -574,7 +590,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             </View>
             {textInEdit.find(t => t) && <Spacer h={keyboardHeight} />}
         </ScrollView >
-    </View>
+    </View >
 }
 
 function ButtonSettings({ index, revision, profileButton, isBusy,
@@ -613,16 +629,8 @@ function ButtonSettings({ index, revision, profileButton, isBusy,
         <View style={{ flexDirection: "column" }}>
             {/* Top Row */}
             <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "flex-start", height: 60 }}>
-                <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", marginEnd: 15 }}
-                    onPress={() => onSetShowNames(!profileButton.showName)}>
-                    {profileButton.showName ?
-                        <MyIcon info={{ type: "MDI", name: "checkbox-outline", size: 30 }} />
-                        :
-                        <MyIcon info={{ type: "MDI", name: "checkbox-blank-outline", size: 30 }} />
-
-                    }
-                    <Text allowFontScaling={false} style={{ fontSize: 20 }} >{translate("ShowName")}</Text>
-                </TouchableOpacity>
+                <Checkbox size={30} caption={translate("ShowName")} checked={profileButton.showName}
+                    onToggle={() => onSetShowNames(!profileButton.showName)} />
 
                 {isBusy && <ActivityIndicator size="large" color="#0000ff" />}
                 <IconButton text={translate("Load")} onPress={() => onOpenLoadButtons()} />

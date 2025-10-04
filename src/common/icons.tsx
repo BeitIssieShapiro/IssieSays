@@ -6,9 +6,11 @@ import MIIcon from "@react-native-vector-icons/material-icons"
 
 const defaultIconColor = "#6E6E6E";
 
+export type IconType = "MDI" | "Ionicons" | "AntDesign" | "MI"
+
 export interface IconProps {
     name: string;
-    type?: "MDI" | "Ionicons" | "AntDesign" | "MI";
+    type?: IconType;
     color?: string;
     size?: number;
 }

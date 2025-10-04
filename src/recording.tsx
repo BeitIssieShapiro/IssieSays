@@ -161,7 +161,7 @@ export function RecordButton({ name, backgroundColor, size, height, revision }:
                 }}
 
             >
-                <MyIcon info={{ type: "MDI", name: recording ? "stop" : "microphone", color: "white", size: size * 3 / 5 }} />
+                <MyIcon info={{ type: "MDI", name: recording ? "stop" : "microphone", color: "white", size: size * 4 / 5 }} />
             </TouchableOpacity>
 
             <TouchableOpacity style={{
@@ -216,7 +216,7 @@ export function RecordButton({ name, backgroundColor, size, height, revision }:
                     }
                 }}
             >
-                <MyIcon info={{ type: "MDI", name: !playing ? "play" : "pause", color: "white", size: size * 2 / 5 }} />
+                <MyIcon info={{ type: "MDI", name: !playing ? "play" : "pause", color: "white", size: size * 4/5 }} />
                 {/**todo: style={{ marginLeft: 6, marginRight: 3 }} */}
             </TouchableOpacity>
             <View style={{ flexDirection: "column", height: 70, width: size * 2, marginTop: 5 }}>

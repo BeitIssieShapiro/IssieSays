@@ -1,11 +1,15 @@
 import { Fragment, useEffect, useState } from "react";
 import { Folders, ListElements } from "./profile";
 import FadeInView from "./FadeInView";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { isRTL, translate } from "./lang";
 //import Icon from 'react-native-vector-icons/AntDesign';
-import { IconButton } from "./uielements";
 import { MyCloseIcon } from "./common/icons";
+import { colors, gStyles, menuActionIcon } from "./common/common-style";
+import { RadioButton } from "./common/radio-button";
+import { IconButton } from "./common/components";
+
+export const DefaultProfileName = "DefaultProfile";
 
 
 function Seperator({ width }: { width: string }) {
@@ -20,7 +24,112 @@ function Seperator({ width }: { width: string }) {
     />
 }
 
+
+
+interface ButtonInfo {
+    name?: string;
+    icon?: string;
+    type?: "MCI" | "Ionicon";
+}
+
+
 interface ProfilePickerProps {
+    open: boolean;
+    currentProfile: string;
+    loadButton: ButtonInfo;
+    editButton?: ButtonInfo;
+    exportButton?: ButtonInfo;
+    height: number | string;
+    onClose: () => void;
+    onSelect: (item: string) => void;
+    exclude?: string;
+    folder: Folders
+    onDelete?: (name: string, afterDelete: () => void) => void;
+    onEdit?: (name: string, afterSave: () => void) => void;
+    onCreate?: () => void;
+    onExport?: (name: string) => void;
+    isNarrow?: boolean;
+}
+
+interface ProfileItem {
+    key:string;
+    name: string;
+}
+
+export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder, onDelete, onEdit, onCreate,
+    isNarrow,
+    currentProfile,
+    onExport }: ProfilePickerProps) {
+    const [list, setList] = useState<ProfileItem[]>([]);
+    const [revision, setRevision] = useState<number>(0);
+    console.log("prof Picker", currentProfile)
+    useEffect(() => {
+        if (open) {
+            ListElements(folder).then(list => {
+                setList(list.filter(l => !exclude || l != exclude).map(l=>{
+                    return {
+                        key: l,
+                        name: l == DefaultProfileName?translate(l):l,
+                    }
+                }));
+            })
+        }
+    }, [open, exclude, revision]);
+
+    const create = onCreate && <IconButton icon={{ name: "plus", color: colors.titleBlue }} onPress={() => onCreate()} text={translate("Create")} />
+    return <FadeInView height={open ? height : 0} style={[gStyles.pickerView]} onClose={onClose}>
+        <View style={[gStyles.pickerTitleHost, { direction: isRTL() ? "rtl" : "ltr" }]}>
+            <Text allowFontScaling={false} style={gStyles.pickerTitleText} >{
+                translate("SelectProfileTitle")
+            }</Text>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+                {!isNarrow && create}
+                <MyCloseIcon onClose={onClose} />
+            </View>
+        </View>
+        {isNarrow && <View style={{}} >{create}</View>}
+
+        <View style={gStyles.horizontalSeperator} />
+
+        {!list || list.length == 0 ?
+            <Text allowFontScaling={false} style={{ fontSize: 25, margin: 25 }}>{translate("NoItemsFound")}</Text> :
+            <ScrollView style={[{ direction: isRTL() ? "rtl" : "ltr" }]}>
+                {list.map(item => {
+                    return <View key={item.key} style={styles.itemHost}>
+                        <View style={[styles.itemRow, isRTL() ? { flexDirection: "row" } : { flexDirection: "row" }]}>
+                            <Pressable style={{ flex: 1, flexDirection: "row" }} onPress={() => onSelect(item.key)}>
+                                <RadioButton selected={currentProfile == item.key} />
+                                <View style={[styles.listItem, isRTL() ? { direction: "rtl" } : {}]}>
+                                    <Text
+                                        allowFontScaling={false}
+                                        numberOfLines={1}
+                                        ellipsizeMode="tail"
+                                        style={{
+                                            textAlign: (isRTL() ? "right" : "left"),
+                                            fontSize: 28, paddingLeft: 10, paddingRight: 10,
+                                            paddingTop: 10, paddingBottom: 10,
+                                        }}>{item.name}</Text>
+                                </View>
+                            </Pressable>
+                            {item.key !== DefaultProfileName &&
+                                <View style={{ flexDirection: "row-reverse", width: isNarrow ? "25%" : "40%" }}>
+                                    {onDelete && <IconButton icon={{ name: "delete", ...menuActionIcon }} onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} />}
+                                    {onEdit && <IconButton icon={{ name: "edit", ...menuActionIcon }} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
+                                    {onExport && <IconButton icon={{ name: "share-social-outline", type: "Ionicons", ...menuActionIcon }} onPress={() => onExport(item.key)} />}
+                                </View>}
+                        </View>
+                        <View style={gStyles.horizontalSeperator} />
+                    </View>
+
+                })}
+            </ScrollView>
+        }
+    </FadeInView>
+}
+
+
+
+interface ButtonPickerProps {
     open: boolean;
     height: number | string;
     onClose: () => void;
@@ -30,8 +139,7 @@ interface ProfilePickerProps {
     onDelete?: (name: string, afterDelete: () => void) => void;
     onEdit?: (name: string, afterSave: () => void) => void;
 }
-
-export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder, onDelete, onEdit }: ProfilePickerProps) {
+export function ButtonPicker({ open, height, onClose, onSelect, exclude, folder, onDelete, onEdit }: ButtonPickerProps) {
     const [profiles, setProfiles] = useState<string[]>([]);
     const [revision, setRevision] = useState<number>(0);
 
@@ -52,8 +160,8 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
         }</Text>
         <Seperator width="90%" />
         <View style={styles.closeButton}>
-            <MyCloseIcon onClose={onClose}/>
-            
+            <MyCloseIcon onClose={onClose} />
+
         </View>
         {!profiles || profiles.length == 0 ?
             <Text allowFontScaling={false} style={{ fontSize: 25, margin: 25 }}>{translate("NoItemsFound")}</Text> :
@@ -76,9 +184,9 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                                     }}>{pName}</Text>
                             </View>
                             <View style={{ flexDirection: "row" }}>
-                                <IconButton icon="upload" onPress={() => onSelect(pName)} text={translate("Load")} />
-                                {onDelete && <IconButton icon="delete" onPress={() => onDelete(pName, () => setRevision(prev => prev + 1))} text={translate("Delete")} />}
-                                {onEdit && <IconButton icon="edit" text={translate("Rename")} onPress={() => onEdit(pName, () => setRevision(prev => prev + 1))} />}
+                                <IconButton icon={{ name: "upload", ...menuActionIcon }} onPress={() => onSelect(pName)} text={translate("Load")} />
+                                {onDelete && <IconButton icon={{ name: "delete", ...menuActionIcon }} onPress={() => onDelete(pName, () => setRevision(prev => prev + 1))} text={translate("Delete")} />}
+                                {onEdit && <IconButton icon={{ name: "edit", ...menuActionIcon }} text={translate("Rename")} onPress={() => onEdit(pName, () => setRevision(prev => prev + 1))} />}
                             </View>
                         </View>
                         <Seperator width="100%" />
@@ -96,6 +204,17 @@ const styles = StyleSheet.create({
         right: 10,
         top: 10,
         zIndex: 100
+    },
+    itemHost: {
+        width: "95%",
+        justifyContent: "center",
+        alignItems: "center",
+
+    },
+    itemRow: {
+        width: "95%",
+        justifyContent: "flex-end",
+        alignItems: "center",
     },
     pickerView: {
         flexDirection: 'column',

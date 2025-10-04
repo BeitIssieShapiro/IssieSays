@@ -1,6 +1,6 @@
 import * as RNFS from 'react-native-fs';
 import * as path from 'path';
-import { BACKGROUND, BUTTONS, BUTTONS_COLOR, BUTTONS_IMAGE_URLS, BUTTONS_NAMES, BUTTONS_SHOW_NAMES, CURRENT_PROFILE, INSTALL, LAST_COLORS } from './settings';
+import { BACKGROUND, BUTTONS, BUTTONS_COLOR, BUTTONS_IMAGE_URLS, BUTTONS_NAMES, BUTTONS_SHOW_NAMES, CURRENT_PROFILE, INSTALL, LAST_COLORS, ONE_AFTER_THE_OTHER } from './settings';
 import { BTN_BACK_COLOR } from './App';
 import Button from 'react-native-really-awesome-button';
 import { Settings } from './setting-storage';
@@ -8,6 +8,7 @@ import { Platform, Settings as RNSettings } from 'react-native'
 import { MMKV } from 'react-native-mmkv';
 import { ensureAndroidCompatible, joinPaths } from './utils';
 import { gCurrentLang } from './lang';
+import { DefaultProfileName } from './profile-picker';
 
 export const enum Folders {
     Profiles = "profiles",
@@ -16,6 +17,8 @@ export const enum Folders {
 
 export class AlreadyExists extends Error { }
 export class InvalidFileName extends Error { }
+export class ReservedFileName extends Error { }
+
 
 export const InvalidCharachters = "<, >, :, \", /, \, |, ?, *,"
 
@@ -29,11 +32,12 @@ export interface Button {
 }
 
 export interface Profile {
+    oneAfterTheOther: boolean;
     buttons: Button[]
 }
 
-export const getRecordingFileName = (recName: string | number, forceFilePrefix?:boolean) => {
-    return ensureAndroidCompatible(joinPaths(RNFS.DocumentDirectoryPath , recName + ".mp4"), forceFilePrefix);
+export const getRecordingFileName = (recName: string | number, forceFilePrefix?: boolean) => {
+    return ensureAndroidCompatible(joinPaths(RNFS.DocumentDirectoryPath, recName + ".mp4"), forceFilePrefix);
 }
 
 export let storage: MMKV;
@@ -74,6 +78,7 @@ export async function Init() {
         }
 
         const numOfButtons = RNSettings.get(BUTTONS.name);
+        let oneAfterTheOther = false;
         if (numOfButtons >= 1 && numOfButtons <= 4) {
             console.log("migrating old persistancy", numOfButtons)
             const currName = getSetting(CURRENT_PROFILE.name, "");
@@ -95,7 +100,7 @@ export async function Init() {
                 });
             }
 
-            writeCurrentProfile({ buttons }, currName);
+            writeCurrentProfile({ buttons, oneAfterTheOther }, currName);
 
             RNSettings.set({ [BUTTONS.name]: 0 })
 
@@ -115,19 +120,35 @@ export async function Init() {
         }
     }
 
-    const isFreshInstall = Settings.getBoolean(INSTALL.fresh, true);
-    if (isFreshInstall) {
-        const filePath = getRecordingFileName(0);
-        RNFS.copyFileAssets(`welcome_${gCurrentLang}.mp4`, filePath)
-        Settings.set(INSTALL.fresh, false);
+    // todo
+    // const isFreshInstall = Settings.getBoolean(INSTALL.fresh, true);
+    // if (isFreshInstall) {
+    //     const filePath = getRecordingFileName(0);
+    //     RNFS.copyFileAssets(`welcome_${gCurrentLang}.mp4`, filePath)
+    //     Settings.set(INSTALL.fresh, false);
+    // }
+
+    // Migrate to home profile
+    const p = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${DefaultProfileName}.json`);
+    const homeExists = await RNFS.exists(ensureAndroidCompatible(p));
+    if (!homeExists) {
+        // Add the home profile - empty:
+        createHomeProfile();
+        console.log("Home profile created")
+    } else {
+        console.log("Home profile exists")
     }
 }
 
 
-export async function SaveProfile(name: string, p: Profile, overwrite = false) {
+export async function SaveProfile(name: string, p: Profile, overwrite = false, allowDefProfile = false) {
     if (!isValidFilename(name)) {
         throw new InvalidFileName(name);
     }
+    if (!allowDefProfile && name.trim() == DefaultProfileName) {
+        throw new ReservedFileName();
+    }
+
     // todo verify name is a valid file name
     const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
     if (!overwrite) {
@@ -167,7 +188,7 @@ export async function renameProfile(previousName: string, newName: string, overw
     }
 }
 
-export async function deleteProfile(name:string) {
+export async function deleteProfile(name: string) {
     const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
     return RNFS.unlink(ensureAndroidCompatible(profilePath));
 }
@@ -188,13 +209,7 @@ export async function LoadProfile(name: string) {
     if (currName.length) {
         console.log("Save profile", currName);
         const currentProfile = await readCurrentProfile();
-        await SaveProfile(currName, currentProfile, true);
-    }
-
-    if (name == "") {
-        // create new profile
-        await clearProfile()
-        return;
+        await SaveProfile(currName, currentProfile, true, true);
     }
 
     const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
@@ -204,20 +219,21 @@ export async function LoadProfile(name: string) {
     return writeCurrentProfile(p, name);
 }
 
-export async function clearProfile() {
+export async function createHomeProfile() {
     const p = {
         buttons: [
             {
-                color:BTN_BACK_COLOR,
-                imageUrl:"",
-                showName:false,
-                name:"",
-                recording:"", // will delete the file
+                color: BTN_BACK_COLOR,
+                imageUrl: "",
+                showName: false,
+                name: "",
+                recording: "", // will delete the file
             }
         ]
     } as Profile;
-    
-    writeCurrentProfile(p, "");
+
+    //writeCurrentProfile(p, DefaultProfileName);
+    SaveProfile(DefaultProfileName, p, true, true);
 }
 
 
@@ -225,6 +241,8 @@ async function writeCurrentProfile(p: Profile, name: string) {
     Settings.set(CURRENT_PROFILE.name, name);
 
     Settings.set(BUTTONS.name, p.buttons.length);
+    Settings.set(ONE_AFTER_THE_OTHER.name, p.oneAfterTheOther);
+
     const buttonColors = [];
     const buttonImageUrls = [];
     const buttonShowNames = [];
@@ -263,7 +281,16 @@ async function writeCurrentProfile(p: Profile, name: string) {
 }
 
 export function readCurrentProfile(): Profile {
+
+    // Verify Default Profile
+    const currName = Settings.getString(CURRENT_PROFILE.name, "");
+    if (currName == "") {
+        // this should happen once ever
+        Settings.set(CURRENT_PROFILE.name, DefaultProfileName);
+    }
+
     const numOfButtons = Settings.getNumber(BUTTONS.name, 1);
+    const oneAfterTheOther = Settings.getBoolean(ONE_AFTER_THE_OTHER.name, false);
     const buttonColors = Settings.getArray<string>(BUTTONS_COLOR.name, "string", [BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR]);
     const buttonImageUrls = Settings.getArray<string>(BUTTONS_IMAGE_URLS.name, "string", ["", "", "", ""]);
     const buttonShowNames = Settings.getArray<boolean>(BUTTONS_SHOW_NAMES.name, "boolean", [false, false, false, false]);
@@ -283,6 +310,7 @@ export function readCurrentProfile(): Profile {
     console.log("readCurrentProfile", buttons)
 
     return {
+        oneAfterTheOther,
         buttons,
     };
 }

@@ -1,7 +1,7 @@
 import * as RNLocalize from 'react-native-localize';
 const locales = RNLocalize.getLocales();
 const bestLanguage = locales[0]?.languageTag || 'en';
-const deviceLanguageRaw = bestLanguage;
+const deviceLanguageRaw = 'he' //bestLanguage;
 
 const supportedLanguages = ['he', 'en', 'ar'];
 
@@ -27,9 +27,10 @@ var strings: any = {
         "SearchImageTitle": "חפש תמונה",
         "BtnSearch": "חפש",
         "Vibrate": "רטט",
-        "ProfileName": "פרופיל",
+        "ProfileName": "שם פרופיל",
+        "ListProfiles": "רשימה",
         "NoButtonName": "ללא שם",
-        "SelectProfileTitle": "פרופילים שמורים",
+        "SelectProfileTitle": "בחירת פרופיל",
         "SelectButtonTitle": "כפתורים שמורים",
         "ProfileNoName": "אין פרופיל פעיל",
         "NoItemsFound": "אין",
@@ -50,7 +51,11 @@ var strings: any = {
         "ProfileSuccessRenamed": "שם הפרופיל שונה בהצלחה",
         "ProfileSuccessfulyCreated": "הפרופיל נוצר בהצלחה",
         "ProfileExistsTitle": "פרופיל קיים",
+        "DefaultProfile": "בית",
+        "ReservedName": "שם שמור",
         "ProfileSaveFailed": "שמירת הפרופיל נכשלה",
+        "OneAfterTheOther": "אחד אחרי השני",
+        "ResetButtons":"חוזר להתחלה בעוד {1} שניות",
         "ButtonSaved": "כפתור נשמר בהצלחה",
         "ButtonExistsTitle": "כפתור קיים",
         "ButtonSaveFailed": "שמירת הכפתור נכשלה",
@@ -60,7 +65,7 @@ var strings: any = {
         "DeleteProfileWarnning": "האם למחוק את הפרופיל ׳{1}׳?",
         "DeleteButtonTitle": "מחיקת כפתור שמור",
         "DeleteButtonWarnning": "האם למחוק את הכפתור השמור ׳{1}׳",
-        "OpenIn": "יפתח בעוד {1}",
+        "OpenIn": "פתיחה בעוד {1} שניות",
     },
     "en": {
         "ButtonTitle": "Button {1}",
