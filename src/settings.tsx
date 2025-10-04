@@ -161,14 +161,22 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
     const changeOneAfterTheOther = (newVal: boolean) => {
         Settings.set(ONE_AFTER_THE_OTHER.name, newVal);
+        if (newVal == false) {
+            // limit num of buttons to 4
+            const current = Settings.getNumber(BUTTONS.name, 1);
+            if (current > 4) {
+                Settings.set(BUTTONS.name, 4);
+            }
+        }
         setRevision(old => old + 1);
     }
 
     const changeNumOfButton = (delta: number) => {
         const current = Settings.getNumber(BUTTONS.name, 1);
+        const oneAfterTheOther = Settings.getBoolean(ONE_AFTER_THE_OTHER.name, false);
         let newVal = current + delta;
         if (newVal < 1) return;
-        if (newVal > 4) return;
+        if (oneAfterTheOther && newVal > 20 || !oneAfterTheOther && newVal > 4) return;
         Settings.set(BUTTONS.name, newVal);
         setRevision(old => old + 1);
     }
@@ -413,6 +421,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     }
 
     const safeAreaInsets = useSafeAreaInsets();
+    const maxButtons = profile.oneAfterTheOther ? 20 : 4
 
 
     return <View style={{ top: safeAreaInsets.top, position: "relative", width: windowSize.width, height: windowSize.height - 50 - safeAreaInsets.top }}>
@@ -522,11 +531,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             onAction={() => setOpenLoadProfile(true)}
         />
 
-        <ScrollView style={styles.settingHost}
-            ref={scrollViewRef} >
-
-
-
+        <View style={styles.settingHost}>
             <View style={[styles.section, marginHorizontal, dirStyle]} >
                 <View style={{ flexDirection: "row" }}>
                     <TouchableOpacity style={{ width: 25, height: 25, backgroundColor: BACKGROUND.DARK, borderRadius: 12.5 }}
@@ -557,7 +562,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                             onPress={() => changeNumOfButton(-1)} />
 
                         <Text allowFontScaling={false} style={{ fontSize: 30, marginHorizontal: 10 }}>{profile.buttons.length}</Text>
-                        <MyIcon info={{ type: "AntDesign", name: "plus-circle", color: profile.buttons.length == 4 ? "lightgray" : BTN_COLOR, size: 35 }}
+                        <MyIcon info={{ type: "AntDesign", name: "plus-circle", color: profile.buttons.length == maxButtons ? "lightgray" : BTN_COLOR, size: 35 }}
                             onPress={() => changeNumOfButton(1)} />
                     </View>
 
@@ -565,7 +570,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                 <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("Buttons")}</Text>
             </View>
 
-            <View style={[styles.buttons, marginHorizontal]}>
+            <ScrollView style={[styles.buttons, marginHorizontal]}>
                 {
                     Array.from(Array(profile.buttons.length).keys()).map((i: any) => (
                         <ButtonSettings
@@ -587,9 +592,9 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
                     ))
                 }
-            </View>
-            {textInEdit.find(t => t) && <Spacer h={keyboardHeight} />}
-        </ScrollView >
+            </ScrollView>
+            {/* {textInEdit.find(t => t) && <Spacer h={keyboardHeight} />} */}
+        </View >
     </View >
 }
 
@@ -768,7 +773,6 @@ const styles = StyleSheet.create({
         backgroundColor: "white",
         padding: 20,
         flexDirection: "column",
-        alignItems: "center",
         borderRadius: 45,
         marginTop: 15,
         marginHorizontal: 40,

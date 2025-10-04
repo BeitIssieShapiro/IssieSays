@@ -248,7 +248,7 @@ async function writeCurrentProfile(p: Profile, name: string) {
     const buttonShowNames = [];
     const buttonTexts = [];
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 20; i++) {
         if (p.buttons.length > i) {
             const btn = p.buttons[i];
             buttonColors.push(btn.color);
