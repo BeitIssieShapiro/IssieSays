@@ -33,7 +33,7 @@ export const gStyles = StyleSheet.create({
         height: 80,
         fontSize: 25,
         borderBottomWidth: 2,
-        borderTopWidth: 2,
+        //borderTopWidth: 2,
         borderColor: "#F5F5F5",
         padding: 15,
 

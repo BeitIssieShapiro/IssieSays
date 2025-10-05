@@ -66,6 +66,7 @@ var strings: any = {
         "DeleteButtonTitle": "מחיקת כפתור שמור",
         "DeleteButtonWarnning": "האם למחוק את הכפתור השמור ׳{1}׳",
         "OpenIn": "פתיחה בעוד {1} שניות",
+        "NoResultsMsg":"לא נמצאו תמונות"
     },
     "en": {
         "ButtonTitle": "Button {1}",

@@ -6,61 +6,9 @@ import { TextInput } from "react-native";
 import { launchImageLibrary } from "react-native-image-picker";
 import RNFS from 'react-native-fs';
 import { MyCloseIcon } from "./common/icons";
+import { Spacer } from "./uielements";
+import { ScreenTitle } from "./common/settings-elements";
 
-
-// export function SelectImage({ onClose, onSelectImage, open, height }: any) {
-
-//     const layout = useWindowDimensions();
-
-//     const [index, setIndex] = useState(0);
-//     const [routes] = useState([
-//         { key: 'search', title: 'Search' },
-//         { key: 'gallery', title: 'Gallery' },
-//     ]);
-//     if (!open) {
-//         return null;
-//     }
-
-//     const renderTabBar = (props: any) => (
-//         <TabBar
-//             {...props}
-//             indicatorStyle={{ backgroundColor: 'black' }}
-//             style={{ backgroundColor: 'lightgray' }}
-//             labelStyle={{ color: 'black' }}
-//         />
-//     );
-
-//     return <FadeInView title={translate("SearchImageTitle")}
-//         onClose={onClose} style={[styles.pickerView, { bottom: 0, left: 0, right: 0 }]}
-//         height={height}
-//     >
-//         <View style={styles.closeButton}>
-//             <Icon name="close" size={45} onPress={onClose} />
-//         </View>
-
-//         <View style={{ flex: 1, flexDirection: "column" }}>
-//             <View style={styles.closeButton}>
-//                 <Icon name="close" size={45} onPress={onClose} />
-//             </View>
-//             <Text style={{ fontSize: 25, paddingTop: 30, textAlign: "center" }}>{translate("SearchImageTitle")}</Text>
-//             <Spacer h={50} />
-//             <TabView
-//                 renderTabBar={renderTabBar}
-//                 navigationState={{ index, routes }}
-//                 renderScene={({ route }) => {
-//                     switch (route.key) {
-//                         case 'search':
-//                             return <SearchImage onSelectImage={onSelectImage} />;
-//                         case 'gallery':
-//                             return <SelectFromGallery onSelectImage={onSelectImage} />;
-//                     }
-//                 }}
-//                 onIndexChange={setIndex}
-//                 initialLayout={{ width: layout.width }}
-//             />
-//         </View>
-//     </FadeInView>
-// }
 
 export async function SelectFromGallery(): Promise<string> {
     const options: any = {
@@ -137,59 +85,71 @@ export function SearchImage({ onSelectImage, open, height, onClose, isScreenNarr
         return null;
     }
 
-    return <Modal transparent={true} animationType="slide" presentationStyle="overFullScreen"
-        supportedOrientations={['portrait', 'portrait-upside-down', 'landscape']}>
-        <View style={{ position: "absolute", backgroundColor: "grey", opacity: 0.1, width: "100%", height: "100%" }} />
-        <View style={[styles.pickerView, { margin: isScreenNarrow ? 10 : 80 }]}>
-            <View style={styles.closeButton}>
-                <MyCloseIcon onClose={onClose}/>
-            </View>
-            <Text style={styles.pickerTitle}>{translate("SearchImageTitle")}</Text>
-            <View style={styles.searchRoot}>
-                <View style={[styles.searchTextAndBtnContainer, { direction: isRight2Left ? "rtl" : "ltr" }]}>
-                    <View style={{ flex: 1, position: "relative" }}>
-                        <TextInput
-                            ref={textRef}
-                            style={[styles.searchInput, { textAlign: isRight2Left ? "right" : "left" }]}
-                            placeholder={translate("EnterSearchHere")}
-                            value={value}
-                            onChangeText={setValue}
-                            onSubmitEditing={doSearch}
-                        />
-                        {value?.length > 0 && (
-                            <TouchableOpacity style={styles.cleanSearchX} onPress={() => setValue('')}>
-                                <Text style={styles.cleanXText}>x</Text>
-                            </TouchableOpacity>
-                        )}
-                    </View>
-                    <TouchableOpacity
-                        style={styles.searchImageBtn}
-                        onPress={doSearch}
-                    >
-                        <Text style={styles.searchBtnText}>{translate("BtnSearch")}</Text>
-                    </TouchableOpacity>
-                </View>
+    return <View style={styles.overlay} >
 
-                <ScrollView>
-                    <View style={styles.resultContainer}>
-                        {results && (results.length > 0 ? results.map((item: any, i: number) => (
-                            <TouchableOpacity key={i} onPress={() => onSelectImage(item.url)}>
-                                <Image source={{ uri: item.url }} style={styles.foundItem} />
-                            </TouchableOpacity>
-                        )) : (
-                            <Text style={styles.noResultMsg}>{translate("NoResultsMsg")}</Text>
-                        ))}
+        <Modal transparent={true} animationType="slide" presentationStyle="overFullScreen"
+            supportedOrientations={['portrait', 'portrait-upside-down', 'landscape']}>
+
+            <View style={[styles.pickerView, { margin: isScreenNarrow ? 10 : 80 }]}>
+                <ScreenTitle onClose={onClose} title={translate("SearchImageTitle")} icon={{ name: "close", color: "black" }} />
+                <View style={styles.searchRoot}>
+                    <View style={[styles.searchTextAndBtnContainer, { direction: isRight2Left ? "rtl" : "ltr" }]}>
+                        <View style={{ flex: 1, position: "relative" }}>
+                            <TextInput
+                                ref={textRef}
+                                style={[styles.searchInput, { textAlign: isRight2Left ? "right" : "left" }]}
+                                placeholder={translate("EnterSearchHere")}
+                                value={value}
+                                onChangeText={setValue}
+                                onSubmitEditing={doSearch}
+                            />
+                            {value?.length > 0 && (
+                                <TouchableOpacity style={styles.cleanSearchX} onPress={() => setValue('')}>
+                                    <Text style={styles.cleanXText}>x</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                        <Spacer w={15} />
+                        <TouchableOpacity
+                            style={styles.searchImageBtn}
+                            onPress={doSearch}
+                        >
+                            <Text style={styles.searchBtnText}>{translate("BtnSearch")}</Text>
+                        </TouchableOpacity>
                     </View>
-                </ScrollView>
+
+                    <ScrollView style={{ flex: 1 }}>
+                        <View style={styles.resultContainer}>
+                            {results && (results.length > 0 ? results.map((item: any, i: number) => (
+                                <TouchableOpacity key={i} onPress={() => onSelectImage(item.url)}>
+                                    <Image source={{ uri: item.url }} style={styles.foundItem} />
+                                </TouchableOpacity>
+                            )) : (
+                                <Text style={styles.noResultMsg}>{translate("NoResultsMsg")}</Text>
+                            ))}
+                        </View>
+                    </ScrollView>
+                </View>
             </View>
-        </View>
-    </Modal>
+
+        </Modal>
+    </View>
 
 }
 
 
 
 const styles = StyleSheet.create({
+    
+    overlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'rgba(0,0,0,0.6)', // <-- semi-transparent black
+        zIndex:1000,
+    },
     closeButton: {
         position: "absolute",
         right: 10,
@@ -219,6 +179,7 @@ const styles = StyleSheet.create({
     },
 
     searchRoot: {
+        flex: 1,
         alignItems: 'center',
         width: '100%',
     },
