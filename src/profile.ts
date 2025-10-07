@@ -9,6 +9,7 @@ import { MMKV } from 'react-native-mmkv';
 import { ensureAndroidCompatible, joinPaths } from './utils';
 import { gCurrentLang } from './lang';
 import { DefaultProfileName } from './profile-picker';
+import { EditedButton } from './edit-button';
 
 export const enum Folders {
     Profiles = "profiles",
@@ -219,8 +220,9 @@ export async function LoadProfile(name: string) {
     return writeCurrentProfile(p, name);
 }
 
-export async function createHomeProfile() {
-    const p = {
+export function newProfile(): Profile {
+    return {
+        oneAfterTheOther: false,
         buttons: [
             {
                 color: BTN_BACK_COLOR,
@@ -231,10 +233,20 @@ export async function createHomeProfile() {
             }
         ]
     } as Profile;
+}
 
-    //writeCurrentProfile(p, DefaultProfileName);
+export async function createHomeProfile() {
+    const p = newProfile()
+
     SaveProfile(DefaultProfileName, p, true, true);
 }
+
+export async function createNewProfile(name:string) {
+    const p = newProfile()
+
+    return SaveProfile(name, p, true, false);
+}
+
 
 
 async function writeCurrentProfile(p: Profile, name: string) {
@@ -328,7 +340,13 @@ export async function loadButton(name: string, index: number) {
     const currName = Settings.getString(CURRENT_PROFILE.name, "");
 
     writeCurrentProfile(p, currName);
+}
 
+export async function loadButton2(name: string) {
+    console.log("Load Button", name)
+    const buttonPath = path.join(RNFS.DocumentDirectoryPath, Folders.Buttons, `${name}.json`);
+    const fileContents = await RNFS.readFile(ensureAndroidCompatible(buttonPath), 'utf8');
+    return JSON.parse(fileContents);
 }
 
 export async function saveButton(name: string, index: number, overwrite = false) {
@@ -359,6 +377,35 @@ export async function saveButton(name: string, index: number, overwrite = false)
     }
 }
 
+
+export async function saveButton2(btn: EditedButton, index: number, overwrite = false) {
+    if (!isValidFilename(btn.name)) {
+        throw new InvalidFileName(btn.name);
+    }
+
+    const buttonPath = path.join(RNFS.DocumentDirectoryPath, Folders.Buttons, `${btn.name}.json`);
+    console.log("save button", btn.name)
+    if (!overwrite && await RNFS.exists(ensureAndroidCompatible(buttonPath))) {
+        throw new AlreadyExists(btn.name);
+    }
+
+    const filePath = getRecordingFileName(btn.audioName ? btn.audioName : index + "");
+    const audioB64 = await RNFS.exists(filePath) ?
+        await RNFS.readFile(filePath, 'base64') :
+        "";
+
+    const btnToSave = {
+        ...btn,
+        recording: audioB64,
+    }
+    // voletile field
+    delete btnToSave.audioName;
+
+    const str = JSON.stringify(btnToSave);
+    return RNFS.writeFile(ensureAndroidCompatible(buttonPath), str, 'utf8');
+}
+
+
 export async function deleteButton(name: string) {
     const buttonPath = path.join(RNFS.DocumentDirectoryPath, Folders.Buttons, `${name}.json`);
     return RNFS.unlink(ensureAndroidCompatible(buttonPath));
@@ -378,6 +425,10 @@ export async function ListElements(folder: Folders): Promise<string[]> {
             list.push(elem.name.substring(0, elem.name.length - 5));
         }
     }
+    if (folder == Folders.Profiles) {
+        list.sort((a, b) => a == DefaultProfileName ? -1 : b == DefaultProfileName ? 1 : a.localeCompare(b));
+    }
+
     return list;
 }
 

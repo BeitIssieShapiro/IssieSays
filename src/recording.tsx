@@ -11,6 +11,7 @@ import { Settings } from "./setting-storage";
 import { INSTALL } from "./settings";
 import { MyIcon } from "./common/icons";
 export const BTN_BACK_COLOR = "#C8572A";
+const TEMP_NAME = "_temp_";
 
 export async function stopPlayback() {
     await audioRecorderPlayer.stopPlayer();
@@ -36,8 +37,8 @@ export async function playRecording(name: string, playbackListner?: (playbackMet
     });
 }
 
-export function RecordButton({ name, backgroundColor, size, height, revision }:
-    { name: string, backgroundColor: string, size: number, height: number, revision: number }) {
+export function RecordButton({ name, backgroundColor, size, height, revision, onSave }:
+    { name: string, backgroundColor: string, size: number, height: number, revision: number, onSave: (tmpName: string) => void }) {
     const [recordProgress, setRecordProgress] = useState(0);
     const [_, setRecordProgressInterval] = useState<NodeJS.Timeout | undefined>(undefined);
     const [state, setState] = useState<any>({ recordSecs: 0 })
@@ -45,20 +46,16 @@ export function RecordButton({ name, backgroundColor, size, height, revision }:
     const [log, setLog] = useState("");
     const [playing, setPlaying] = useState<boolean>(false);
     const [paused, setPaused] = useState<boolean>(false);
+    const [currentName, setCurrentName] = useState<string>(name);
 
     const [recordingExists, setRecordingExists] = useState<boolean>(false);
 
 
-
-    const getFileName = () => {
-        return getRecordingFileName(name);
-    }
-
     useEffect(() => {
-        RNFS.exists(getFileName()).then((value: boolean) => {
+        RNFS.exists(getRecordingFileName(currentName)).then((value: boolean) => {
             setRecordingExists(value);
         })
-    }, [revision])
+    }, [revision, currentName])
 
     const onStartRecord = async () => {
         console.log("about to start recording")
@@ -73,8 +70,10 @@ export function RecordButton({ name, backgroundColor, size, height, revision }:
                     setLog(prev => prev + "\nerr start record" + err)
                     console.log("Failed to start recording...", err);
                 });
-            RNFS.unlink(getFileName()).then(() => setRecordingExists(false))
+            const tmpFile = getRecordingFileName(TEMP_NAME);
+            RNFS.unlink(tmpFile).then(() => setRecordingExists(false))
                 .catch((e) => {/*ignore*/ });
+            setCurrentName(TEMP_NAME);
 
             setRecordProgressInterval((prevInterval) => {
                 if (prevInterval) clearInterval(prevInterval);
@@ -113,14 +112,16 @@ export function RecordButton({ name, backgroundColor, size, height, revision }:
 
         setLog(prev => prev + "\nRecording Ended...")
 
-        let tmpFileName = ""
+        let resFileName = ""
         if (result?.startsWith("file:")) {
-            tmpFileName = result.substring(7);
-            console.log("Saving...", getFileName())
+            const tmpFile = getRecordingFileName(currentName);
+            resFileName = result.substring(7);
+            console.log("Saving...", tmpFile)
             // Save to the Document path
-            RNFS.moveFile(ensureAndroidCompatible(tmpFileName), getFileName())
+            RNFS.moveFile(ensureAndroidCompatible(resFileName), tmpFile)
                 .then(() => {
-                    console.log("Saving done", getFileName())
+                    console.log("Saving done", tmpFile)
+                    onSave(currentName);
                     //setLog(prev => prev + "\nresult: " + result)
                     setRecordingExists(true);
                 })
@@ -128,7 +129,7 @@ export function RecordButton({ name, backgroundColor, size, height, revision }:
         } else {
             setLog(prev => prev + "\nnot a file: " + result);
         }
-        return tmpFileName;
+        return resFileName;
     };
 
     return <View style={{ flexDirection: "column", width: size * 4, height }}>
@@ -216,12 +217,12 @@ export function RecordButton({ name, backgroundColor, size, height, revision }:
                     }
                 }}
             >
-                <MyIcon info={{ type: "MDI", name: !playing ? "play" : "pause", color: "white", size: size * 4/5 }} />
+                <MyIcon info={{ type: "MDI", name: !playing ? "play" : "pause", color: "white", size: size * 4 / 5 }} />
                 {/**todo: style={{ marginLeft: 6, marginRight: 3 }} */}
             </TouchableOpacity>
             <View style={{ flexDirection: "column", height: 70, width: size * 2, marginTop: 5 }}>
-                {recording && <AudioWaveForm width={size * 2} height={40} infiniteProgress={recordProgress} color={BTN_BACK_COLOR} baseColor={"lightgray"} />}
-                {recording && <Text allowFontScaling={false} style={{ fontSize: 16, width: size * 2, height: 30, textAlign: "center" }}>{state.recordTime?.substring(0, 5) || ""}</Text>}
+                 <AudioWaveForm width={size * 2} height={40} infiniteProgress={recordProgress} color={BTN_BACK_COLOR} baseColor={"lightgray"} />
+                <Text allowFontScaling={false} style={{ fontSize: 16, width: size * 2, height: 30, textAlign: "center" }}>{state.recordTime?.substring(0, 5) || "0.0"}</Text>
             </View>
 
         </View>

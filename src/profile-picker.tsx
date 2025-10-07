@@ -52,7 +52,7 @@ interface ProfilePickerProps {
 }
 
 interface ProfileItem {
-    key:string;
+    key: string;
     name: string;
 }
 
@@ -66,10 +66,10 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
     useEffect(() => {
         if (open) {
             ListElements(folder).then(list => {
-                setList(list.filter(l => !exclude || l != exclude).map(l=>{
+                setList(list.filter(l => !exclude || l != exclude).map(l => {
                     return {
                         key: l,
-                        name: l == DefaultProfileName?translate(l):l,
+                        name: l == DefaultProfileName ? translate(l) : l,
                     }
                 }));
             })
@@ -93,35 +93,58 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
 
         {!list || list.length == 0 ?
             <Text allowFontScaling={false} style={{ fontSize: 25, margin: 25 }}>{translate("NoItemsFound")}</Text> :
-            <ScrollView style={[{ direction: isRTL() ? "rtl" : "ltr" }]}>
-                {list.map(item => {
-                    return <View key={item.key} style={styles.itemHost}>
-                        <View style={[styles.itemRow, isRTL() ? { flexDirection: "row" } : { flexDirection: "row" }]}>
-                            <Pressable style={{ flex: 1, flexDirection: "row" }} onPress={() => onSelect(item.key)}>
-                                <RadioButton selected={currentProfile == item.key} />
-                                <View style={[styles.listItem, isRTL() ? { direction: "rtl" } : {}]}>
-                                    <Text
-                                        allowFontScaling={false}
-                                        numberOfLines={1}
-                                        ellipsizeMode="tail"
-                                        style={{
-                                            textAlign: (isRTL() ? "right" : "left"),
-                                            fontSize: 28, paddingLeft: 10, paddingRight: 10,
-                                            paddingTop: 10, paddingBottom: 10,
-                                        }}>{item.name}</Text>
-                                </View>
-                            </Pressable>
-                            {item.key !== DefaultProfileName &&
-                                <View style={{ flexDirection: "row-reverse", width: isNarrow ? "25%" : "40%" }}>
-                                    {onDelete && <IconButton icon={{ name: "delete", ...menuActionIcon }} onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} />}
-                                    {onEdit && <IconButton icon={{ name: "edit", ...menuActionIcon }} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
-                                    {onExport && <IconButton icon={{ name: "share-social-outline", type: "Ionicons", ...menuActionIcon }} onPress={() => onExport(item.key)} />}
-                                </View>}
-                        </View>
-                        <View style={gStyles.horizontalSeperator} />
-                    </View>
+            <ScrollView
+                style={{ width: "100%" }}
+                contentContainerStyle={{
+                    paddingVertical: 10,
+                    paddingHorizontal: 20,
+                }}
+            >
+                {list.map(item => (
+                    <View key={item.key} style={[styles.itemRow, { direction: isRTL() ? "rtl" : "ltr" }]}>
+                        <Pressable
+                            style={{ flex: 1, flexDirection: "row", alignItems: "center" }}
+                            onPress={() => onSelect(item.key)}
+                        >
+                            <RadioButton selected={currentProfile == item.key} />
+                            <Text
+                                allowFontScaling={false}
+                                numberOfLines={1}
+                                ellipsizeMode="tail"
+                                style={{
+                                    fontSize: 22,
+                                    paddingHorizontal: 10,
+                                    color: currentProfile == item.key ? colors.titleBlue : "black",
+                                }}
+                            >
+                                {item.name}
+                            </Text>
+                        </Pressable>
 
-                })}
+                        {item.key !== DefaultProfileName && (
+                            <View style={{ flexDirection: "row" }}>
+                                {onDelete && (
+                                    <IconButton
+                                        icon={{ name: "delete", ...menuActionIcon }}
+                                        onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))}
+                                    />
+                                )}
+                                {onEdit && (
+                                    <IconButton
+                                        icon={{ name: "edit", ...menuActionIcon }}
+                                        onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))}
+                                    />
+                                )}
+                                {onExport && (
+                                    <IconButton
+                                        icon={{ name: "share-social-outline", type: "Ionicons", ...menuActionIcon }}
+                                        onPress={() => onExport(item.key)}
+                                    />
+                                )}
+                            </View>
+                        )}
+                    </View>
+                ))}
             </ScrollView>
         }
     </FadeInView>
@@ -184,7 +207,7 @@ export function ButtonPicker({ open, height, onClose, onSelect, exclude, folder,
                                     }}>{pName}</Text>
                             </View>
                             <View style={{ flexDirection: "row" }}>
-                                <IconButton icon={{ name: "upload", ...menuActionIcon }} onPress={() => onSelect(pName)} text={translate("Load")} />
+                                <IconButton icon={{ name: "upload", ...menuActionIcon }} onPress={() => onSelect(pName)} text={translate("LoadBtn")} />
                                 {onDelete && <IconButton icon={{ name: "delete", ...menuActionIcon }} onPress={() => onDelete(pName, () => setRevision(prev => prev + 1))} text={translate("Delete")} />}
                                 {onEdit && <IconButton icon={{ name: "edit", ...menuActionIcon }} text={translate("Rename")} onPress={() => onEdit(pName, () => setRevision(prev => prev + 1))} />}
                             </View>
@@ -206,15 +229,17 @@ const styles = StyleSheet.create({
         zIndex: 100
     },
     itemHost: {
-        width: "95%",
-        justifyContent: "center",
-        alignItems: "center",
-
+        width: "100%",
+        paddingVertical: 10,
     },
     itemRow: {
-        width: "95%",
-        justifyContent: "flex-end",
+        flexDirection: "row",
         alignItems: "center",
+        justifyContent: "space-between",
+        width: "100%",
+        paddingVertical: 10,
+        borderBottomColor: "#ddd",
+        borderBottomWidth: 1,
     },
     pickerView: {
         flexDirection: 'column',

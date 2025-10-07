@@ -1,6 +1,7 @@
-import { TouchableOpacity, Text, StyleSheet } from "react-native";
+import { TouchableOpacity, Text, StyleSheet, Pressable } from "react-native";
 import { isRTL } from "../lang";
-import { IconProps, MyIcon } from "./icons";
+import { IconProps, IconType, MyIcon } from "./icons";
+import { gStyles } from "./common-style";
 
 // export function IconButton({ icon, onPress, text }: { icon?: string, text: string, onPress: () => void }) {
 
@@ -24,6 +25,21 @@ export function IconButton({ icon, onPress, text, backgroundColor }:
     </TouchableOpacity >
 }
 
+export function LabeledIconButton({ type, icon, label, onPress, size = 40, color = "black" }:
+    {
+        type?: IconType,
+        icon: string,
+        label: string,
+        onPress: () => void,
+        size?: number,
+        color?: string,
+    }) {
+ 
+    return <Pressable onPress={onPress} style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", width: size*3 }}>
+        <MyIcon info={{type, name:icon, size, color }}/>
+        <Text allowFontScaling={false} style={gStyles.labeledIconText}>{label}</Text>
+    </Pressable>
+}
 
 const styles = StyleSheet.create({
 
