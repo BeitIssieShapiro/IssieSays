@@ -8,7 +8,7 @@ import { IconButton } from "./components"
 export function ScreenTitle({ title, onClose, onAbout, icon }: { title: string, onClose: () => void, onAbout?: () => void, icon?: IconProps }) {
     return <View style={gStyles.screenTitle}>
         {onAbout ?
-            <MyIcon info={{ type: "AntDesign", name: "info-circle", color: gStyles.screenTitleText.color, size: 35 }} onPress={onAbout} />
+            <MyIcon info={{ type: "MDI", name: "information-outline", color: gStyles.screenTitleText.color, size: 45 }} onPress={onAbout} />
             :
             <Spacer h={10} />}
         <Text allowFontScaling={false} style={gStyles.screenTitleText}>{title}</Text>

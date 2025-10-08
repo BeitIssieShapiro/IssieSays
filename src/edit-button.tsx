@@ -124,6 +124,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
             <TextInput
                 style={[
                     styles.input,
+                    isRTL() ? { textAlign: "right" } : { direction: "ltr", textAlign: "left" },
                 ]}
 
                 placeholderTextColor="gray"
@@ -306,7 +307,7 @@ const styles = StyleSheet.create({
         right: 10,
         flexDirection: "row",
         justifyContent: "center",
-        marginTop: 10,
+        alignItems: "center",
     },
     section: {
         marginVertical: 20,
@@ -329,7 +330,6 @@ const styles = StyleSheet.create({
         padding: 10,
         borderWidth: 1,
         borderRadius: 5,
-        textAlign: "right",
         width: 400,
         fontSize: 24,
     },

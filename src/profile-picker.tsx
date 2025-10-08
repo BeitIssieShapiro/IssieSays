@@ -161,6 +161,7 @@ interface ButtonPickerProps {
     folder: Folders
     onDelete?: (name: string, afterDelete: () => void) => void;
     onEdit?: (name: string, afterSave: () => void) => void;
+
 }
 export function ButtonPicker({ open, height, onClose, onSelect, exclude, folder, onDelete, onEdit }: ButtonPickerProps) {
     const [profiles, setProfiles] = useState<string[]>([]);
@@ -181,40 +182,58 @@ export function ButtonPicker({ open, height, onClose, onSelect, exclude, folder,
             folder == Folders.Profiles ?
                 translate("SelectProfileTitle") : translate("SelectButtonTitle")
         }</Text>
-        <Seperator width="90%" />
+        <Seperator width="100%" />
         <View style={styles.closeButton}>
             <MyCloseIcon onClose={onClose} />
 
         </View>
         {!profiles || profiles.length == 0 ?
             <Text allowFontScaling={false} style={{ fontSize: 25, margin: 25 }}>{translate("NoItemsFound")}</Text> :
-            <ScrollView style={styles.listHost}>
+            <ScrollView
+                contentContainerStyle={{
+                    paddingHorizontal: 20,
+                    paddingBottom: 40,
+                }}
+            >
                 {profiles.map(pName => (
                     <Fragment key={pName}>
-                        <View style={{
-                            flexDirection: isRTL() ? "row-reverse" : "row",
-                            width: "90%",
-                            justifyContent: "space-between",
-                        }}>
-                            <View style={styles.listItem} key={pName} >
-                                <Text
-                                    allowFontScaling={false}
-                                    numberOfLines={1}
-                                    ellipsizeMode="tail"
-                                    style={{
-                                        textAlign: (isRTL() ? "right" : "left"),
-                                        fontSize: 28, paddingLeft: 15, paddingRight: 15
-                                    }}>{pName}</Text>
-                            </View>
-                            <View style={{ flexDirection: "row" }}>
-                                <IconButton icon={{ name: "upload", ...menuActionIcon }} onPress={() => onSelect(pName)} text={translate("LoadBtn")} />
-                                {onDelete && <IconButton icon={{ name: "delete", ...menuActionIcon }} onPress={() => onDelete(pName, () => setRevision(prev => prev + 1))} text={translate("Delete")} />}
-                                {onEdit && <IconButton icon={{ name: "edit", ...menuActionIcon }} text={translate("Rename")} onPress={() => onEdit(pName, () => setRevision(prev => prev + 1))} />}
+                        <View
+                            style={styles.itemRow}
+                        >
+                            <Text
+                                allowFontScaling={false}
+                                numberOfLines={1}
+                                ellipsizeMode="tail"
+                                style={styles.itemText}
+                            >
+                                {pName}
+                            </Text>
+
+                            <View style={styles.actionRow}>
+                                <IconButton
+                                    icon={{ name: "upload", ...menuActionIcon }}
+                                    onPress={() => onSelect(pName)}
+                                    text={translate("LoadBtn")}
+                                />
+                                {onDelete && (
+                                    <IconButton
+                                        icon={{ name: "delete", ...menuActionIcon }}
+                                        onPress={() => onDelete(pName, () => setRevision(prev => prev + 1))}
+                                        text={translate("Delete")}
+                                    />
+                                )}
+                                {onEdit && (
+                                    <IconButton
+                                        icon={{ name: "edit", ...menuActionIcon }}
+                                        onPress={() => onEdit(pName, () => setRevision(prev => prev + 1))}
+                                        text={translate("Rename")}
+                                    />
+                                )}
                             </View>
                         </View>
-                        <Seperator width="100%" />
-                    </Fragment>
 
+                        <View style={styles.separator} />
+                    </Fragment>
                 ))}
             </ScrollView>
         }
@@ -268,5 +287,21 @@ const styles = StyleSheet.create({
     listHost: {
         padding: 20,
         width: "100%",
-    }
+    },
+    itemText: {
+        flex: 1,
+        fontSize: 26,
+        paddingHorizontal: 10,
+        textAlign: "left",
+    },
+    actionRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 5, // RN 0.71+ supports gap
+    },
+    separator: {
+        height: 1,
+        backgroundColor: "#ddd",
+        width: "100%",
+    },
 });

@@ -1,21 +1,22 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
+import SplashScreen from 'react-native-splash-screen';
 
-import { createSound, Sound } from 'react-native-nitro-sound';
+import { createSound } from 'react-native-nitro-sound';
 import { MainButton, RectView } from './uielements';
 import { About } from './about';
-import { playRecording } from './recording';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import { Settings } from './setting-storage';
 import { readCurrentProfile } from './profile';
 import { BACKGROUND, BUTTONS, CURRENT_PROFILE, ONE_AFTER_THE_OTHER, SettingsPage } from './settings';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { CountdownButton } from './common/countdown-btn';
+import { useIncomingURL } from './common/linking-hook';
+import { GlobalContext } from './common/global-context';
 
 const toastConfig = {
 
@@ -47,11 +48,6 @@ export const BTN_BACK_COLOR = "#C8572A";
 
 function Main(): React.JSX.Element {
   const [windowSize, setWindowSize] = useState({ width: 500, height: 500 });
-  const [playing, setPlaying] = useState<string | undefined>(undefined);
-  const [playingInProgress, setPlayingInProgress] = useState(false);
-  // const [curr, setCurr] = useState(0.0);
-  // const [duration, setDuration] = useState(0.0);
-  // const [profile, setProfile] = useState<Profile>(readDefaultProfile());
 
   const [log, setLog] = useState("");
   const [showSettings, setShowSettings] = useState(false);
@@ -60,7 +56,39 @@ function Main(): React.JSX.Element {
 
   const isLandscape = () => windowSize.height < windowSize.width;
 
-  //console.log("Setting is ", Settings.getNumber(BUTTONS.name, 8))
+
+  async function handleImport(event: any) {
+    let url = event.url
+    url = decodeURI(url);
+
+    if (Platform.OS === "android" && url.startsWith("content://")) {
+      console.log("translate content://", url);
+      // url = await FileCopyModule.copyContentUriToTemp(url);
+      // todo android
+    }
+
+    console.log("handleImport event:", url, JSON.stringify(event));
+
+    // setImportInProgress({
+    //   message: translate("ImportInProgress"),
+    //   precent: 0,
+    // })
+
+    // let result: ImportInfo = {
+    //   importedDice: [],
+    //   importedProfiles: [],
+    //   skippedExistingDice: [],
+    //   skippedExistingProfiles: []
+    // };
+
+    // importPackage(url, result)
+    //   .then(() => setImportInfo(result))
+    //   .catch(err => Alert.alert(translate("ImportError"), err?.message || err))
+    //   .finally(() => setImportInProgress(undefined))
+  }
+
+  useIncomingURL((url) => handleImport({ url }));
+
 
 
   const mainBackgroundColor = Settings.getString(BACKGROUND.name, BACKGROUND.LIGHT);
@@ -211,10 +239,30 @@ function Main(): React.JSX.Element {
 
 
 
-export default function App() {
-  return <SafeAreaProvider>
-    <Main />
-  </SafeAreaProvider>
+export default function App(props: any) {
+
+  useEffect(() => {
+    const now = Date.now();
+    const nativeStartTime = props.nativeStartTime ?? now;
+    const elapsed = now - nativeStartTime;
+    const minDuration = 2000;
+    const remaining = Math.max(0, minDuration - elapsed);
+
+    console.log("Splash delay remaining:", remaining);
+
+    setTimeout(() => {
+      console.log("Splash Closed");
+      SplashScreen.hide();
+    }, remaining);
+  }, []);
+
+  return <GlobalContext.Provider value={{
+    url: props.url
+  }}>
+    <SafeAreaProvider>
+      <Main />
+    </SafeAreaProvider>
+  </GlobalContext.Provider>
 
 
 }

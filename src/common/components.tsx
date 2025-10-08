@@ -12,13 +12,15 @@ import { gStyles } from "./common-style";
 // }
 
 
-export function IconButton({ icon, onPress, text, backgroundColor }:
-    { icon?: IconProps, text?: string, backgroundColor?: string, onPress: () => void, type?: undefined | "Ionicon" | "MCI" }) {
+export function IconButton({ icon, onPress, text, backgroundColor, borderWidth }:
+    { icon?: IconProps, text?: string, backgroundColor?: string, onPress: () => void, type?: undefined | "Ionicon" | "MCI", borderWidth?: number }) {
 
     return <TouchableOpacity style={
         [styles.iconButton, { flexDirection: "row", direction: isRTL() ? "rtl" : "ltr" },
         backgroundColor && { backgroundColor },
-        !text && { borderWidth: 0, padding: 0, maxWidth: styles.iconButton.maxHeight }]} onPress={onPress} >
+        !text && { borderWidth: 0, padding: 0, maxWidth: styles.iconButton.maxHeight },
+        borderWidth != undefined && { borderWidth }
+        ]} onPress={onPress} >
 
         {icon && <MyIcon info={icon} />}
         {!!text && <Text allowFontScaling={false} style={{ fontSize: 22, marginInlineStart: 5, marginInlineEnd: 5, textAlign: icon ? "left" : "center" }}>{text}</Text>}
@@ -34,9 +36,9 @@ export function LabeledIconButton({ type, icon, label, onPress, size = 40, color
         size?: number,
         color?: string,
     }) {
- 
-    return <Pressable onPress={onPress} style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", width: size*3 }}>
-        <MyIcon info={{type, name:icon, size, color }}/>
+
+    return <Pressable onPress={onPress} style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", width: size * 3 }}>
+        <MyIcon info={{ type, name: icon, size, color }} />
         <Text allowFontScaling={false} style={gStyles.labeledIconText}>{label}</Text>
     </Pressable>
 }

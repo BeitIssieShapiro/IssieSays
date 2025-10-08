@@ -1,21 +1,22 @@
-import { Keyboard, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert } from "react-native";
-import { BTN_COLOR, Spacer } from "./uielements";
+import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View, Alert } from "react-native";
+import { BTN_COLOR } from "./uielements";
 import { useEffect, useRef, useState } from "react";
 import { fTranslate, isRTL, translate } from "./lang";
 import { DefaultProfileName, ProfilePicker } from "./profile-picker";
 import { AlreadyExists, Button, createNewProfile, deleteButton, deleteProfile, Folders, getRecordingFileName, InvalidCharachters, InvalidFileName, isValidFilename, loadButton, LoadProfile, Profile, readCurrentProfile, renameProfile, ReservedFileName, saveButton, SaveProfile, verifyProfileNameFree } from "./profile";
 import Toast from 'react-native-toast-message';
 import { Settings } from './setting-storage';
-import prompt from 'react-native-prompt-android';
 import { MyIcon } from "./common/icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenSubTitle, ScreenTitle } from "./common/settings-elements";
 import { colors } from "./common/common-style";
-import { Checkbox } from "./common/check-box";
 import { ButtonCard } from "./button-card";
 import { EditButton, EditedButton } from "./edit-button";
 import { moveFile, unlink } from "react-native-fs";
 import { EditText } from "./common/edit-text";
+import { IconButton } from "./common/components";
+import Share from 'react-native-share';
+import { exportAll, exportProfile } from "./import-export";
 
 
 
@@ -85,6 +86,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     const [backgroundColor, setBackgroundColor] = useState<string>(Settings.getString(BACKGROUND.name, BACKGROUND.LIGHT));
     const [profileBusy, setProfileBusy] = useState<boolean>(false);
     const [editButton, setEditButton] = useState<number>(-1);
+    const [busy, setBusy] = useState<boolean>(false);
 
     useEffect(() => {
         setBackgroundColor(Settings.getString(BACKGROUND.name, BACKGROUND.LIGHT));
@@ -267,7 +269,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         afterDelete();
     }
 
-    const handleProfileEditName = (newName:string, prevName: string, isRename: boolean, afterSave: () => void) => {
+    const handleProfileEditName = (newName: string, prevName: string, isRename: boolean, afterSave: () => void) => {
         const currName = Settings.getString(CURRENT_PROFILE.name, "");
         const isCurrent = currName == prevName;
 
@@ -311,6 +313,46 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                     })
                 }
             });
+    }
+
+    async function handleExportProfile(name: string) {
+        setBusy(true);
+        const zipPath = (await exportProfile(name)
+            .finally(() => setBusy(false))
+        ) as string;
+
+        const shareOptions = {
+            title: translate("ShareProfileWithTitle"),
+            subject: translate("ShareProfileEmailSubject"),
+            urls: [zipPath],
+        };
+
+        Share.open(shareOptions).then(() => {
+            Alert.alert(translate("ShareSuccessful"));
+        }).catch(err => {
+            Alert.alert(translate("ActionCancelled"));
+        });
+    }
+
+    async function handleBackupAll() {
+        setBusy(true)
+        const zipPath = (await exportAll()
+            .catch(err => console.log("export all failed", err))
+            .finally(() => setBusy(false))
+        ) as string;
+
+        console.log("Export All", zipPath)
+        const shareOptions = {
+            title: translate("ShareBackupWithTitle"),
+            subject: translate("ShareBackupEmailSubject"),
+            urls: [zipPath],
+        };
+
+        Share.open(shareOptions).then(() => {
+            Alert.alert(translate("ShareSuccessful"));
+        }).catch(err => {
+            Alert.alert(translate("ActionCancelled"));
+        });
     }
 
 
@@ -362,7 +404,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
             onDelete={(name, afterDelete) => handleProfileDelete(name, afterDelete)}
             onClose={() => setOpenLoadProfile(false)}
-            //onExport={handleExportProfile}
+            onExport={handleExportProfile}
             isNarrow={isScreenNarrow}
         />
 
@@ -408,44 +450,45 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         <View style={styles.settingHost}>
             <View style={[styles.section, marginHorizontal, dirStyle]} >
                 <View style={{ flexDirection: "row" }}>
-                    <TouchableOpacity style={{ width: 25, height: 25, backgroundColor: BACKGROUND.DARK, borderRadius: 12.5 }}
-                        onPress={() => changeBackgroundColor(BACKGROUND.DARK)}>
-                        {backgroundColor === BACKGROUND.DARK &&
-                            <MyIcon info={{ type: "AntDesign", name: "check", size: 25 }} />
-                        }
-                    </TouchableOpacity>
-                    <Spacer w={25} />
-                    <TouchableOpacity style={{ width: 25, height: 25, backgroundColor: BACKGROUND.LIGHT, borderColor: "black", borderWidth: 1, borderRadius: 12.5 }}
-                        onPress={() => changeBackgroundColor(BACKGROUND.LIGHT)}>
-                        {backgroundColor === BACKGROUND.LIGHT &&
-                            <MyIcon info={{ type: "AntDesign", name: "check", color: "black", size: 25 }} />
-                        }
-                    </TouchableOpacity>
-                    <Spacer w={5} />
+                    <IconButton backgroundColor="black" onPress={() => changeBackgroundColor(BACKGROUND.DARK)}
+                        icon={backgroundColor === BACKGROUND.DARK ? { name: "check", color: "white", size: 25 } : undefined} />
+                    <IconButton backgroundColor="white" onPress={() => changeBackgroundColor(BACKGROUND.LIGHT)} borderWidth={1}
+                        icon={backgroundColor === BACKGROUND.LIGHT ? { name: "check", color: "black", size: 25 } : undefined} />
                 </View>
                 <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("BackgroundColor")}</Text>
             </View>
 
             <View style={[styles.section, marginHorizontal, dirStyle]} >
-                <View style={{ direction: isRTL() ? "rtl" : "ltr", flexDirection: "row", alignItems: "center" }} >
-                    <Checkbox size={30} caption={translate("OneAfterTheOther")} checked={profile.oneAfterTheOther}
-                        onToggle={() => changeOneAfterTheOther(!profile.oneAfterTheOther)} />
-                    <Spacer w={20} />
-                    <View style={styles.numberSelector}>
-                        <MyIcon info={{ type: "AntDesign", name: "minus-circle", color: profile.buttons.length == 1 ? "lightgray" : BTN_COLOR, size: 35 }}
-                            onPress={() => changeNumOfButton(-1)} />
-
-                        <Text allowFontScaling={false} style={{ fontSize: 30, marginHorizontal: 10 }}>{profile.buttons.length}</Text>
-                        <MyIcon info={{ type: "AntDesign", name: "plus-circle", color: profile.buttons.length == maxButtons ? "lightgray" : BTN_COLOR, size: 35 }}
-                            onPress={() => changeNumOfButton(1)} />
-                    </View>
-
+                <View style={{ flexDirection: "row" }}>
+                    <IconButton backgroundColor={profile.oneAfterTheOther ? "lightgray" : "white"} borderWidth={profile.oneAfterTheOther ? 3 : 1} text={translate("OneAfterTheOtherBtn")} icon={{ name: "transition", type: "MDI", color: "black" }} onPress={() => changeOneAfterTheOther(true)} />
+                    <IconButton backgroundColor={profile.oneAfterTheOther ? "white" : "lightgray"} borderWidth={profile.oneAfterTheOther ? 1 : 3} text={translate("AllAtOnceBtn")} icon={{ name: "gamepad-circle-outline", type: "MDI", color: "black" }} onPress={() => changeOneAfterTheOther(false)} />
                 </View>
+                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("ButtonsLayout")}</Text>
+            </View>
+
+            <View style={[styles.section, marginHorizontal, dirStyle]} >
+                <IconButton backgroundColor="white" text={translate("BackupAll")} icon={{ name: "cloud-upload", type: "AntDesign" }} 
+                    onPress={handleBackupAll} />
+                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("Backup")}</Text>
+            </View>
+
+            <View style={[styles.section, marginHorizontal, dirStyle]} >
+                <View style={[styles.numberSelector, { direction: isRTL() ? "rtl" : "ltr", flexDirection: "row", alignItems: "center" }]}>
+                    <MyIcon info={{ type: "AntDesign", name: "minus-circle", color: profile.buttons.length == 1 ? "lightgray" : BTN_COLOR, size: 35 }}
+                        onPress={() => changeNumOfButton(-1)} />
+
+                    <Text allowFontScaling={false} style={{ fontSize: 30, marginHorizontal: 10 }}>{profile.buttons.length}</Text>
+
+                    <MyIcon info={{ type: "AntDesign", name: "plus-circle", color: profile.buttons.length == maxButtons ? "lightgray" : BTN_COLOR, size: 35 }}
+                        onPress={() => changeNumOfButton(1)} />
+                </View>
+
                 <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("Buttons")}</Text>
             </View>
 
+
             <ScrollView style={styles.settingButtosnHost} >
-                <View style={[styles.buttons, marginHorizontal]}>
+                <View style={[styles.buttons, marginHorizontal, { flexDirection: isRTL() ? "row-reverse" : "row" }]}>
                     {
                         profile.buttons.map((button: Button, i: number) => (
                             <ButtonCard key={i} button={button} width={buttonCardSize} height={buttonCardSize * .8}
@@ -463,115 +506,6 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     </View >
 }
 
-// function ButtonSettings({ index, revision, profileButton, isBusy,
-//     onOpenLoadButtons, onSaveButton, onSetImageUrl, onSetColorPickerOpen, onSetShowNames,
-//     onEditName,
-//     onImageSearchOpen, isLast, isScreenNarrow }: {
-//         index: 0 | 1 | 2 | 3,
-//         revision: number;
-//         profileButton: Button;
-//         isBusy: boolean;
-//         onOpenLoadButtons: () => void;
-//         onSaveButton: () => void;
-//         onSetImageUrl: (url: string) => void;
-//         onSetColorPickerOpen: () => void;
-//         onImageSearchOpen: () => void;
-//         onSetShowNames: (show: boolean) => void;
-//         onEditName: () => void;
-//         isLast: boolean;
-//         isScreenNarrow: boolean;
-//     }) {
-
-
-//     return <View style={[{
-//         direction: isRTL() ? "rtl" : "ltr",
-//         width: "100%",
-//         //height: 160,
-//         flexDirection: "row",
-//         justifyContent: "space-between",
-//         alignItems: "center",
-//         borderBottomColor: "lightgray",
-//         borderBottomWidth: isLast ? 0 : 2,
-//         paddingBottom: 15,
-//         paddingTop: 15,
-//     }, isScreenNarrow && { flexDirection: "column", alignItems: "flex-start" }]}>
-//         {/* Buttons */}
-//         <View style={{ flexDirection: "column" }}>
-//             {/* Top Row */}
-//             <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "flex-start", height: 60 }}>
-//                 <Checkbox size={30} caption={translate("ShowName")} checked={profileButton.showName}
-//                     onToggle={() => onSetShowNames(!profileButton.showName)} />
-
-//                 {isBusy && <ActivityIndicator size="large" color="#0000ff" />}
-//                 <IconButton text={translate("Load")} onPress={() => onOpenLoadButtons()} />
-//                 <IconButton text={translate("Save")} onPress={() => onSaveButton()} />
-//             </View>
-//             {/* Bottom Row */}
-//             <View style={{ flexDirection: "row", alignItems: "center", height: 60 }}>
-//                 <MyIcon info={{ type: "MDI", name: "palette-outline", size: 30 }} onPress={() => onSetColorPickerOpen()} />
-//                 <Spacer w={20} />
-//                 <MyIcon info={{ type: "MDI", name: "image-outline", size: 30 }} onPress={() => {
-//                     SelectFromGallery().then((url) => {
-//                         if (url !== "") {
-//                             onSetImageUrl(url);
-//                         }
-//                     })
-//                 }} />
-
-//                 <Spacer w={20} />
-
-//                 <TouchableOpacity onPress={() => onSetImageUrl("")}>
-//                     {removeIcon}
-//                 </TouchableOpacity>
-//                 <Spacer w={20} />
-//                 <MyIcon info={{ type: "MDI", name: "image-search-outline", size: 30 }} onPress={() => {
-//                     onImageSearchOpen();
-//                 }} />
-
-//                 <Spacer w={20} />
-//                 <View style={styles.verticalSeperator} />
-//                 <Spacer w={20} />
-//                 {/* <RecordButton name={index + ""} backgroundColor={"#013D76"}
-//                     size={40} height={60} revision={revision} /> */}
-//             </View>
-
-//         </View>
-
-//         {/* Preview */}
-//         <View>
-//             <View style={{ flexWrap: "nowrap", overflow: "visible", width: 140 }}>
-//                 {/* <MainButton
-//                     name={profileButton.name}
-//                     showName={false}
-//                     fontSize={20}
-//                     width={80}
-//                     raisedLevel={3}
-//                     color={profileButton.color}
-//                     imageUrl={profileButton.imageUrl}
-//                     appBackground={BACKGROUND.LIGHT}
-//                     showProgress={false}
-//                     recName={"" + index}
-//                 /> */}
-//                 <View style={[styles.buttonPreview, { borderColor: profileButton.color }]} >
-//                     {profileButton.imageUrl?.length > 0 && <Image source={{ uri: profileButton.imageUrl }}
-//                         style={{
-//                             borderRadius: 80 * (5 / 12),
-//                             height: 80 * (5 / 6), width: 80 * (5 / 6),
-//                             transform: [{ scale: 0.9 }]
-//                         }} />}
-//                 </View>
-//                 <Spacer h={25} />
-//             </View>
-//             <View style={{ position: "absolute", flexDirection: "row", bottom: 0, [isRTL() ? "left" : "right"]: 0, height: 25, justifyContent: "flex-end" }}>
-//                 <Text style={{ fontSize: 20, color: profileButton.showName ? "black" : "gray", paddingEnd: profileButton.name.length > 7 ? 0 : 27 }}>
-//                     {profileButton.name.length > 0 ? profileButton.name : translate("NoButtonName")}
-//                 </Text>
-//                 <MyIcon info={{ type: "MI", name: "edit", size: 25 }} onPress={onEditName} />
-//             </View>
-//         </View>
-
-//     </View >
-// }
 
 const styles = StyleSheet.create({
     settingHost: {
@@ -618,7 +552,6 @@ const styles = StyleSheet.create({
     buttons: {
         marginTop: 10,
         marginHorizontal: 40,
-        flexDirection: "row-reverse",
         flexWrap: "wrap",
         justifyContent: "space-between",
 
@@ -654,7 +587,8 @@ const styles = StyleSheet.create({
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
-        height: "100%"
+        height: "100%",
+        paddingHorizontal: 10,
     },
 
     buttonPreview: {
