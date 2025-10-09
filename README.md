@@ -21,11 +21,10 @@ cp node_modules/react-native-vector-icons/Fonts/*.ttf android/app/src/main/asset
 
 # Images Tawsol (not yet impl.)
 https://tawasol.mada.org.qa/wp-json/custom/v2/YOUR_APP_ID/symbols
-```  [oai_citation:6‡tawasol.mada.org.qa](https://tawasol.mada.org.qa/api-documentation/?lang=en&utm_source=chatgpt.com)  
+[oai_citation:6‡tawasol.mada.org.qa](https://tawasol.mada.org.qa/api-documentation/?lang=en&utm_source=chatgpt.com)  
 
 
-## todo
-- splash screen is not shown enough
-- export profiles??
-- backup?
+## TODO
+- verify iPhone form factor
+- Tawsol images
 

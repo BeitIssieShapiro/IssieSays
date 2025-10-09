@@ -3,7 +3,8 @@ import path from "path";
 
 import { ensureAndroidCompatible, joinPaths } from "./utils";
 import { unzip, zip } from "react-native-zip-archive";
-import { Folders, ListElements, Profile } from "./profile";
+import { AlreadyExists, Folders, ListElements, Profile, SaveProfile } from "./profile";
+import { translate } from "./lang";
 export function doNothing() { }
 
 export function getTempFileName(ext: string) {
@@ -13,10 +14,12 @@ export function getTempFileName(ext: string) {
     return path.join(RNFS.TemporaryDirectoryPath, fn + "." + ext);
 }
 
+export function loadFile(path: string) {
+    return RNFS.readFile(ensureAndroidCompatible(path), 'utf8');
+}
+
 
 export async function exportProfile(name: string): Promise<string> {
-    const metaDataFile = getTempFileName("json");
-
     const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
     const fileContents = await RNFS.readFile(ensureAndroidCompatible(profilePath), 'utf8');
     const p: Profile = JSON.parse(fileContents);
@@ -27,13 +30,13 @@ export async function exportProfile(name: string): Promise<string> {
         name,
         ...p,
     }
-    await RNFS.writeFile(metaDataFile, JSON.stringify(metaData, undefined, " "));
-
+    const metadataTargetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "metadata__" + name + ".json"))
+    await RNFS.writeFile(metadataTargetFile, JSON.stringify(metaData, undefined, " "));
     const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "profile__" + name + ".says"));
     // delete if exists before
     await RNFS.unlink(ensureAndroidCompatible(targetFile)).catch(doNothing);
 
-    return zip([ensureAndroidCompatible(metaDataFile)], targetFile);    
+    return zip([metadataTargetFile], targetFile);
 }
 
 export async function exportAll(): Promise<string> {
@@ -58,54 +61,41 @@ export async function exportAll(): Promise<string> {
 }
 
 export interface ImportInfo {
-    importedDice: string[];
     importedProfiles: string[];
-    skippedExistingDice: string[];
     skippedExistingProfiles: string[];
 }
-/*
+
 export async function importPackage(packagePath: string, importInfo: ImportInfo, subFolder = "") {
     const unzipTargetPath = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "imported", subFolder));
     await RNFS.unlink(unzipTargetPath).catch(doNothing);
+    if (packagePath.startsWith("file://")) {
+        packagePath = packagePath.substring(7);
+    }
     const unzipFolderPath = await unzip(packagePath, unzipTargetPath);
 
     const items = await RNFS.readDir(ensureAndroidCompatible(unzipFolderPath));
-    const metaDataItem = items.find(f => f.name.endsWith(".json") && !f.name.startsWith("face"));
+    const metaDataItem = items.find(f => f.name.startsWith("metadata__"));
     if (metaDataItem) {
         const metadataStr = await loadFile(metaDataItem.path);
         const md = JSON.parse(metadataStr);
-        if (md.type == "dice") {
-            const targetPath = getCustomTypePath(md.name)
-
-            if (await RNFS.exists(ensureAndroidCompatible(targetPath))) {
-                importInfo.skippedExistingDice.push(md.name);
-                return;
-            }
-
-            await RNFS.mkdir(ensureAndroidCompatible(targetPath));
-            for (const file of items.filter(item => item.name != metaDataItem.name)) {
-                await RNFS.moveFile(ensureAndroidCompatible(file.path), ensureAndroidCompatible(targetPath + "/" + file.name)).catch(e => console.log("copy file on import failed", e));
-            }
-            importInfo.importedDice.push(md.name);
-        } else if (md.type == "profile") {
-            const targetPath = profileFilePath(md.name);
-            if (await RNFS.exists(ensureAndroidCompatible(targetPath))) {
-                importInfo.skippedExistingProfiles.push(md.name);
-                return;
-            }
-
+        if (md.type == "profile") {
+            const name = md.name;
             const p: Profile = {
-                dice: md.dice,
-                size: md.size,
-                recoveryTime: md.recoveryTime,
-                tableColor: md.tableColor,
-                soundEnabled: md.soundEnabled
+                buttons: md.buttons,
+                oneAfterTheOther: md.oneAfterTheOther,
+            };
+            try {
+                await SaveProfile(name, p, false, true);
+                importInfo.importedProfiles.push(md.name);
+            } catch (err) {
+                if (err instanceof AlreadyExists) {
+                    importInfo.skippedExistingProfiles.push(md.name);
+                    return;
+                }
             }
 
-            await saveProfileFile(md.name, p, true);
-            importInfo.importedProfiles.push(md.name);
         } else {
-            throw "Unknown package type";
+            throw translate("UnknownPackageType");
         }
     } else {
         // list of zips
@@ -116,4 +106,3 @@ export async function importPackage(packagePath: string, importInfo: ImportInfo,
     }
 }
 
-*/

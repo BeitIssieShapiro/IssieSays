@@ -5,6 +5,7 @@ import {
 } from 'react-native-safe-area-context';
 
 import SplashScreen from 'react-native-splash-screen';
+import * as Progress from 'react-native-progress';
 
 import { createSound } from 'react-native-nitro-sound';
 import { MainButton, RectView } from './uielements';
@@ -13,10 +14,15 @@ import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import { Settings } from './setting-storage';
 import { readCurrentProfile } from './profile';
 import { BACKGROUND, BUTTONS, CURRENT_PROFILE, ONE_AFTER_THE_OTHER, SettingsPage } from './settings';
-import { Platform, View } from 'react-native';
+import { Alert, Platform, View } from 'react-native';
 import { CountdownButton } from './common/countdown-btn';
 import { useIncomingURL } from './common/linking-hook';
 import { GlobalContext } from './common/global-context';
+import { isRTL, translate } from './lang';
+import { ImportInfo, importPackage } from './import-export';
+import { Text } from '@rneui/themed';
+import { ImportInfoDialog } from './common/import-info-dialog';
+import { gStyles } from './common/common-style';
 
 const toastConfig = {
 
@@ -53,11 +59,18 @@ function Main(): React.JSX.Element {
   const [showSettings, setShowSettings] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [nextButton, setNextButton] = useState(0);
+  const [importInfo, setImportInfo] = useState<ImportInfo | undefined>(undefined);
+  const [importInProgress, setImportInProgress] = useState<{
+    message: string;
+    precent: number;
+  } | undefined>();
 
   const isLandscape = () => windowSize.height < windowSize.width;
 
 
   async function handleImport(event: any) {
+    setShowSettings(false);
+    setShowAbout(false);
     let url = event.url
     url = decodeURI(url);
 
@@ -69,22 +82,20 @@ function Main(): React.JSX.Element {
 
     console.log("handleImport event:", url, JSON.stringify(event));
 
-    // setImportInProgress({
-    //   message: translate("ImportInProgress"),
-    //   precent: 0,
-    // })
+    setImportInProgress({
+      message: translate("ImportInProgress"),
+      precent: 0,
+    })
 
-    // let result: ImportInfo = {
-    //   importedDice: [],
-    //   importedProfiles: [],
-    //   skippedExistingDice: [],
-    //   skippedExistingProfiles: []
-    // };
+    let result: ImportInfo = {
+      importedProfiles: [],
+      skippedExistingProfiles: []
+    };
 
-    // importPackage(url, result)
-    //   .then(() => setImportInfo(result))
-    //   .catch(err => Alert.alert(translate("ImportError"), err?.message || err))
-    //   .finally(() => setImportInProgress(undefined))
+    importPackage(url, result)
+      .then(() => setImportInfo(result))
+      .catch(err => Alert.alert(translate("ImportError"), err?.message || err))
+      .finally(() => setImportInProgress(undefined))
   }
 
   useIncomingURL((url) => handleImport({ url }));
@@ -195,6 +206,17 @@ function Main(): React.JSX.Element {
 
     />
 
+    {/** Progress */}
+    {importInProgress && <View style={gStyles.progressBarHost}>
+      <Text allowFontScaling={false} style={{ fontSize: 28, marginBottom: 5 }}>{importInProgress.message}</Text>
+      <Progress.Bar width={windowSize.width * .6} progress={importInProgress.precent / 100} style={[isRTL() && { transform: [{ scaleX: -1 }] }]} />
+    </View>}
+
+    {
+      // Import info
+      importInfo && <ImportInfoDialog importInfo={importInfo} onClose={() => setImportInfo(undefined)} />
+    }
+
     <RectView buttonWidth={bottonWidth} width={windowSize.width} height={windowSize.height} isLandscape={isLandscape()}>
 
       {activeButtons.map((i: any) => (
@@ -263,6 +285,4 @@ export default function App(props: any) {
       <Main />
     </SafeAreaProvider>
   </GlobalContext.Provider>
-
-
 }

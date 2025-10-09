@@ -57,7 +57,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
     }
 
 
-    const handleSaveButton = (btn: EditedButton, index: number) => {
+    const handleSaveButton = (btn: EditedButton, index: number, afterSave?: () => void) => {
         if (!btn.name || btn.name.trim().length == 0) {
             Alert.alert(translate("ButtonMissingName"), "", [{ text: translate("OK") }]);
             return;
@@ -69,6 +69,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                     type: 'success',
                     text1: translate("ButtonSaved")
                 });
+                if (afterSave) afterSave();
             })
             .catch(err => {
                 if (err instanceof AlreadyExists) {
@@ -83,6 +84,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                                                 type: 'success',
                                                 text1: translate("ButtonSaved")
                                             });
+                                            if (afterSave) afterSave();
                                         })
                                 }
                             },
@@ -207,8 +209,25 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                     console.log("selected button", buttonName)
                     if (openLoadButton) {
                         setOpenLoadButton(false);
-                        const loadedBtn = await loadButton2(buttonName);
-                        updateButton(loadedBtn);
+                        Alert.alert(translate("AboutToOverwriteButtonTitle"), fTranslate("AboutToOverwriteButton"),
+                            [
+                                {
+                                    text: translate("SaveFirst"), onPress: () => {
+                                        handleSaveButton(localButton, index, async () => {
+                                            // after save
+                                            const loadedBtn = await loadButton2(buttonName);
+                                            updateButton(loadedBtn);
+                                        })
+                                    }
+                                },
+                                {
+                                    text: translate("ContinueWithoutSave"), onPress: async () => {
+                                        const loadedBtn = await loadButton2(buttonName);
+                                        updateButton(loadedBtn);
+                                    }
+                                },
+                                { text: translate("Cancel") }
+                            ])
                     }
                 }}
                 onClose={() => setOpenLoadButton(false)}

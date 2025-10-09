@@ -10,8 +10,8 @@ export const colors = {
 }
 
 export const menuActionIcon = {
-    color:colors.titleBlue,
-    size:22
+    color: colors.titleBlue,
+    size: 22
 }
 
 export const gStyles = StyleSheet.create({
@@ -98,7 +98,7 @@ export const gStyles = StyleSheet.create({
         borderBottomWidth: 2,
     },
     cardBody: {
-        position:"relative",
+        position: "relative",
         width: "100%",
         flexDirection: "column",
         alignItems: "center",
@@ -201,5 +201,16 @@ export const gStyles = StyleSheet.create({
         fontWeight: "bold",
         color: colors.titleBlue,
 
-    }
+    },
+    progressBarHost: {
+        position: 'absolute',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.35,
+        shadowRadius: 3.84,
+        borderRadius: 10,
+        padding: 10,
+        top: '25%', left: '15%', width: '70%', zIndex: 1000,
+        backgroundColor: 'white', alignItems: 'center'
+    },
 });
