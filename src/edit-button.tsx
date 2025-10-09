@@ -12,6 +12,7 @@ import { Checkbox } from "./common/check-box";
 import { MyColorPicker } from "./color-picker";
 import { ButtonPicker } from "./profile-picker";
 import Toast from "react-native-toast-message";
+import { getIsMobile } from "./utils";
 
 
 interface EditButtonProps {
@@ -41,7 +42,9 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
 
     const colorWidth = Math.min(windowSize.width, windowSize.height);
     const isLandscape = windowSize.height < windowSize.width;
+    const isMobile = getIsMobile(windowSize);
 
+    console.log("isMobile", isMobile);
     const handleButtonDelete = async (name: string, afterDelete: () => void, force = false) => {
 
         if (!force) {
@@ -108,7 +111,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
             name={localButton.name}
             fontSize={22}
             showName={localButton.showName}
-            width={180}
+            width={isMobile ? 80 : 180}
             raisedLevel={10}
             color={localButton.color}
             imageUrl={localButton.imageUrl}
@@ -117,15 +120,16 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
             recName={""}
         />
         {localButton.showName || <Spacer h={26} />}
-        <Spacer h={20} />
+        {!isMobile && <Spacer h={20} />}
     </View>
 
-    const txtEdit = <View style={styles.section}>
+    const txtEdit = <View style={[styles.section, isMobile ? { marginVertical: 5 } : {}]}>
         <Text allowFontScaling={false} style={styles.label}>{translate("Name")}</Text>
         <View>
             <TextInput
                 style={[
                     styles.input,
+                    isNarrow ? { width: windowSize.width * .8 } : {},
                     isRTL() ? { textAlign: "right" } : { direction: "ltr", textAlign: "left" },
                 ]}
 
@@ -150,13 +154,14 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
         </View>
     </View>;
 
-
+    const buttonSize = isNarrow ? 30 : 50;
+    const gapSize = isNarrow ? 0 : 25;
 
 
     return (
         <View style={[gStyles.screenContainer, { top: safeAreaInsets.top, direction: isRTL() ? "rtl" : "ltr" }]}>
             {/* Header */}
-            <View style={[gStyles.screenTitle, { justifyContent: "center" }, isNarrow && { height: 140 }]}>
+            <View style={[gStyles.screenTitle, { justifyContent: "center" }, isNarrow && { height: 110, alignItems: "flex-start" }]}>
                 <Text allowFontScaling={false} style={gStyles.screenTitleText}>
                     {translate("EditButtonTitle")}
                 </Text>
@@ -179,9 +184,9 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
 
             {colorPickerOpen && <MyColorPicker
                 open={colorPickerOpen}
-                title={localButton.name}
+                title={translate("BackgroundColor")}
                 top={100}
-                height={250}
+                height={300}
                 width={colorWidth}
                 color={localButton.color}
                 isScreenNarrow={isNarrow}
@@ -249,7 +254,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
             {!isLandscape && <View style={gStyles.horizontalSeperator} />}
 
             {/* Appearance */}
-            <View style={styles.section}>
+            <View style={[styles.section, isMobile ? { marginVertical: 5 } : {}]}>
                 <Text allowFontScaling={false} style={styles.label}>{translate("Appearance")}</Text>
                 <View style={styles.row}>
                     <LabeledIconButton
@@ -258,18 +263,18 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                         label={translate("ButtonBackgroundColor")}
                         color={colors.defaultIconColor}
                         onPress={() => setColorPickerOpen(true)}
-                        size={50}
+                        size={buttonSize}
                     />
-                    <Spacer w={25} />
+                    <Spacer w={gapSize} />
                     <LabeledIconButton
                         type="MDI"
                         icon="image-search-outline"
                         label={translate("SearchImage")}
                         color={colors.defaultIconColor}
                         onPress={() => setImageSearchOpen(true)}
-                        size={50}
+                        size={buttonSize}
                     />
-                    <Spacer w={25} />
+                    <Spacer w={gapSize} />
                     <LabeledIconButton
                         type="MDI"
                         icon="view-gallery-outline"
@@ -279,16 +284,16 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                             const url = await SelectFromGallery();
                             if (url) updateButton({ imageUrl: url });
                         }}
-                        size={50}
+                        size={buttonSize}
                     />
-                    <Spacer w={25} />
+                    <Spacer w={gapSize} />
                     <LabeledIconButton
                         type="MDI"
                         icon="close"
                         label={translate("RemoveImage")}
                         color={"red"}
                         onPress={() => updateButton({ imageUrl: "" })}
-                        size={50}
+                        size={buttonSize}
                     />
                 </View>
             </View>
@@ -296,7 +301,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
             <View style={gStyles.horizontalSeperator} />
 
             {/* Text and Voice */}
-            <View style={styles.section}>
+            <View style={[styles.section, isMobile ? { marginVertical: 5 } : {}]}>
                 <Text allowFontScaling={false} style={styles.label}>{translate("Voice")}</Text>
 
                 <RecordButton
@@ -305,7 +310,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                     }}
                     name={localButton.audioName != undefined ? localButton.audioName : index + ""}
                     backgroundColor={"#013D76"}
-                    size={50}
+                    size={buttonSize}
                     height={60}
                     revision={0}
                 />

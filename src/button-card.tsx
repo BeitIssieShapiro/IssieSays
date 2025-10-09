@@ -23,9 +23,10 @@ export function ButtonCard({ width, height, button, onSetActive, onEditButton, r
 
     const dirStyle: any = { flexDirection: (isRTL() ? "row-reverse" : "row") }
 
-    return <View style={[gStyles.card, { width, height,  padding:10 }]}>
-        <View style={[gStyles.cardTitle, dirStyle]}>
-            <Text allowFontScaling={false} style={[styles.textValue, { textAlign: isRTL() ? "right" : "left" }]}>
+    return <View style={[gStyles.card, { width, height, padding: isMobile ? 0 : 10 }]}>
+        <View style={[gStyles.cardTitle, dirStyle,]}>
+            <Text allowFontScaling={false} style={[styles.textValue, { textAlign: isRTL() ? "right" : "left" },
+            isMobile ? { fontSize: 22 } : {}]}>
                 {button.name}
             </Text>
             {/* <Switch
@@ -40,7 +41,7 @@ export function ButtonCard({ width, height, button, onSetActive, onEditButton, r
                 name={""}
                 fontSize={22}
                 showName={true}
-                width={width /3}
+                width={width / (isMobile ? 4 : 3)}
                 raisedLevel={10}
                 color={button.color}
                 imageUrl={button.imageUrl}

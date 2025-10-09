@@ -8,6 +8,7 @@ import RNFS from 'react-native-fs';
 import { MyCloseIcon } from "./common/icons";
 import { Spacer } from "./uielements";
 import { ScreenTitle } from "./common/settings-elements";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 
 export async function SelectFromGallery(): Promise<string> {
@@ -70,6 +71,8 @@ export const deleteFile = async (filePath: string) => {
 export function SearchImage({ onSelectImage, open, height, onClose, isScreenNarrow }: any) {
     const [value, setValue] = useState("")
     const [results, setResults] = useState<any>();
+    const safeAreaInsets = useSafeAreaInsets();
+
 
     const textRef = useRef<TextInput>(null);
 
@@ -90,7 +93,7 @@ export function SearchImage({ onSelectImage, open, height, onClose, isScreenNarr
         <Modal transparent={true} animationType="slide" presentationStyle="overFullScreen"
             supportedOrientations={['portrait', 'portrait-upside-down', 'landscape']}>
 
-            <View style={[styles.pickerView, { margin: isScreenNarrow ? 10 : 80 }]}>
+            <View style={[styles.pickerView, { margin: isScreenNarrow ? 10 : 80, top: safeAreaInsets.top }]}>
                 <ScreenTitle onClose={onClose} title={translate("SearchImageTitle")} icon={{ name: "close", color: "black" }} />
                 <View style={styles.searchRoot}>
                     <View style={[styles.searchTextAndBtnContainer, { direction: isRight2Left ? "rtl" : "ltr" }]}>
@@ -140,7 +143,7 @@ export function SearchImage({ onSelectImage, open, height, onClose, isScreenNarr
 
 
 const styles = StyleSheet.create({
-    
+
     overlay: {
         position: 'absolute',
         top: 0,
@@ -148,7 +151,7 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
         backgroundColor: 'rgba(0,0,0,0.6)', // <-- semi-transparent black
-        zIndex:1000,
+        zIndex: 1000,
     },
     closeButton: {
         position: "absolute",

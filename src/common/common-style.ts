@@ -7,6 +7,7 @@ export const colors = {
     titleButtonsBG: "#F5F5F5",
     disabled: "gray",
     defaultIconColor: "#6E6E6E",
+    defaultVoiceButtonBGColor: "#C8572A",
 }
 
 export const menuActionIcon = {

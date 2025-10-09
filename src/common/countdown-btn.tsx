@@ -31,7 +31,7 @@ export const CountdownButton: React.FC<CountdownButtonProps> = ({
     // When press starts, begin a countdown from 3.
     const handlePressIn = () => {
         setCountdown(__DEV__ ? 0 : delayInSeconds);
-        //setCountdown(delayInSeconds);
+        // setCountdown(delayInSeconds);
     };
 
     // When press is released, cancel the countdown.

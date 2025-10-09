@@ -1,7 +1,7 @@
 import * as RNLocalize from 'react-native-localize';
 const locales = RNLocalize.getLocales();
 const bestLanguage = locales[0]?.languageTag || 'en';
-const deviceLanguageRaw = //'he'
+const deviceLanguageRaw = 'he'
     bestLanguage;
 
 const supportedLanguages = ['he', 'en', 'ar'];
@@ -60,7 +60,7 @@ var strings: any = {
         "ProfileEditNameTitle": "עריכת שם פרופיל",
         "ProfileSaveFailed": "שמירת הפרופיל נכשלה",
         "OneAfterTheOther": "אחד אחרי השני",
-        "ResetButtons": "חוזר להתחלה בעוד {1} שניות",
+        "ResetButtons": "חוזר בעוד {1}",
         "ButtonSaved": "כפתור-שמע נשמר בהצלחה",
         "ButtonExistsTitle": "כפתור-שמע קיים",
         "ButtonSaveFailed": "שמירת כפתור-השמע נכשלה",
@@ -144,7 +144,7 @@ var strings: any = {
         "DeleteProfileWarnning": "Deleting Profile '{1}'. Are you sure?",
         "DeleteButtonTitle": "Delete Voice-Button Template",
         "DeleteButtonWarnning": "Deleting Voice-Button Template '{1}'. Are you sure",
-        "OpenIn": "Open In {1}",
+        "OpenIn": "Open In {1} seconds",
         "ListProfiles": "List",
         "OK": "OK",
         "SaveToList": "Save As Template",
@@ -156,7 +156,7 @@ var strings: any = {
         "ProfileNameTitle": "Profile Name",
         "ProfileEditNameTitle": "Edit Profile Name",
         "OneAfterTheOther": "One After The Other",
-        "ResetButtons": "Reset in {1} seconds",
+        "ResetButtons": "Reset in {1}",
         "NoResultsMsg": "No Images found",
         "EditButtonTitle": "Edit Voice-Button",
         "ButtonBackgroundColor": "Color",

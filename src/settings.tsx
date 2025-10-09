@@ -17,6 +17,7 @@ import { EditText } from "./common/edit-text";
 import { IconButton } from "./common/components";
 import Share from 'react-native-share';
 import { exportAll, exportProfile } from "./import-export";
+import { getIsMobile } from "./utils";
 
 
 
@@ -87,6 +88,8 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     const [profileBusy, setProfileBusy] = useState<boolean>(false);
     const [editButton, setEditButton] = useState<number>(-1);
     const [busy, setBusy] = useState<boolean>(false);
+    const isMobile = getIsMobile(windowSize)
+    console.log("isMobile", isMobile, windowSize)
 
     useEffect(() => {
         setBackgroundColor(Settings.getString(BACKGROUND.name, BACKGROUND.LIGHT));
@@ -460,14 +463,14 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
             <View style={[styles.section, marginHorizontal, dirStyle]} >
                 <View style={{ flexDirection: "row" }}>
-                    <IconButton backgroundColor={profile.oneAfterTheOther ? "lightgray" : "white"} borderWidth={profile.oneAfterTheOther ? 3 : 1} text={translate("OneAfterTheOtherBtn")} icon={{ name: "transition", type: "MDI", color: "black" }} onPress={() => changeOneAfterTheOther(true)} />
-                    <IconButton backgroundColor={profile.oneAfterTheOther ? "white" : "lightgray"} borderWidth={profile.oneAfterTheOther ? 1 : 3} text={translate("AllAtOnceBtn")} icon={{ name: "gamepad-circle-outline", type: "MDI", color: "black" }} onPress={() => changeOneAfterTheOther(false)} />
+                    <IconButton backgroundColor={profile.oneAfterTheOther ? "lightgray" : "white"} borderWidth={profile.oneAfterTheOther ? 3 : 1} text={isMobile ? undefined : translate("OneAfterTheOtherBtn")} icon={{ name: "transition", type: "MDI", color: "black", size: 25 }} onPress={() => changeOneAfterTheOther(true)} />
+                    <IconButton backgroundColor={profile.oneAfterTheOther ? "white" : "lightgray"} borderWidth={profile.oneAfterTheOther ? 1 : 3} text={isMobile ? undefined : translate("AllAtOnceBtn")} icon={{ name: "gamepad-circle-outline", type: "MDI", color: "black", size: 25 }} onPress={() => changeOneAfterTheOther(false)} />
                 </View>
                 <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("ButtonsLayout")}</Text>
             </View>
 
             <View style={[styles.section, marginHorizontal, dirStyle]} >
-                <IconButton backgroundColor="white" text={translate("BackupAll")} icon={{ name: "cloud-upload", type: "AntDesign" }} 
+                <IconButton backgroundColor="white" text={translate("BackupAll")} icon={{ name: "cloud-upload", type: "AntDesign" }}
                     onPress={handleBackupAll} />
                 <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("Backup")}</Text>
             </View>

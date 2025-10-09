@@ -8,15 +8,16 @@ import { LAST_COLORS } from "./settings";
 import FadeInView from "./FadeInView";
 import { ColorButton } from "./uielements";
 import { MyCloseIcon } from "./common/icons";
+import { colors } from "./common/common-style";
+import { getIsMobile } from "./utils";
 export const availableColorPicker = [
-    '#000000', '#fee100', '#20ad57', '#5db7dd', '#2958af', '#d62796', '#65309c', '#da3242'
+    '#000000', '#fee100', '#20ad57', '#5db7dd', '#2958af', '#d62796', '#65309c', colors.defaultVoiceButtonBGColor,
 ]
 
 export function MyColorPicker(props: any) {
     const [openMore, setOpenMore] = useState(false);
     const [composedColor, setComposedColor] = useState(props.color);
     const [lastColors, setLastColors] = useState<string[]>([]);
-
 
     useEffect(() => {
         //load last colors
@@ -27,15 +28,8 @@ export function MyColorPicker(props: any) {
     }, [])
 
     let colorButtonSize = (props.width) / ((availableColorPicker.length + 1) * 1.4);
-    if (props.isScreenNarrow) {
-        colorButtonSize *= 2;
-    }
+
     let height = props.open ? props.height : 0;
-
-    // useEffect(() => {
-    //     props.onHeightChanged(height);
-    // }, [openMore, props.open]);
-
 
     const _handleSelect = useCallback(() => {
         props.onSelect(composedColor)
@@ -57,13 +51,11 @@ export function MyColorPicker(props: any) {
         return null;
     }
 
-    //trace("last colors", lastColors)
-    //trace("color", props.color, "composed", composedColor)
     return <FadeInView height={height}
         style={[styles.pickerView, { bottom: 0, left: 0, right: 0 }]}>
         <Text allowFontScaling={false} style={{ fontSize: 25, margin: 25 }}>{props.title}</Text>
         <View style={styles.closeButton}>
-            <MyCloseIcon onClose={props.onClose}/>
+            <MyCloseIcon onClose={props.onClose} />
         </View>
 
 
@@ -97,7 +89,6 @@ export function MyColorPicker(props: any) {
             <View style={{
                 position: "absolute",
                 top: 30, left: -12,
-                //height: colorButtonSize * 3 + 30,
                 width: colorButtonSize * 2 + 30,
                 flexWrap: "wrap",
                 zIndex: 1000, flexDirection: "row",
@@ -111,9 +102,6 @@ export function MyColorPicker(props: any) {
                         index={i} />
                 </View>
                 )}
-
-
-
             </View>
 
             <View style={{
@@ -156,7 +144,6 @@ export function MyColorPicker(props: any) {
                     gapSize={10}
                     thumbSize={25}
                     autoResetSlider={true}
-
                     swatches={false}
                 />
             </View>

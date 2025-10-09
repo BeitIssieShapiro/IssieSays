@@ -47,11 +47,6 @@ const toastConfig = {
 
 export const audioRecorderPlayer = createSound();
 
-export const BTN_BACK_COLOR = "#C8572A";
-
-
-
-
 function Main(): React.JSX.Element {
   const [windowSize, setWindowSize] = useState({ width: 500, height: 500 });
 

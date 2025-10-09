@@ -1,17 +1,19 @@
 import { Platform, PermissionsAndroid } from "react-native";
 
-export function joinPaths(...segments:string[]) {
-    return segments
-        .map((seg) => seg.replace(/\/+$/, ""))
-        .join("/");
+export function joinPaths(...segments: string[]) {
+  return segments
+    .map((seg) => seg.replace(/\/+$/, ""))
+    .join("/");
 }
 
-export function ensureAndroidCompatible(path:string, forceFilePrefix?:boolean):string {
-    if ((forceFilePrefix || Platform.OS === 'android') && !path.startsWith("file")) {
-        return "file://" + path
-    }
-    return path
+export function ensureAndroidCompatible(path: string, forceFilePrefix?: boolean): string {
+  if ((forceFilePrefix || Platform.OS === 'android') && !path.startsWith("file")) {
+    return "file://" + path
+  }
+  return path
 }
+
+export const getIsMobile = (windowSize: { width: number, height: number }) => windowSize.width < 500 || windowSize.height < 500;
 
 
 export async function requestAudioPermission() {

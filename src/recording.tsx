@@ -10,7 +10,6 @@ import { ensureAndroidCompatible, requestAudioPermission } from "./utils";
 import { Settings } from "./setting-storage";
 import { INSTALL } from "./settings";
 import { MyIcon } from "./common/icons";
-export const BTN_BACK_COLOR = "#C8572A";
 const TEMP_NAME = "_temp_";
 
 export async function stopPlayback() {
@@ -221,7 +220,7 @@ export function RecordButton({ name, backgroundColor, size, height, revision, on
                 {/**todo: style={{ marginLeft: 6, marginRight: 3 }} */}
             </TouchableOpacity>
             <View style={{ flexDirection: "column", height: 70, width: size * 2, marginTop: 5 }}>
-                 <AudioWaveForm width={size * 2} height={40} infiniteProgress={recordProgress} color={BTN_BACK_COLOR} baseColor={"lightgray"} />
+                 <AudioWaveForm width={size * 2} height={40} infiniteProgress={recordProgress} color={backgroundColor} baseColor={"lightgray"} />
                 <Text allowFontScaling={false} style={{ fontSize: 16, width: size * 2, height: 30, textAlign: "center" }}>{state.recordTime?.substring(0, 5) || "0.0"}</Text>
             </View>
 

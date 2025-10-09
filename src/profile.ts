@@ -1,15 +1,14 @@
 import * as RNFS from 'react-native-fs';
 import * as path from 'path';
 import { BACKGROUND, BUTTONS, BUTTONS_COLOR, BUTTONS_IMAGE_URLS, BUTTONS_NAMES, BUTTONS_SHOW_NAMES, CURRENT_PROFILE, INSTALL, LAST_COLORS, ONE_AFTER_THE_OTHER } from './settings';
-import { BTN_BACK_COLOR } from './App';
 import Button from 'react-native-really-awesome-button';
 import { Settings } from './setting-storage';
 import { Platform, Settings as RNSettings } from 'react-native'
 import { MMKV } from 'react-native-mmkv';
 import { ensureAndroidCompatible, joinPaths } from './utils';
-import { gCurrentLang } from './lang';
 import { DefaultProfileName } from './profile-picker';
 import { EditedButton } from './edit-button';
+import { colors } from './common/common-style';
 
 export const enum Folders {
     Profiles = "profiles",
@@ -85,7 +84,12 @@ export async function Init() {
             const currName = getSetting(CURRENT_PROFILE.name, "");
 
             // move settings:
-            const buttonColors = getSetting(BUTTONS_COLOR.name, [BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR]);
+            const buttonColors = getSetting(BUTTONS_COLOR.name, [
+                colors.defaultVoiceButtonBGColor,
+                colors.defaultVoiceButtonBGColor,
+                colors.defaultVoiceButtonBGColor,
+                colors.defaultVoiceButtonBGColor,
+            ]);
             const buttonImageUrls = getSetting(BUTTONS_IMAGE_URLS.name, ["", "", "", ""]);
             const buttonShowNames = getSetting(BUTTONS_SHOW_NAMES.name, [false, false, false, false]);
             const buttonTexts = getSetting(BUTTONS_NAMES.name, ["", "", "", ""]);
@@ -225,7 +229,7 @@ export function newProfile(): Profile {
         oneAfterTheOther: false,
         buttons: [
             {
-                color: BTN_BACK_COLOR,
+                color: colors.defaultVoiceButtonBGColor,
                 imageUrl: "",
                 showName: false,
                 name: "",
@@ -241,7 +245,7 @@ export async function createHomeProfile() {
     SaveProfile(DefaultProfileName, p, true, true);
 }
 
-export async function createNewProfile(name:string) {
+export async function createNewProfile(name: string) {
     const p = newProfile()
 
     return SaveProfile(name, p, true, false);
@@ -275,7 +279,7 @@ async function writeCurrentProfile(p: Profile, name: string) {
                 } catch (e) { }
             } // if btn.recording undefined do nothing
         } else {
-            buttonColors.push(BTN_BACK_COLOR);
+            buttonColors.push(colors.defaultVoiceButtonBGColor);
             buttonImageUrls.push("");
             buttonShowNames.push(false);
             buttonTexts.push("");
@@ -303,7 +307,7 @@ export function readCurrentProfile(): Profile {
 
     const numOfButtons = Settings.getNumber(BUTTONS.name, 1);
     const oneAfterTheOther = Settings.getBoolean(ONE_AFTER_THE_OTHER.name, false);
-    const buttonColors = Settings.getArray<string>(BUTTONS_COLOR.name, "string", [BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR, BTN_BACK_COLOR]);
+    const buttonColors = Settings.getArray<string>(BUTTONS_COLOR.name, "string", [colors.defaultVoiceButtonBGColor, colors.defaultVoiceButtonBGColor, colors.defaultVoiceButtonBGColor, colors.defaultVoiceButtonBGColor]);
     const buttonImageUrls = Settings.getArray<string>(BUTTONS_IMAGE_URLS.name, "string", ["", "", "", ""]);
     const buttonShowNames = Settings.getArray<boolean>(BUTTONS_SHOW_NAMES.name, "boolean", [false, false, false, false]);
     const buttonTexts = Settings.getArray<string>(BUTTONS_NAMES.name, "string", ["", "", "", ""]);
@@ -311,7 +315,7 @@ export function readCurrentProfile(): Profile {
     const buttons = [] as Button[];
     for (let i = 0; i < numOfButtons; i++) {
         buttons.push({
-            color: buttonColors[i] || BTN_BACK_COLOR,
+            color: buttonColors[i] || colors.defaultVoiceButtonBGColor,
             name: buttonTexts[i] || "",
             imageUrl: buttonImageUrls[i] || "",
             showName: buttonShowNames[i] || false,
