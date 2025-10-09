@@ -36,7 +36,6 @@ interface ButtonInfo {
 interface ProfilePickerProps {
     open: boolean;
     currentProfile: string;
-    loadButton: ButtonInfo;
     editButton?: ButtonInfo;
     exportButton?: ButtonInfo;
     height: number | string;

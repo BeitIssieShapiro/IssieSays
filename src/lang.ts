@@ -1,7 +1,7 @@
 import * as RNLocalize from 'react-native-localize';
 const locales = RNLocalize.getLocales();
 const bestLanguage = locales[0]?.languageTag || 'en';
-const deviceLanguageRaw = 'he'
+const deviceLanguageRaw = // 'he'
     bestLanguage;
 
 const supportedLanguages = ['he', 'en', 'ar'];
@@ -272,7 +272,8 @@ var strings: any = {
         "SuccessfulImport": "تم الاستيراد بنجاح",
         "AboutToOverwriteButton": "هل تريد حفظ زر الصوت الحالي قبل تحميل زر صوت من المكتبة؟",
         "SaveFirst": "احفظ ثم قم بالتحميل",
-        "ContinueWithoutSave": "تحميل بدون حفظ"
+        "ContinueWithoutSave": "تحميل بدون حفظ",
+        "AboutToOverwriteButtonTitle": "حفظ قبل الاستيراد من المكتبة",
     }
 };
 
@@ -305,7 +306,7 @@ function findMissing() {
     console.log(missing);
 
 }
-//findMissing();
+// findMissing();
 
 
 const currStrings = strings[deviceLanguage];

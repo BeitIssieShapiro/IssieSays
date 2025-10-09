@@ -381,7 +381,6 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             folder={Folders.Profiles}
             currentProfile={profileName}
             open={openLoadProfile}
-            loadButton={{ name: translate("Load"), icon: "upload" }}
             exportButton={{ name: translate("Export") }}
             height={windowSize.height * .6}
             onSelect={async (name) => {

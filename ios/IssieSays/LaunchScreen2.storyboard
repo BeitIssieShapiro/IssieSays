@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24128" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
     <device id="ipad11_0rounded" orientation="portrait" layout="fullscreen" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22684"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24063"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
-        <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -14,48 +13,41 @@
             <objects>
                 <viewController id="01J-lp-oVM" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Ze5-6b-2t3">
-                        <rect key="frame" x="0.0" y="0.0" width="834" height="1194"/>
+                        <rect key="frame" x="0.0" y="0.0" width="834" height="1210"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" misplaced="YES" image="bis logo new" translatesAutoresizingMaskIntoConstraints="NO" id="6uc-RF-RIF">
-                                <rect key="frame" x="192" y="149" width="436" height="124"/>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" image="bis logo new" translatesAutoresizingMaskIntoConstraints="NO" id="6uc-RF-RIF">
+                                <rect key="frame" x="20" y="149" width="794" height="124"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" secondItem="6uc-RF-RIF" secondAttribute="height" multiplier="109:31" id="fBr-ad-4UZ"/>
+                                </constraints>
                             </imageView>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Issie" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="JYa-bN-fBw">
-                                <rect key="frame" x="192" y="517" width="244" height="108"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" name="Verdana" family="Verdana" pointSize="100"/>
-                                <color key="textColor" systemColor="systemOrangeColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Says" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ltx-uj-oMH">
-                                <rect key="frame" x="440" y="519" width="244" height="108"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" name="Verdana" family="Verdana" pointSize="100"/>
-                                <color key="textColor" systemColor="systemCyanColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" image="IssieSaysText" translatesAutoresizingMaskIntoConstraints="NO" id="pEH-up-HD5">
+                                <rect key="frame" x="20" y="463.5" width="794" height="283"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" secondItem="pEH-up-HD5" secondAttribute="height" multiplier="267:95" id="xYs-dP-VBZ"/>
+                                </constraints>
+                            </imageView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="Bcu-3y-fUS"/>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="6uc-RF-RIF" firstAttribute="top" relation="greaterThanOrEqual" secondItem="Bcu-3y-fUS" secondAttribute="top" priority="700" constant="60" id="Bjz-l5-2K9"/>
-                            <constraint firstItem="6uc-RF-RIF" firstAttribute="centerX" secondItem="Bcu-3y-fUS" secondAttribute="centerX" id="E19-fY-FEt"/>
-                            <constraint firstItem="6uc-RF-RIF" firstAttribute="width" secondItem="Bcu-3y-fUS" secondAttribute="width" multiplier="0.5" id="oog-as-iTT"/>
+                            <constraint firstItem="Bcu-3y-fUS" firstAttribute="trailing" secondItem="pEH-up-HD5" secondAttribute="trailing" constant="20" id="0j2-w0-I2g"/>
+                            <constraint firstItem="6uc-RF-RIF" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="Bkf-Oh-Yh0"/>
+                            <constraint firstItem="6uc-RF-RIF" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" constant="20" id="MEd-A4-wcw"/>
+                            <constraint firstAttribute="trailing" secondItem="6uc-RF-RIF" secondAttribute="trailing" constant="20" id="RVj-aW-B0F"/>
+                            <constraint firstItem="pEH-up-HD5" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="eYF-Qp-gmH"/>
+                            <constraint firstItem="pEH-up-HD5" firstAttribute="leading" secondItem="Bcu-3y-fUS" secondAttribute="leading" constant="20" id="gk7-98-Vgs"/>
                         </constraints>
                     </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="52.517985611510795" y="374.8743718592965"/>
+            <point key="canvasLocation" x="52.517985611510795" y="374.38016528925618"/>
         </scene>
     </scenes>
     <resources>
+        <image name="IssieSaysText" width="438" height="133"/>
         <image name="bis logo new" width="1686" height="428"/>
-        <systemColor name="systemCyanColor">
-            <color red="0.1960784314" green="0.67843137249999996" blue="0.90196078430000004" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-        </systemColor>
-        <systemColor name="systemOrangeColor">
-            <color red="1" green="0.58431372550000005" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-        </systemColor>
     </resources>
 </document>
