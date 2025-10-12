@@ -18,6 +18,8 @@
     "@react-native/new-app-screen": "0.81.4",
     "@rneui/themed": "^4.0.0-rc.8",
     "axios": "^1.12.2",
+    "install": "^0.13.0",
+    "npm": "^11.6.2",
     "path": "^0.12.7",
     "react": "19.1.0",
     "react-native": "0.81.4",

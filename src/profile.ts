@@ -1,6 +1,6 @@
 import * as RNFS from 'react-native-fs';
 import * as path from 'path';
-import { BACKGROUND, BUTTONS, BUTTONS_COLOR, BUTTONS_IMAGE_URLS, BUTTONS_NAMES, BUTTONS_SHOW_NAMES, CURRENT_PROFILE, INSTALL, LAST_COLORS, ONE_AFTER_THE_OTHER } from './settings';
+import { BACKGROUND, BUTTONS, BUTTONS_COLOR, BUTTONS_IMAGE_URLS, BUTTONS_NAMES, BUTTONS_OFFSET_X, BUTTONS_OFFSET_Y, BUTTONS_SCALES, BUTTONS_SHOW_NAMES, CURRENT_PROFILE, INSTALL, LAST_COLORS, ONE_AFTER_THE_OTHER } from './settings';
 import Button from 'react-native-really-awesome-button';
 import { Settings } from './setting-storage';
 import { Platform, Settings as RNSettings } from 'react-native'
@@ -9,6 +9,7 @@ import { ensureAndroidCompatible, joinPaths } from './utils';
 import { DefaultProfileName } from './profile-picker';
 import { EditedButton } from './edit-button';
 import { colors } from './common/common-style';
+import { Point } from 'react-native-svg/lib/typescript/elements/Shape';
 
 export const enum Folders {
     Profiles = "profiles",
@@ -29,6 +30,8 @@ export interface Button {
     imageUrl: string;
     showName: boolean;
     recording: string | undefined; // base64 of the audio binary
+    scale: number;
+    offset: Point;
 }
 
 export interface Profile {
@@ -102,6 +105,8 @@ export async function Init() {
                     imageUrl: buttonImageUrls[i],
                     showName: buttonShowNames[i],
                     recording: undefined,
+                    scale: 1,
+                    offset: { x: 0, y: 0 }
                 });
             }
 
@@ -263,6 +268,9 @@ async function writeCurrentProfile(p: Profile, name: string) {
     const buttonImageUrls = [];
     const buttonShowNames = [];
     const buttonTexts = [];
+    const buttonScales = [];
+    const buttonOffsetsX = [];
+    const buttonOffsetsY = [];
 
     for (let i = 0; i < 20; i++) {
         if (p.buttons.length > i) {
@@ -271,6 +279,10 @@ async function writeCurrentProfile(p: Profile, name: string) {
             buttonImageUrls.push(btn.imageUrl);
             buttonShowNames.push(btn.showName);
             buttonTexts.push(btn.name);
+            buttonScales.push(btn.scale);
+            buttonOffsetsX.push(btn.offset.x);
+            buttonOffsetsY.push(btn.offset.y);
+
             if (btn.recording && btn.recording.length > 0) {
                 await RNFS.writeFile(getRecordingFileName(i), btn.recording, 'base64');
             } else if (btn.recording == "") {
@@ -283,6 +295,10 @@ async function writeCurrentProfile(p: Profile, name: string) {
             buttonImageUrls.push("");
             buttonShowNames.push(false);
             buttonTexts.push("");
+            buttonScales.push(1);
+            buttonOffsetsX.push(0);
+            buttonOffsetsY.push(0);
+
             try {
                 await RNFS.unlink(getRecordingFileName(i));
             } catch (e) { }
@@ -293,6 +309,9 @@ async function writeCurrentProfile(p: Profile, name: string) {
     Settings.setArray(BUTTONS_IMAGE_URLS.name, buttonImageUrls);
     Settings.setArray(BUTTONS_SHOW_NAMES.name, buttonShowNames);
     Settings.setArray(BUTTONS_NAMES.name, buttonTexts);
+    Settings.setArray(BUTTONS_SCALES.name, buttonScales);
+    Settings.setArray(BUTTONS_OFFSET_X.name, buttonOffsetsX);
+    Settings.setArray(BUTTONS_OFFSET_Y.name, buttonOffsetsY);
 
 }
 
@@ -311,6 +330,9 @@ export function readCurrentProfile(): Profile {
     const buttonImageUrls = Settings.getArray<string>(BUTTONS_IMAGE_URLS.name, "string", ["", "", "", ""]);
     const buttonShowNames = Settings.getArray<boolean>(BUTTONS_SHOW_NAMES.name, "boolean", [false, false, false, false]);
     const buttonTexts = Settings.getArray<string>(BUTTONS_NAMES.name, "string", ["", "", "", ""]);
+    const buttonScales = Settings.getArray<number>(BUTTONS_SCALES.name, "number", Array(numOfButtons).fill(1));
+    const offsetX = Settings.getArray<number>(BUTTONS_OFFSET_X.name, "number", Array(numOfButtons).fill(0));
+    const offsetY = Settings.getArray<number>(BUTTONS_OFFSET_Y.name, "number", Array(numOfButtons).fill(0));
 
     const buttons = [] as Button[];
     for (let i = 0; i < numOfButtons; i++) {
@@ -320,6 +342,8 @@ export function readCurrentProfile(): Profile {
             imageUrl: buttonImageUrls[i] || "",
             showName: buttonShowNames[i] || false,
             recording: undefined,
+            offset: { x: offsetX[i], y: offsetY[i] },
+            scale: buttonScales[i],
         });
     }
 

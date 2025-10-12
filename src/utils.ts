@@ -1,4 +1,11 @@
-import { Platform, PermissionsAndroid } from "react-native";
+import { Platform, PermissionsAndroid, ImageSize } from "react-native";
+
+
+export interface WinSize {
+  width: number;
+  height: number;
+}
+export type Point = { x: number; y: number };
 
 export function joinPaths(...segments: string[]) {
   return segments
@@ -13,8 +20,11 @@ export function ensureAndroidCompatible(path: string, forceFilePrefix?: boolean)
   return path
 }
 
-export const getIsMobile = (windowSize: { width: number, height: number }) => windowSize.width < 500 || windowSize.height < 500;
+export const getIsMobile = (windowSize: ImageSize) => windowSize.width < 500 || windowSize.height < 500;
+export const isLandscape = (windowSize: ImageSize) => windowSize.width > windowSize.height
 
+export const normOffset = (offset:Point, size:number)=> ({x:offset.x/size, y:offset.y/size});
+export const denormOffset = (offset:Point, size:number)=> ({x:offset.x*size, y:offset.y*size});
 
 export async function requestAudioPermission() {
   if (Platform.OS === 'android') {

@@ -17,7 +17,7 @@ import { EditText } from "./common/edit-text";
 import { IconButton } from "./common/components";
 import Share from 'react-native-share';
 import { exportAll, exportProfile } from "./import-export";
-import { getIsMobile } from "./utils";
+import { getIsMobile, Point } from "./utils";
 
 
 
@@ -40,6 +40,18 @@ export const BUTTONS_COLOR = {
 
 export const BUTTONS_NAMES = {
     name: 'buttons_names',
+}
+
+export const BUTTONS_SCALES = {
+    name: 'buttons_scales',
+}
+
+export const BUTTONS_OFFSET_X = {
+    name: 'buttons_offset_x',
+}
+
+export const BUTTONS_OFFSET_Y = {
+    name: 'buttons_offset_y',
 }
 
 export const BUTTONS_IMAGE_URLS = {
@@ -188,17 +200,36 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         Settings.setArray(BUTTONS_IMAGE_URLS.name, newBtnImageUrls);
         console.log("new button ImageUrl", newBtnImageUrls, index)
     }
+
     const saveShowNames = (index: number, newVal: boolean) => {
         let newBtnShowNames = profile.buttons.map(b => b.showName);
         newBtnShowNames[index] = newVal
         Settings.setArray(BUTTONS_SHOW_NAMES.name, newBtnShowNames);
     }
 
+    const saveScale = (index: number, newVal: number) => {
+        let newBtnScales = profile.buttons.map(b => b.scale);
+        newBtnScales[index] = newVal
+        Settings.setArray(BUTTONS_SCALES.name, newBtnScales);
+    }
+
+    const saveOffset = (index: number, newVal: Point) => {
+        let newOffsetX = profile.buttons.map(b => b.offset.x);
+        let newOffsetY = profile.buttons.map(b => b.offset.y);
+        newOffsetX[index] = newVal.x;
+        newOffsetY[index] = newVal.y;
+        Settings.setArray(BUTTONS_OFFSET_X.name, newOffsetX);
+        Settings.setArray(BUTTONS_OFFSET_Y.name, newOffsetY);
+    }
+
+
     const handleSaveButton = (index: number, btn: EditedButton) => {
         saveColor(index, btn.color);
         saveImageUrl(index, btn.imageUrl);
         saveShowNames(index, btn.showName);
         changeButtonName(index, btn.name);
+        saveScale(index, btn.scale);
+        saveOffset(index, btn.offset);
         if (btn.audioName) {
             // copy the audio file
             const tmpFile = getRecordingFileName(btn.audioName)

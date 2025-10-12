@@ -101,6 +101,8 @@ var strings: any = {
         "AboutToOverwriteButton": "האם לשמור את כפתור-השמע הנוכחי לפני טעינת כפתור-שמע מהספרייה?",
         "SaveFirst": "שמירה ואז טעינה",
         "ContinueWithoutSave": "טעינה ללא שמירה",
+        "EditImage": "ערוך תמונה",
+        "EditImageTitle":"ניתן להזיז ולשנות את הגודל",
     },
     "en": {
         "Settings": "Settings",
@@ -187,6 +189,8 @@ var strings: any = {
         "AboutToOverwriteButton": "Would you like to save the current voice-button before loading the template?",
         "SaveFirst": "Save and Load",
         "ContinueWithoutSave": "Load Without Save",
+        "EditImage": "Edit Image",
+        "EditImageTitle":"You may move and change size",
 
     },
     "ar": {
@@ -274,6 +278,8 @@ var strings: any = {
         "SaveFirst": "احفظ ثم قم بالتحميل",
         "ContinueWithoutSave": "تحميل بدون حفظ",
         "AboutToOverwriteButtonTitle": "حفظ قبل الاستيراد من المكتبة",
+        "EditImage": "تحرير الصورة",
+        "EditImageTitle":"يمكنك التحريك وتغيير الحجم",
     }
 };
 

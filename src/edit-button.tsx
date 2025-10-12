@@ -13,6 +13,7 @@ import { MyColorPicker } from "./color-picker";
 import { ButtonPicker } from "./profile-picker";
 import Toast from "react-native-toast-message";
 import { getIsMobile } from "./utils";
+import ImageAdjustModal from "./adjust-image";
 
 
 interface EditButtonProps {
@@ -35,6 +36,8 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
     const [colorPickerOpen, setColorPickerOpen] = useState<boolean>(false);
     const [imageSearchOpen, setImageSearchOpen] = useState<boolean>(false);
     const [openLoadButton, setOpenLoadButton] = useState<boolean>(false);
+    const [isEditingImage, setIsEditingImage] = useState(false);
+
 
     const updateButton = (updates: Partial<EditedButton>) => {
         setLocalButton(prev => ({ ...prev, ...updates }));
@@ -118,8 +121,20 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
             appBackground={"white"}
             showProgress={false}
             recName={""}
+            imageOffset={localButton.offset}
+            scale={localButton.scale}
         />
         {localButton.showName || <Spacer h={26} />}
+        <View style={styles.editImageButton}>
+            <LabeledIconButton
+                type="MDI"
+                icon="crop"
+                label={translate("EditImage")}
+                color={colors.defaultIconColor}
+                onPress={() => setIsEditingImage(!isEditingImage)}
+                size={40}
+            />
+        </View>
         {!isMobile && <Spacer h={20} />}
     </View>
 
@@ -158,6 +173,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
     const gapSize = isNarrow ? 0 : 25;
 
 
+
     return (
         <View style={[gStyles.screenContainer, { top: safeAreaInsets.top, direction: isRTL() ? "rtl" : "ltr" }]}>
             {/* Header */}
@@ -181,6 +197,18 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                 </View>
             </View>
 
+            {isEditingImage && localButton.imageUrl && <ImageAdjustModal
+                windowSize={windowSize}
+                backgroundColor={localButton.color}
+                initialOffset={localButton.offset}
+                initialScale={localButton.scale}
+                imageUrl={localButton.imageUrl}
+                onClose={() => setIsEditingImage(false)}
+                onSave={(scale, offset) => {
+                    updateButton({ offset, scale })
+                    setIsEditingImage(false)
+                }}
+            />}
 
             {colorPickerOpen && <MyColorPicker
                 open={colorPickerOpen}
@@ -201,7 +229,8 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
             }
             <SearchImage open={imageSearchOpen} onClose={() => setImageSearchOpen(false)}
                 onSelectImage={(url: string) => {
-                    updateButton({ imageUrl: url })
+                    console.log("image selected", url)
+                    updateButton({ imageUrl: url, scale: 1, offset: { x: 0, y: 0 } });
                     setImageSearchOpen(false);
                 }}
                 isScreenNarrow={isNarrow}
@@ -282,7 +311,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                         color={colors.defaultIconColor}
                         onPress={async () => {
                             const url = await SelectFromGallery();
-                            if (url) updateButton({ imageUrl: url });
+                            if (url) updateButton({ imageUrl: url, scale: 1, offset: { x: 0, y: 0 } });
                         }}
                         size={buttonSize}
                     />
@@ -370,4 +399,9 @@ const styles = StyleSheet.create({
         padding: 8,
         textAlign: "right",
     },
+    editImageButton: {
+        position: "absolute",
+        left: -100,
+        bottom: "10%"
+    }
 });

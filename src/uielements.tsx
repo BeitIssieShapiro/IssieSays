@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, ImageSize, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import AwesomeButton from "react-native-really-awesome-button";
 
@@ -6,10 +6,11 @@ import { isRTL, translate } from "./lang";
 import { increaseColor } from "./color-picker";
 import { BACKGROUND } from "./settings";
 import { AudioWaveForm } from "./audio-progress";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { audioRecorderPlayer } from "./App";
 import { playRecording, stopPlayback } from "./recording";
 import { MyIcon } from "./common/icons";
+import { denormOffset } from "./utils";
 
 export const BTN_COLOR = "#6E6E6E";
 const BTN_FOR_COLOR = "#CD6438";
@@ -90,7 +91,7 @@ export function RectView({ children, width, height, buttonWidth, isLandscape }: 
 }
 
 export function MainButton({ name, showName, width, fontSize, raisedLevel, color, imageUrl, appBackground,
-    showProgress, recName, onPlayComplete
+    showProgress, recName, onPlayComplete, imageOffset = { x: 0, y: 0 }, scale = 1
 }: {
     width: number;
     raisedLevel: number;
@@ -102,7 +103,9 @@ export function MainButton({ name, showName, width, fontSize, raisedLevel, color
     appBackground: string;
     showProgress: boolean;
     recName: string;
-    onPlayComplete?: () => void
+    onPlayComplete?: () => void,
+    imageOffset?: { x: number, y: number },
+    scale?: number
 }) {
     const [playing, setPlaying] = useState<string | undefined>(undefined);
     const [playingInProgress, setPlayingInProgress] = useState(false);
@@ -110,6 +113,12 @@ export function MainButton({ name, showName, width, fontSize, raisedLevel, color
     const [duration, setDuration] = useState(0.0);
     const playCompleteSent = useRef<boolean>(false);
 
+    const [imageSize, setImageSize] = useState<ImageSize>({ width: 500, height: 500 });
+
+    useEffect(() => {
+        if (imageUrl)
+            Image.getSize(imageUrl).then((size) => setImageSize(size))
+    }, [imageUrl]);
 
     const onStartPlay = useCallback(async () => {
         if (playingInProgress) return;
@@ -150,7 +159,11 @@ export function MainButton({ name, showName, width, fontSize, raisedLevel, color
         }
     }, [playing, playingInProgress, recName]);
 
-
+    const cWidth = width * 5.5 / 6
+    const actOffset = denormOffset(imageOffset, cWidth);
+    const baseScale = cWidth / imageSize.height;
+    const imageLeft = cWidth / 2 - imageSize.width * baseScale / 2
+    console.log("imgSize", imageSize, scale, actOffset, baseScale, cWidth)
     return (
         <View style={{ alignItems: "center", justifyContent: "center" }}>
             <View style={{
@@ -158,7 +171,6 @@ export function MainButton({ name, showName, width, fontSize, raisedLevel, color
                 width: width * 1.3,
                 height: width * 1.3,
                 padding: width * .15,
-                // marginTop: isLandscape() ? "15%" : "40%",
                 borderRadius: width * 1.3 / 2,
             }}>
                 <AwesomeButton
@@ -173,21 +185,34 @@ export function MainButton({ name, showName, width, fontSize, raisedLevel, color
                     onPress={onStartPlay}
                     animatedPlaceholder={false}
                     paddingHorizontal={0}
+                    paddingTop={0}
+
                 >
                     {imageUrl && imageUrl.length > 0 ? <View
                         style={{
-                            justifyContent: "center", alignItems: "center",
-                            width: width * 5 / 6,
-                            height: width * 5 / 6,
-                            backgroundColor: "white",
-                            borderRadius: width * 5 / 12,
+                            overflow: 'hidden',
+                            transform: [
+
+
+                            ],
+                            width: cWidth,
+                            height: cWidth,
+                            borderRadius: cWidth / 2,
+                            //backgroundColor: "white"
                         }}
                     >
                         <Image source={{ uri: imageUrl }}
+                            resizeMode="stretch"
                             style={{
-                                borderRadius: width * (5 / 12),
-                                height: width * (5 / 6), width: width * (5 / 6),
-                                transform: [{ scale: 0.9 }]
+                                transform: [
+                                    { translateX: imageLeft + actOffset.x },
+                                    { translateY: actOffset.y },
+                                    { scale: scale * .86 },
+
+                                ],
+                                width: imageSize.width * baseScale,
+                                height: imageSize.height * baseScale,
+                                borderRadius: 10,
                             }} />
                     </View> :
                         " "}

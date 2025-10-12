@@ -48,6 +48,8 @@ export function ButtonCard({ width, height, button, onSetActive, onEditButton, r
                 appBackground={'white'}
                 showProgress={true}
                 recName={recName}
+                imageOffset={button.offset}
+                scale={button.scale}
             />
         </View>
         <View style={[gStyles.cardFooter, { flexDirection: "row", justifyContent: isNarrow ? "space-between" : "flex-start", alignItems: "center", direction: (isRTL() ? "rtl" : "ltr") }]}>

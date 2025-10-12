@@ -14,7 +14,7 @@ import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import { Settings } from './setting-storage';
 import { readCurrentProfile } from './profile';
 import { BACKGROUND, BUTTONS, CURRENT_PROFILE, ONE_AFTER_THE_OTHER, SettingsPage } from './settings';
-import { Alert, Platform, View } from 'react-native';
+import { Alert, Dimensions, Platform, View } from 'react-native';
 import { CountdownButton } from './common/countdown-btn';
 import { useIncomingURL } from './common/linking-hook';
 import { GlobalContext } from './common/global-context';
@@ -48,7 +48,7 @@ const toastConfig = {
 export const audioRecorderPlayer = createSound();
 
 function Main(): React.JSX.Element {
-  const [windowSize, setWindowSize] = useState({ width: 500, height: 500 });
+  const [windowSize, setWindowSize] = useState(Dimensions.get("window"));
 
   const [log, setLog] = useState("");
   const [showSettings, setShowSettings] = useState(false);
@@ -61,6 +61,15 @@ function Main(): React.JSX.Element {
   } | undefined>();
 
   const isLandscape = () => windowSize.height < windowSize.width;
+
+
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }: any) => setWindowSize(window));
+    return () => {
+      // Cleanup 
+      subscription?.remove()
+    }
+  }, [])
 
 
   async function handleImport(event: any) {
@@ -130,10 +139,7 @@ function Main(): React.JSX.Element {
     return <>
       <SafeAreaProvider>
         {/* @ts-ignore*/}
-        <View style={backgroundStyle} onLayout={(e) => {
-          let wz = e.nativeEvent.layout;
-          setWindowSize(wz);
-        }}>
+        <View style={backgroundStyle} >
           <SettingsPage
             windowSize={windowSize}
             onAbout={() => {
@@ -183,10 +189,7 @@ function Main(): React.JSX.Element {
 
 
   // @ts-ignore
-  return (<View style={backgroundStyle} onLayout={(e) => {
-    let wz = e.nativeEvent.layout;
-    setWindowSize(wz);
-  }}  >
+  return (<View style={backgroundStyle} >
     <CountdownButton iconSize={45} onComplete={() => setShowSettings(true)} style={{
       top: Math.max(25, 20 + safeAreaInsets.top),
       right: Math.max(20, 15 + safeAreaInsets.right),
@@ -228,6 +231,8 @@ function Main(): React.JSX.Element {
           showProgress={true}
           recName={i + ""}
           onPlayComplete={oneAfterTheOther ? handlePlayComplete : undefined}
+          imageOffset={p.buttons[i].offset}
+          scale={p.buttons[i].scale}
         />
       ))
       }
