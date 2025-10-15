@@ -125,7 +125,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
             scale={localButton.scale}
         />
         {localButton.showName || <Spacer h={26} />}
-        <View style={styles.editImageButton}>
+        {!!localButton.imageUrl && <View style={styles.editImageButton}>
             <LabeledIconButton
                 type="MDI"
                 icon="crop"
@@ -134,14 +134,14 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                 onPress={() => setIsEditingImage(!isEditingImage)}
                 size={40}
             />
-        </View>
+        </View>}
         {!isMobile && <Spacer h={20} />}
     </View>
 
     const txtEdit = <View style={[styles.section, isMobile ? { marginVertical: 5 } : {}]}>
         <Text allowFontScaling={false} style={styles.label}>{translate("Name")}</Text>
         <View>
-            <TextInput
+            {!isEditingImage && <TextInput
                 style={[
                     styles.input,
                     isNarrow ? { width: windowSize.width * .8 } : {},
@@ -158,7 +158,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                 }}
                 autoFocus
                 allowFontScaling={false}
-            />
+            />}
             <Spacer h={15} />
             <Checkbox
                 size={30}
@@ -321,7 +321,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                         icon="close"
                         label={translate("RemoveImage")}
                         color={"red"}
-                        onPress={() => updateButton({ imageUrl: "" })}
+                        onPress={() => updateButton({ imageUrl: "", scale: 1, offset: { x: 0, y: 0 } })}
                         size={buttonSize}
                     />
                 </View>

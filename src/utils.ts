@@ -23,8 +23,10 @@ export function ensureAndroidCompatible(path: string, forceFilePrefix?: boolean)
 export const getIsMobile = (windowSize: ImageSize) => windowSize.width < 500 || windowSize.height < 500;
 export const isLandscape = (windowSize: ImageSize) => windowSize.width > windowSize.height
 
-export const normOffset = (offset:Point, size:number)=> ({x:offset.x/size, y:offset.y/size});
-export const denormOffset = (offset:Point, size:number)=> ({x:offset.x*size, y:offset.y*size});
+export const normOffset = (offset: Point, size: number) => ({ x: offset.x / size, y: offset.y / size });
+export const denormOffset = (offset: Point, size: number) => ({ x: offset.x * size, y: offset.y * size });
+export const FIX_IMAGE_SCALE = 0.86;
+
 
 export async function requestAudioPermission() {
   if (Platform.OS === 'android') {

@@ -10,7 +10,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { audioRecorderPlayer } from "./App";
 import { playRecording, stopPlayback } from "./recording";
 import { MyIcon } from "./common/icons";
-import { denormOffset } from "./utils";
+import { denormOffset, FIX_IMAGE_SCALE } from "./utils";
 
 export const BTN_COLOR = "#6E6E6E";
 const BTN_FOR_COLOR = "#CD6438";
@@ -162,8 +162,9 @@ export function MainButton({ name, showName, width, fontSize, raisedLevel, color
     const cWidth = width * 5.5 / 6
     const actOffset = denormOffset(imageOffset, cWidth);
     const baseScale = cWidth / imageSize.height;
-    const imageLeft = cWidth / 2 - imageSize.width * baseScale / 2
-    console.log("imgSize", imageSize, scale, actOffset, baseScale, cWidth)
+    const imageLeft = cWidth / 2 - imageSize.width * baseScale / 2;
+
+    console.log("imgSize", (imageLeft + actOffset.x)*scale/cWidth)
     return (
         <View style={{ alignItems: "center", justifyContent: "center" }}>
             <View style={{
@@ -186,33 +187,27 @@ export function MainButton({ name, showName, width, fontSize, raisedLevel, color
                     animatedPlaceholder={false}
                     paddingHorizontal={0}
                     paddingTop={0}
-
                 >
                     {imageUrl && imageUrl.length > 0 ? <View
                         style={{
                             overflow: 'hidden',
-                            transform: [
-
-
-                            ],
+                            direction: "ltr",
                             width: cWidth,
                             height: cWidth,
                             borderRadius: cWidth / 2,
-                            //backgroundColor: "white"
                         }}
                     >
                         <Image source={{ uri: imageUrl }}
                             resizeMode="stretch"
                             style={{
                                 transform: [
+                                    //{ scale: FIX_IMAGE_SCALE },
                                     { translateX: imageLeft + actOffset.x },
                                     { translateY: actOffset.y },
-                                    { scale: scale * .86 },
-
+                                    { scale: scale }
                                 ],
                                 width: imageSize.width * baseScale,
                                 height: imageSize.height * baseScale,
-                                borderRadius: 10,
                             }} />
                     </View> :
                         " "}

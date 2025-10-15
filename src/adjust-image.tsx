@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { colors, gStyles } from "./common/common-style";
 import Svg, { Rect, Circle, Mask } from "react-native-svg";
-import { denormOffset, isLandscape, normOffset, WinSize } from "./utils";
+import { denormOffset, FIX_IMAGE_SCALE, isLandscape, normOffset, WinSize } from "./utils";
 import { IconButton } from "./common/components";
 import { translate } from "./lang";
 import { Text } from "@rneui/themed";
@@ -105,24 +105,30 @@ export default function ImageResizerModal({
     ).current;
 
     const baseScale = cWidth / imageSize.height;
-    const imageLeft = (windowSize.width - imageSize.width * baseScale) / 2
+    const cLeft = (windowSize.width - cWidth) / 2;
+    const imageLeft = (cWidth / 2 - imageSize.width * baseScale / 2);
     const imageTop = (windowSize.height - cWidth) / 2;
 
-    console.log("ai", offset, cWidth, baseScale, scale)
+    console.log("ai2", normOffset(offset, cWidth))
 
     return (
-        <View style={[gStyles.screenContainer, { backgroundColor: backgroundColor, }]}>
+        <View style={[gStyles.screenContainer, { backgroundColor: backgroundColor, direction: "ltr" }]}>
             <View style={styles.title}>
-                <Text style={styles.titleText}>{translate("EditImageTitle")}</Text>
+                <Text allowFontScaling={false} style={styles.titleText}>{translate("EditImageTitle")}</Text>
             </View>
+            <View style={{ position: "absolute", left: 0, top: windowSize.height / 2, borderBottomWidth: 1, width: cLeft }} />
+            <View style={{ position: "absolute", right: 0, top: windowSize.height / 2, borderBottomWidth: 1, width: cLeft }} />
             <View
-
                 style={{
+                    position: "absolute",
                     transform: [
+                        // { translateX: cLeft },
+                        // { scale: FIX_IMAGE_SCALE },
                         { translateX: imageLeft + offset.x },
                         { translateY: imageTop + offset.y },
-                        { scale: scale * .86 },
+                        { scale: scale },
                     ],
+                    left: cLeft,
                     width: cWidth, height: cWidth,
                 }}
             >
@@ -132,7 +138,6 @@ export default function ImageResizerModal({
                     style={{
                         width: imageSize.width * baseScale,
                         height: imageSize.height * baseScale,
-                        borderRadius: 10,
                         backgroundColor,
                     }}
                 />
