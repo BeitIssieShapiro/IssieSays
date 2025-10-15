@@ -19,12 +19,13 @@ mkdir -p android/app/src/main/assets/fonts
 cp node_modules/react-native-vector-icons/Fonts/*.ttf android/app/src/main/assets/fonts/
 
 
+It is best to open AndroidStudio from terminal: `open -a /Applications/Android\ Studio.app` so path is found for e.g. node
+
 # Images Tawsol (not yet impl.)
 https://tawasol.mada.org.qa/wp-json/custom/v2/YOUR_APP_ID/symbols
 [oai_citation:6‡tawasol.mada.org.qa](https://tawasol.mada.org.qa/api-documentation/?lang=en&utm_source=chatgpt.com)  
 
 
 ## TODO
-- verify iPhone form factor
 - Tawsol images
 

@@ -10,6 +10,7 @@ import { DefaultProfileName } from './profile-picker';
 import { EditedButton } from './edit-button';
 import { colors } from './common/common-style';
 import { Point } from 'react-native-svg/lib/typescript/elements/Shape';
+import { gCurrentLang, translate } from './lang';
 
 export const enum Folders {
     Profiles = "profiles",
@@ -130,13 +131,20 @@ export async function Init() {
         }
     }
 
-    // todo
-    // const isFreshInstall = Settings.getBoolean(INSTALL.fresh, true);
-    // if (isFreshInstall) {
-    //     const filePath = getRecordingFileName(0);
-    //     RNFS.copyFileAssets(`welcome_${gCurrentLang}.mp4`, filePath)
-    //     Settings.set(INSTALL.fresh, false);
-    // }
+    const isFreshInstall = Settings.getBoolean(INSTALL.fresh, true);
+    if (isFreshInstall) {
+        const filePath = getRecordingFileName(0);
+        if (Platform.OS == 'android') {
+            await RNFS.copyFileAssets(`welcome_${gCurrentLang}.mp4`, filePath)
+        } else {
+            const sourcePath = `${RNFS.MainBundlePath}/welcome_${gCurrentLang}.mp4`;
+            await RNFS.copyFile(sourcePath, filePath);
+        }
+        Settings.setArray(BUTTONS_NAMES.name, [(translate("Welcome"))]);
+        Settings.setArray(BUTTONS_SHOW_NAMES.name, [true]);
+    }
+    Settings.set(INSTALL.fresh, false);
+
 
     // Migrate to home profile
     const p = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${DefaultProfileName}.json`);
@@ -159,7 +167,6 @@ export async function SaveProfile(name: string, p: Profile, overwrite = false, a
         throw new ReservedFileName();
     }
 
-    // todo verify name is a valid file name
     const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
     if (!overwrite) {
         if (await RNFS.exists(ensureAndroidCompatible(profilePath))) {

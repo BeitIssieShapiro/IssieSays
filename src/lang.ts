@@ -18,6 +18,7 @@ export const isRight2Left = gCurrentLang.startsWith("he") || gCurrentLang.starts
 
 var strings: any = {
     "he": {
+        "Welcome": "ברוכים הבאים",
         "Settings": "הגדרות",
         "About": "אודות",
         "BackgroundColor": "צבע רקע",
@@ -102,9 +103,10 @@ var strings: any = {
         "SaveFirst": "שמירה ואז טעינה",
         "ContinueWithoutSave": "טעינה ללא שמירה",
         "EditImage": "ערוך תמונה",
-        "EditImageTitle":"ניתן להזיז ולשנות את הגודל",
+        "EditImageTitle": "ניתן להזיז ולשנות את הגודל",
     },
     "en": {
+        "Welcome": "Welcome",
         "Settings": "Settings",
         "About": "About",
         "BackgroundColor": "Background Color",
@@ -190,10 +192,11 @@ var strings: any = {
         "SaveFirst": "Save and Load",
         "ContinueWithoutSave": "Load Without Save",
         "EditImage": "Edit Image",
-        "EditImageTitle":"You may move and change size",
+        "EditImageTitle": "You may move and change size",
 
     },
     "ar": {
+        "Welcome": "أهلًا وسهلًا",
         "Settings": "الإعدادات",
         "About": "حول التطبيق",
         "BackgroundColor": "لون الخلفية",
@@ -279,7 +282,7 @@ var strings: any = {
         "ContinueWithoutSave": "تحميل بدون حفظ",
         "AboutToOverwriteButtonTitle": "حفظ قبل الاستيراد من المكتبة",
         "EditImage": "تحرير الصورة",
-        "EditImageTitle":"يمكنك التحريك وتغيير الحجم",
+        "EditImageTitle": "يمكنك التحريك وتغيير الحجم",
     }
 };
 

@@ -4,6 +4,7 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 
+
 import SplashScreen from 'react-native-splash-screen';
 import * as Progress from 'react-native-progress';
 
@@ -14,7 +15,7 @@ import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import { Settings } from './setting-storage';
 import { readCurrentProfile } from './profile';
 import { BACKGROUND, BUTTONS, CURRENT_PROFILE, ONE_AFTER_THE_OTHER, SettingsPage } from './settings';
-import { Alert, Dimensions, Platform, View } from 'react-native';
+import { Alert, Dimensions, NativeModules, Platform, View } from 'react-native';
 import { CountdownButton } from './common/countdown-btn';
 import { useIncomingURL } from './common/linking-hook';
 import { GlobalContext } from './common/global-context';
@@ -23,6 +24,8 @@ import { ImportInfo, importPackage } from './import-export';
 import { Text } from '@rneui/themed';
 import { ImportInfoDialog } from './common/import-info-dialog';
 import { gStyles } from './common/common-style';
+import { MyCloseIcon, MyIcon } from './common/icons';
+const { FileCopyModule } = NativeModules;
 
 const toastConfig = {
 
@@ -80,8 +83,7 @@ function Main(): React.JSX.Element {
 
     if (Platform.OS === "android" && url.startsWith("content://")) {
       console.log("translate content://", url);
-      // url = await FileCopyModule.copyContentUriToTemp(url);
-      // todo android
+      url = await FileCopyModule.copyContentUriToTemp(url);
     }
 
     console.log("handleImport event:", url, JSON.stringify(event));

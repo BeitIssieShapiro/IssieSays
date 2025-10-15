@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -43,6 +43,10 @@
 		F91FBCE536D49CC96D53C5A5 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = IssieSays/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		6ADA89022E9F7C59008A70EF /* welcome */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = welcome; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		00E356EB1AD99517003FC87E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
@@ -65,6 +69,7 @@
 		13B07FAE1A68108700A75B9A /* IssieSays */ = {
 			isa = PBXGroup;
 			children = (
+				6ADA89022E9F7C59008A70EF /* welcome */,
 				6ABE4F712E8FDD9400DB5ECF /* AppDelegate.swift */,
 				6AE846102B3B3FC700DA0A2A /* Assets.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
@@ -162,6 +167,9 @@
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				6ADA89022E9F7C59008A70EF /* welcome */,
 			);
 			name = IssieSays;
 			productName = IssieSays;
