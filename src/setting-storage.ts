@@ -4,7 +4,6 @@ import { storage } from './profile';
 
 type SupportedTypes = 'number' | 'boolean' | 'string';
 
-
 export class Settings {
     static getString(key: string, defValue: string): string {
         if (!storage) throw "Missing Storage"
@@ -34,6 +33,14 @@ export class Settings {
         storage.set(key, arr.length);
         for (let i = 0; i < arr.length; i++) {
             storage.set(key + "_" + i, arr[i]);
+        }
+    }
+
+    static truncateArray(key: string, from:number, max:number) {
+        for (let i = from; i <= max; i++) {
+            const val = storage.getString(key);
+            //console.log("about to delete:",key, i, val)
+            storage.delete(key + "_" + i);
         }
     }
 

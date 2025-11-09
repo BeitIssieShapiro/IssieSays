@@ -11,9 +11,9 @@ import * as Progress from 'react-native-progress';
 import { createSound } from 'react-native-nitro-sound';
 import { MainButton, RectView } from './uielements';
 import { About } from './about';
-import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
+import Toast, { BaseToast, ErrorToast, SuccessToast } from 'react-native-toast-message';
 import { Settings } from './setting-storage';
-import { readCurrentProfile } from './profile';
+import { getImagePath, readCurrentProfile } from './profile';
 import { BACKGROUND, BUTTONS, CURRENT_PROFILE, ONE_AFTER_THE_OTHER, SettingsPage } from './settings';
 import { Alert, Dimensions, NativeModules, Platform, View } from 'react-native';
 import { CountdownButton } from './common/countdown-btn';
@@ -24,7 +24,6 @@ import { ImportInfo, importPackage } from './import-export';
 import { Text } from '@rneui/themed';
 import { ImportInfoDialog } from './common/import-info-dialog';
 import { gStyles } from './common/common-style';
-import { MyCloseIcon, MyIcon } from './common/icons';
 const { FileCopyModule } = NativeModules;
 
 const toastConfig = {
@@ -32,7 +31,8 @@ const toastConfig = {
   success: (props: any) => (
     <BaseToast
       {...props}
-      style={{ width: "80%" }}
+      style={{ borderLeftColor: '#69C779', width: "80%" }}
+      text1Style={{ textAlign: "center", fontSize: 16 }}
     />
   ),
   /*
@@ -40,9 +40,10 @@ const toastConfig = {
     by modifying the existing `ErrorToast` component
   */
   error: (props: any) => (
-    <ErrorToast
+    <BaseToast
       {...props}
-      style={{ width: "80%" }}
+      style={{ borderLeftColor: '#FE6301', width: "80%" }}
+      text1Style={{ textAlign: "center", fontSize: 16 }}
     />
   )
 };
@@ -228,7 +229,7 @@ function Main(): React.JSX.Element {
           width={bottonWidth}
           raisedLevel={10}
           color={p.buttons[i].color == "#000000" && mainBackgroundColor == BACKGROUND.DARK ? "white" : p.buttons[i].color}
-          imageUrl={p.buttons[i].imageUrl}
+          imageUrl={getImagePath(p.buttons[i].imageUrl)}
           appBackground={mainBackgroundColor}
           showProgress={true}
           recName={i + ""}

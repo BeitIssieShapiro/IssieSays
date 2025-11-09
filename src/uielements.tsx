@@ -164,7 +164,7 @@ export function MainButton({ name, showName, width, fontSize, raisedLevel, color
     const baseScale = cWidth / imageSize.height;
     const imageLeft = cWidth / 2 - imageSize.width * baseScale / 2;
 
-    console.log("imgSize", (imageLeft + actOffset.x)*scale/cWidth)
+    //console.log("imgSize", (imageLeft + actOffset.x) * scale / cWidth)
     return (
         <View style={{ alignItems: "center", justifyContent: "center" }}>
             <View style={{
@@ -195,6 +195,7 @@ export function MainButton({ name, showName, width, fontSize, raisedLevel, color
                             width: cWidth,
                             height: cWidth,
                             borderRadius: cWidth / 2,
+                            backgroundColor: "white" 
                         }}
                     >
                         <Image source={{ uri: imageUrl }}

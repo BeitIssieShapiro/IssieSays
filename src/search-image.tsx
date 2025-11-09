@@ -9,6 +9,7 @@ import { MyCloseIcon } from "./common/icons";
 import { Spacer } from "./uielements";
 import { ScreenTitle } from "./common/settings-elements";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ensureAndroidCompatible } from "./utils";
 
 
 export async function SelectFromGallery(): Promise<string> {
@@ -42,13 +43,13 @@ export async function SelectFromGallery(): Promise<string> {
 }
 
 const copyFileToDocumentFolder = async (sourcePath: string) => {
-    const fileName = sourcePath.split('/').pop(); // Extract the file name
+    const fileName = sourcePath.split('/').pop() || ""; // Extract the file name
     const destinationPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
 
     // Copy the file from the sourcePath to the destinationPath
-    await RNFS.copyFile(sourcePath, destinationPath);
+    await RNFS.copyFile(ensureAndroidCompatible(sourcePath), ensureAndroidCompatible(destinationPath));
 
-    return `file://${destinationPath}`; // Return the new file path
+    return fileName;
 };
 
 export const deleteFile = async (filePath: string) => {

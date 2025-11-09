@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { Switch } from "@rneui/themed";
 import { isRTL, translate } from "./lang";
-import { Button } from "./profile";
+import { Button, getImagePath } from "./profile";
 import { colors, gStyles } from "./common/common-style";
 import { MainButton, Spacer } from "./uielements";
 import { IconButton } from "./common/components";
@@ -40,11 +40,11 @@ export function ButtonCard({ width, height, button, onSetActive, onEditButton, r
             <MainButton
                 name={""}
                 fontSize={22}
-                showName={true}
+                showName={false}
                 width={width / (isMobile ? 4 : 3)}
                 raisedLevel={10}
                 color={button.color}
-                imageUrl={button.imageUrl}
+                imageUrl={getImagePath(button.imageUrl)}
                 appBackground={'white'}
                 showProgress={true}
                 recName={recName}

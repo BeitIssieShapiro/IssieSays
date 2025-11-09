@@ -27,5 +27,7 @@ https://tawasol.mada.org.qa/wp-json/custom/v2/YOUR_APP_ID/symbols
 
 
 ## TODO
+- copy searched images?
+
 - Tawsol images
 

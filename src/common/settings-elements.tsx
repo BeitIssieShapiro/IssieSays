@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native"
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native"
 import { colors, gStyles } from "./common-style"
 import { IconProps, MyIcon } from "./icons"
 import {  Spacer } from "../uielements"
@@ -21,8 +21,8 @@ export function ScreenTitle({ title, onClose, onAbout, icon }: { title: string, 
     </View>
 }
 
-export function ScreenSubTitle({ titleIcon, elementTitle, elementName, actionName, actionIcon, onAction }:
-    { titleIcon?: IconProps, elementTitle: string, elementName: string, actionName: string, actionIcon: IconProps, onAction: () => void }) {
+export function ScreenSubTitle({ titleIcon, elementTitle, elementName, actionName, actionIcon, onAction, busy }:
+    { titleIcon?: IconProps, elementTitle: string, elementName: string, actionName: string, actionIcon: IconProps, onAction: () => void , busy?:boolean}) {
 
     return (
         <View style={[gStyles.screenSubTitle, {
@@ -34,6 +34,7 @@ export function ScreenSubTitle({ titleIcon, elementTitle, elementName, actionNam
             <View style={{ flexDirection: "row", alignItems: "center" }}>
                 {titleIcon && <MyIcon info={titleIcon} />}
                 <Text allowFontScaling={false} style={gStyles.screenSubTitleElementTitle}>{elementTitle}:</Text>
+                {busy && <ActivityIndicator color="#0000ff" size="small" />}
                 <Text allowFontScaling={false} style={[gStyles.screenSubTitleElementName, { textAlign: isRTL() ? "right" : "left" },
                 elementName.length == 0 && { color: colors.disabled }]}>
                     {elementName.length > 0 ? elementName : translate("ProfileNoName")}

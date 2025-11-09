@@ -47,6 +47,7 @@ interface ProfilePickerProps {
     onEdit?: (name: string, afterSave: () => void) => void;
     onCreate?: () => void;
     onExport?: (name: string) => void;
+    onSaveAs?: (name: string, afterDuplicate: () => void) => void;
     isNarrow?: boolean;
 }
 
@@ -55,7 +56,7 @@ interface ProfileItem {
     name: string;
 }
 
-export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder, onDelete, onEdit, onCreate,
+export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder, onDelete, onEdit, onCreate, onSaveAs,
     isNarrow,
     currentProfile,
     onExport }: ProfilePickerProps) {
@@ -120,28 +121,34 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                             </Text>
                         </Pressable>
 
-                        {item.key !== DefaultProfileName && (
-                            <View style={{ flexDirection: "row" }}>
-                                {onDelete && (
-                                    <IconButton
-                                        icon={{ name: "delete", ...menuActionIcon }}
-                                        onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))}
-                                    />
-                                )}
-                                {onEdit && (
-                                    <IconButton
-                                        icon={{ name: "edit", ...menuActionIcon }}
-                                        onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))}
-                                    />
-                                )}
-                                {onExport && (
-                                    <IconButton
-                                        icon={{ name: "share-social-outline", type: "Ionicons", ...menuActionIcon }}
-                                        onPress={() => onExport(item.key)}
-                                    />
-                                )}
-                            </View>
-                        )}
+
+                        <View style={{ flexDirection: "row" }}>
+                            {item.key !== DefaultProfileName && onDelete && (
+                                <IconButton
+                                    icon={{ name: "delete", ...menuActionIcon }}
+                                    onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))}
+                                />
+                            )}
+                            {item.key !== DefaultProfileName && onEdit && (
+                                <IconButton
+                                    icon={{ name: "edit", ...menuActionIcon }}
+                                    onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))}
+                                />
+                            )}
+                            {onSaveAs && (
+                                <IconButton
+                                    icon={{ name: "save", ...menuActionIcon }}
+                                    onPress={() => onSaveAs(item.key, () => setRevision(prev => prev + 1))}
+                                />
+                            )}
+                            {item.key !== DefaultProfileName && onExport && (
+                                <IconButton
+                                    icon={{ name: "share-social-outline", type: "Ionicons", ...menuActionIcon }}
+                                    onPress={() => onExport(item.key)}
+                                />
+                            )}
+                        </View>
+
                     </View>
                 ))}
             </ScrollView>

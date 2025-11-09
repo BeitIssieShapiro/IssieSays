@@ -3,7 +3,7 @@ import { BTN_COLOR } from "./uielements";
 import { useEffect, useRef, useState } from "react";
 import { fTranslate, isRTL, translate } from "./lang";
 import { DefaultProfileName, ProfilePicker } from "./profile-picker";
-import { AlreadyExists, Button, createNewProfile, deleteButton, deleteProfile, Folders, getRecordingFileName, InvalidCharachters, InvalidFileName, isValidFilename, loadButton, LoadProfile, Profile, readCurrentProfile, renameProfile, ReservedFileName, saveButton, SaveProfile, verifyProfileNameFree } from "./profile";
+import { AlreadyExists, Button, createNewProfile, deleteButton, deleteProfile, Folders, getRecordingFileName, InvalidCharachters, InvalidFileName, isEmptyButton, isValidFilename, LoadProfile, Profile, readCurrentProfile, renameProfile, ReservedFileName, SaveProfile, saveProfileAs, verifyProfileNameFree } from "./profile";
 import Toast from 'react-native-toast-message';
 import { Settings } from './setting-storage';
 import { MyIcon } from "./common/icons";
@@ -12,12 +12,13 @@ import { ScreenSubTitle, ScreenTitle } from "./common/settings-elements";
 import { colors } from "./common/common-style";
 import { ButtonCard } from "./button-card";
 import { EditButton, EditedButton } from "./edit-button";
-import { moveFile, unlink } from "react-native-fs";
+import { DocumentDirectoryPath, moveFile, unlink, writeFile } from "react-native-fs";
 import { EditText } from "./common/edit-text";
 import { IconButton } from "./common/components";
 import Share from 'react-native-share';
-import { exportAll, exportProfile } from "./import-export";
+import { doNothing, exportAll, exportProfile } from "./import-export";
 import { getIsMobile, Point } from "./utils";
+
 
 
 
@@ -62,6 +63,21 @@ export const BUTTONS_SHOW_NAMES = {
     name: 'button_show_names',
 }
 
+export const BUTTONS_DIRTY = {
+    name: 'button_dirty',
+}
+
+const buttonSettingArrays: any = [
+    BUTTONS_COLOR,
+    BUTTONS_DIRTY,
+    BUTTONS_IMAGE_URLS,
+    BUTTONS_NAMES,
+    BUTTONS_OFFSET_X,
+    BUTTONS_OFFSET_Y,
+    BUTTONS_SCALES,
+    BUTTONS_SHOW_NAMES,
+]
+
 // export const BUTTONS_VIBRATE = {
 //     name: 'button_vibrate',
 // }
@@ -79,7 +95,8 @@ export const BACKGROUND = {
 
 export const INSTALL = {
     fresh: 'fresh-install',
-    firstTimeSettings: 'firstTimeSettings'
+    firstTimeSettings: 'firstTimeSettings',
+    version: 'settings-version',
 }
 
 
@@ -90,6 +107,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     const [openLoadProfile, setOpenLoadProfile] = useState<boolean>(false);
     const [inputProfile, setInputProfile] = useState<boolean>(false);
     const [editProfileName, setEditProfileName] = useState<{ name: string, afterSave: () => void } | undefined>();
+    const [profileSaveAs, setProfileSaveAs] = useState<{ name: string, afterSave: () => void } | undefined>();
 
     const textInputRef = [useRef<TextInput>(null), useRef<TextInput>(null), useRef<TextInput>(null), useRef<TextInput>(null)];
     const scrollViewRef = useRef<ScrollView>(null);
@@ -101,7 +119,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     const [editButton, setEditButton] = useState<number>(-1);
     const [busy, setBusy] = useState<boolean>(false);
     const isMobile = getIsMobile(windowSize)
-    console.log("isMobile", isMobile, windowSize)
+    console.log("profile", `${DocumentDirectoryPath} `, profile)
 
     useEffect(() => {
         setBackgroundColor(Settings.getString(BACKGROUND.name, BACKGROUND.LIGHT));
@@ -155,11 +173,18 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     const isScreenNarrow = windowSize.width < 500;
 
     const changeBackgroundColor = (color: string) => {
+        const current = Settings.getString(BACKGROUND.name, BACKGROUND.LIGHT);
+        if (current == color) return false;
+
         Settings.set(BACKGROUND.name, color);
         setRevision(old => old + 1);
+        return true;
     }
 
     const changeOneAfterTheOther = (newVal: boolean) => {
+        const current = Settings.getBoolean(ONE_AFTER_THE_OTHER.name, false);
+        if (current == newVal) return false;
+
         Settings.set(ONE_AFTER_THE_OTHER.name, newVal);
         if (newVal == false) {
             // limit num of buttons to 4
@@ -169,74 +194,123 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             }
         }
         setRevision(old => old + 1);
+        return true;
     }
 
-    const changeNumOfButton = (delta: number) => {
+    const changeNumOfButton = (delta: number): boolean => {
         const current = Settings.getNumber(BUTTONS.name, 1);
         const oneAfterTheOther = Settings.getBoolean(ONE_AFTER_THE_OTHER.name, false);
         let newVal = current + delta;
-        if (newVal < 1) return;
-        if (oneAfterTheOther && newVal > 20 || !oneAfterTheOther && newVal > 4) return;
+        if (newVal < 1) return false;
+        if (oneAfterTheOther && newVal > 20 || !oneAfterTheOther && newVal > 4) return false;
+
+        if (newVal == current) return false;
+
         Settings.set(BUTTONS.name, newVal);
         setRevision(old => old + 1);
+        return true
     }
 
-    const changeButtonName = (index: number, newName: string) => {
-        console.log("change buttun text", index, newName)
+    const changeButtonName = (index: number, newName: string): boolean => {
+        console.log("change button text", index, newName)
         let newButtonNames = profile.buttons.map(b => b.name);
+        if (newButtonNames[index] == newName) return false;
         newButtonNames[index] = newName
         Settings.setArray(BUTTONS_NAMES.name, newButtonNames);
+        return true;
     }
 
-    const saveColor = (index: number, newVal: string) => {
+    const saveColor = (index: number, newVal: string): boolean => {
         let newColors = profile.buttons.map(b => b.color);
+        if (newColors[index] == newVal) return false;
+
         newColors[index] = newVal
         Settings.setArray(BUTTONS_COLOR.name, newColors);
+        return true;
     }
 
-    const saveImageUrl = (index: number, newVal: string) => {
+    const saveImageUrl = (index: number, newVal: string): boolean => {
         let newBtnImageUrls = profile.buttons.map(b => b.imageUrl);
+        if (newBtnImageUrls[index] == newVal) return false;
+
         newBtnImageUrls[index] = newVal
         Settings.setArray(BUTTONS_IMAGE_URLS.name, newBtnImageUrls);
-        console.log("new button ImageUrl", newBtnImageUrls, index)
+        return true;
     }
 
-    const saveShowNames = (index: number, newVal: boolean) => {
+    const saveShowNames = (index: number, newVal: boolean): boolean => {
         let newBtnShowNames = profile.buttons.map(b => b.showName);
+        if (newBtnShowNames[index] == newVal) return false
         newBtnShowNames[index] = newVal
         Settings.setArray(BUTTONS_SHOW_NAMES.name, newBtnShowNames);
+        return true;
     }
 
-    const saveScale = (index: number, newVal: number) => {
+    const saveScale = (index: number, newVal: number): boolean => {
         let newBtnScales = profile.buttons.map(b => b.scale);
+        if (newBtnScales[index] == newVal) return false;
+
         newBtnScales[index] = newVal
         Settings.setArray(BUTTONS_SCALES.name, newBtnScales);
+        return true;
     }
 
     const saveOffset = (index: number, newVal: Point) => {
+        console.log("saveoffset", newVal)
         let newOffsetX = profile.buttons.map(b => b.offset.x);
         let newOffsetY = profile.buttons.map(b => b.offset.y);
+        if (newOffsetX[index] == newVal.x && newOffsetY[index] == newVal.y) return false;
+
         newOffsetX[index] = newVal.x;
         newOffsetY[index] = newVal.y;
         Settings.setArray(BUTTONS_OFFSET_X.name, newOffsetX);
         Settings.setArray(BUTTONS_OFFSET_Y.name, newOffsetY);
+        return true;
     }
 
+    const saveDirty = (index: number, newVal: boolean) => {
+        let dirty = profile.buttons.map(b => b.dirty);
+        dirty[index] = newVal;
+        Settings.setArray(BUTTONS_DIRTY.name, dirty);
+    }
 
-    const handleSaveButton = (index: number, btn: EditedButton) => {
-        saveColor(index, btn.color);
-        saveImageUrl(index, btn.imageUrl);
-        saveShowNames(index, btn.showName);
-        changeButtonName(index, btn.name);
-        saveScale(index, btn.scale);
-        saveOffset(index, btn.offset);
+    const handleSaveButton = async (index: number, btn: EditedButton) => {
+        let dirty = false;
+        dirty = saveColor(index, btn.color) || dirty;
+        dirty = saveImageUrl(index, btn.imageUrl) || dirty;
+        dirty = saveShowNames(index, btn.showName) || dirty;
+        dirty = changeButtonName(index, btn.name) || dirty;
+        dirty = saveScale(index, btn.scale || 1) || dirty;
+        dirty = saveOffset(index, btn.offset?.x != undefined ? btn.offset : { x: 0, y: 0 }) || dirty;
+
+
+        console.log("dirty button", dirty, btn.audioName, "rec", btn.recording != undefined)
         if (btn.audioName) {
+            dirty = true;
             // copy the audio file
             const tmpFile = getRecordingFileName(btn.audioName)
+            console.log("saving audio-file", btn.audioName, tmpFile)
             const targetFile = getRecordingFileName(index + "")
             unlink(targetFile).
                 catch(() => {/** expected to be empty sometimes */ }).
                 finally(() => moveFile(tmpFile, targetFile));
+        } else if (btn.recording) {
+            // the field recording is a base64 audio, which is saved to file. 
+            // it means this button was just loaded from file
+            const targetFile = getRecordingFileName(index + "")
+            unlink(targetFile).
+                catch(() => {/** expected to be empty sometimes */ }).
+                finally(() => writeFile(targetFile, btn.recording!, 'base64'));
+
+            // in this case we set to dirty to false!, as the button was loaded from template
+            dirty = false;
+            saveDirty(index, false);
+        }
+        if (dirty) {
+            // verify not new empty button
+            if (!await isEmptyButton(btn, index + "")) {
+                saveDirty(index, true);
+            }
         }
         setRevision(old => old + 1);
     }
@@ -303,8 +377,28 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         afterDelete();
     }
 
-    const handleProfileEditName = (newName: string, prevName: string, isRename: boolean, afterSave: () => void) => {
+    const handleProfileSaveAs = async (targetName: string, sourceName: string, afterSave: () => void) => {
         const currName = Settings.getString(CURRENT_PROFILE.name, "");
+        const isCurrent = currName == sourceName;
+        if (isCurrent) {
+            // save current first
+            const p = readCurrentProfile();
+            await SaveProfile(currName, p, true, true);
+        }
+
+        await saveProfileAs(sourceName, targetName)
+            .then(() => afterSave())
+            .catch(err => {
+                if (err instanceof AlreadyExists) {
+                    Alert.alert(translate("ProfileExistsTitle"), fTranslate("ProfileExists", targetName),);
+                } else {
+                    Alert.alert(err);
+                }
+            });
+    }
+
+    const handleProfileEditName = (newName: string, prevName: string, isRename: boolean, afterSave: () => void) => {
+        const currName = Settings.getString(CURRENT_PROFILE.name, DefaultProfileName);
         const isCurrent = currName == prevName;
 
         doProfileSave(newName, prevName, isCurrent)
@@ -312,7 +406,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                 afterSave();
                 Toast.show({
                     autoHide: true,
-                    type: 'success',
+                    type: "success",
                     text1: translate(isRename ? "ProfileSuccessRenamed" : "ProfileSuccessfulyCreated")
                 })
             })
@@ -351,6 +445,13 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
     async function handleExportProfile(name: string) {
         setBusy(true);
+
+        const currentProfileName = Settings.getString(CURRENT_PROFILE.name, "")
+        if (name == currentProfileName) {
+            // save current profile (cannot be default as it cannot be exported)
+            await SaveProfile(name, profile, true, false);
+        }
+
         const zipPath = (await exportProfile(name)
             .finally(() => setBusy(false))
         ) as string;
@@ -368,8 +469,30 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         });
     }
 
+    async function handleCloseSettings() {
+        const maxCleanUp = 20;
+        const numOfButtons = Settings.getNumber(BUTTONS.name, 1);
+        for (let i = 0; i < buttonSettingArrays.length; i++) {
+            Settings.truncateArray(buttonSettingArrays[i].name as string, numOfButtons, maxCleanUp);
+        }
+
+        // cleanup files
+        for (let i = numOfButtons; i < maxCleanUp; i++) {
+            const recPath = getRecordingFileName(i + "");
+            unlink(recPath).catch(doNothing);
+        }
+
+        onClose()
+    }
+
     async function handleBackupAll() {
         setBusy(true)
+
+        // first save current profile to disk:
+        const currentProfileName = Settings.getString(CURRENT_PROFILE.name, DefaultProfileName);
+        const p = readCurrentProfile();
+        await SaveProfile(currentProfileName, p, true, true);
+
         const zipPath = (await exportAll()
             .catch(err => console.log("export all failed", err))
             .finally(() => setBusy(false))
@@ -407,6 +530,10 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         />
     }
 
+
+
+
+
     return <View style={{ top: safeAreaInsets.top, position: "relative", width: windowSize.width, height: windowSize.height - 50 - safeAreaInsets.top }}>
         <ProfilePicker
             folder={Folders.Profiles}
@@ -414,11 +541,11 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             open={openLoadProfile}
             exportButton={{ name: translate("Export") }}
             height={windowSize.height * .6}
-            onSelect={async (name) => {
+            onSelect={(name) => {
                 console.log("Loading profile ", name)
                 setProfileBusy(true);
                 setOpenLoadProfile(false);
-                await LoadProfile(name).finally(() => {
+                LoadProfile(name).finally(() => {
                     setProfileBusy(false)
                     setRevision(prev => prev + 1);
                 });
@@ -436,6 +563,9 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                 })}
 
             onDelete={(name, afterDelete) => handleProfileDelete(name, afterDelete)}
+            onSaveAs={(srcName, afterSave) => setProfileSaveAs({
+                name: srcName, afterSave
+            })}
             onClose={() => setOpenLoadProfile(false)}
             onExport={handleExportProfile}
             isNarrow={isScreenNarrow}
@@ -469,7 +599,20 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
         />}
 
-        <ScreenTitle title={translate("Settings")} onClose={() => onClose()} onAbout={onAbout} icon={{ name: "check-bold", type: "MDI", size: 30, color: colors.titleBlue }} />
+        {profileSaveAs && <EditText initialText={""} label={fTranslate("ProfileSaveAsTitle", profileSaveAs.name == DefaultProfileName ? translate(profileSaveAs.name) : profileSaveAs.name)} onClose={() => setProfileSaveAs(undefined)}
+            onDone={async (name) => {
+                handleProfileSaveAs(name, profileSaveAs.name, profileSaveAs.afterSave);
+                setProfileSaveAs(undefined);
+
+            }}
+            width={Math.min(windowSize.width / 2, 400)}
+            textHeight={70}
+            textWidth={250}
+            windowSize={windowSize}
+
+        />}
+
+        <ScreenTitle title={translate("Settings")} onClose={handleCloseSettings} onAbout={onAbout} icon={{ name: "check-bold", type: "MDI", size: 30, color: colors.titleBlue }} />
 
         {/* Profile Name */}
         <ScreenSubTitle
@@ -478,6 +621,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             actionName={translate("ListProfiles")}
             actionIcon={{ name: "list", type: "Ionicons", color: colors.titleBlue, size: 25 }}
             onAction={() => setOpenLoadProfile(true)}
+            busy={profileBusy}
         />
 
         <View style={styles.settingHost}>
@@ -518,7 +662,6 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
                 <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("Buttons")}</Text>
             </View>
-
 
             <ScrollView style={styles.settingButtosnHost} >
                 <View style={[styles.buttons, marginHorizontal, { flexDirection: isRTL() ? "row-reverse" : "row" }]}>

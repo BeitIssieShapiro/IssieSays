@@ -104,6 +104,10 @@ var strings: any = {
         "ContinueWithoutSave": "טעינה ללא שמירה",
         "EditImage": "ערוך תמונה",
         "EditImageTitle": "ניתן להזיז ולשנות את הגודל",
+        "AboutToReloadSameButtonTitle": "טעינה מחדש של אותו כפתור-שמע",
+        "AboutToReloadSameButton": "טעינת אותו כפתור-שמע תדרוס את השינויים שנעשו בכפתור בפרופיל זה. להמשיך?",
+        "Load": "טוען...",
+        "ProfileSaveAsTitle": "שמירת '{1}' בשם",
     },
     "en": {
         "Welcome": "Welcome",
@@ -152,6 +156,9 @@ var strings: any = {
         "ListProfiles": "List",
         "OK": "OK",
         "SaveToList": "Save As Template",
+        "ProfileSaveAsTitle": "Save '{1}' As",
+        "AboutToReloadSameButtonTitle": "Reload Again The Same Voice-Button Template",
+        "AboutToReloadSameButton": "Are you sure you want to reload the same template and loose change made to the button in this profile?",
         "LoadFromList": "Templates",
         "LoadBtn": "Load",
         "EditButton": "Edit",
@@ -283,6 +290,9 @@ var strings: any = {
         "AboutToOverwriteButtonTitle": "حفظ قبل الاستيراد من المكتبة",
         "EditImage": "تحرير الصورة",
         "EditImageTitle": "يمكنك التحريك وتغيير الحجم",
+        "AboutToReloadSameButtonTitle": "إعادة تحميل نفس زر الصوت",
+        "AboutToReloadSameButton": "سيؤدي تحميل نفس زر الصوت إلى استبدال التغييرات التي أُجريت على الزر في هذا الملف الشخصي. هل تريد المتابعة؟",
+        "ProfileSaveAsTitle": "حفظ '{1}' باسم",
     }
 };
 
@@ -315,7 +325,7 @@ function findMissing() {
     console.log(missing);
 
 }
-// findMissing();
+findMissing();
 
 
 const currStrings = strings[deviceLanguage];

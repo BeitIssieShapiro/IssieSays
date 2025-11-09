@@ -5,7 +5,7 @@ import { colors, gStyles } from "./common/common-style";
 import { IconButton, LabeledIconButton } from "./common/components";
 import { fTranslate, isRTL, translate } from "./lang";
 import { MainButton, Spacer } from "./uielements";
-import { AlreadyExists, Button, deleteButton, Folders, InvalidCharachters, InvalidFileName, loadButton2, saveButton, saveButton2 } from "./profile";
+import { AlreadyExists, Button, deleteButton, Folders, getImagePath, InvalidCharachters, InvalidFileName, loadButton2, saveButton2 } from "./profile";
 import { SearchImage, SelectFromGallery } from "./search-image";
 import { RecordButton } from "./recording";
 import { Checkbox } from "./common/check-box";
@@ -117,7 +117,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
             width={isMobile ? 80 : 180}
             raisedLevel={10}
             color={localButton.color}
-            imageUrl={localButton.imageUrl}
+            imageUrl={getImagePath(localButton.imageUrl)}
             appBackground={"white"}
             showProgress={false}
             recName={""}
@@ -202,7 +202,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                 backgroundColor={localButton.color}
                 initialOffset={localButton.offset}
                 initialScale={localButton.scale}
-                imageUrl={localButton.imageUrl}
+                imageUrl={getImagePath(localButton.imageUrl)}
                 onClose={() => setIsEditingImage(false)}
                 onSave={(scale, offset) => {
                     updateButton({ offset, scale })
@@ -243,32 +243,49 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                     console.log("selected button", buttonName)
                     if (openLoadButton) {
                         setOpenLoadButton(false);
-                        Alert.alert(translate("AboutToOverwriteButtonTitle"), fTranslate("AboutToOverwriteButton"),
-                            [
-                                {
-                                    text: translate("SaveFirst"), onPress: () => {
-                                        handleSaveButton(localButton, index, async () => {
-                                            // after save
+                        if (localButton.dirty) {
+                            // loading the same button name
+                            if (localButton.name == buttonName) {
+                                Alert.alert(translate("AboutToReloadSameButtonTitle"), fTranslate("AboutToReloadSameButton"), [
+                                    {
+                                        text: translate("YES"), onPress: async () => {
                                             const loadedBtn = await loadButton2(buttonName);
-                                            updateButton(loadedBtn);
-                                        })
-                                    }
-                                },
-                                {
-                                    text: translate("ContinueWithoutSave"), onPress: async () => {
-                                        const loadedBtn = await loadButton2(buttonName);
-                                        updateButton(loadedBtn);
-                                    }
-                                },
-                                { text: translate("Cancel") }
-                            ])
+                                            updateButton({ ...loadedBtn, dirty: false, audioName: undefined });
+                                        }
+                                    },
+                                    { text: translate("Cancel") }
+                                ])
+                                return;
+                            }
+
+                            Alert.alert(translate("AboutToOverwriteButtonTitle"), fTranslate("AboutToOverwriteButton"),
+                                [
+                                    {
+                                        text: translate("SaveFirst"), onPress: () => {
+                                            handleSaveButton(localButton, index, async () => {
+                                                // after save
+                                                const loadedBtn = await loadButton2(buttonName);
+                                                updateButton({ ...loadedBtn, dirty: false, audioName: undefined });
+                                            })
+                                        }
+                                    },
+                                    {
+                                        text: translate("ContinueWithoutSave"), onPress: async () => {
+                                            const loadedBtn = await loadButton2(buttonName);
+                                            updateButton({ ...loadedBtn, dirty: false, audioName: undefined });
+                                        }
+                                    },
+                                    { text: translate("Cancel") }
+                                ]);
+                        } else {
+                            const loadedBtn = await loadButton2(buttonName);
+                            updateButton({ ...loadedBtn, dirty: false, audioName: undefined });
+                        }
                     }
                 }}
                 onClose={() => setOpenLoadButton(false)}
                 onDelete={handleButtonDelete}
-
             />
-
 
             {/* Preview */}
             <View style={[styles.row, { justifyContent: isLandscape ? "space-around" : "center" }]}>

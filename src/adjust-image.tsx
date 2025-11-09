@@ -3,18 +3,16 @@ import {
     View,
     Image,
     PanResponder,
-    Dimensions,
-    Modal,
     StyleSheet,
-    Button,
     ImageSize,
 } from "react-native";
 import { colors, gStyles } from "./common/common-style";
-import Svg, { Rect, Circle, Mask } from "react-native-svg";
-import { denormOffset, FIX_IMAGE_SCALE, isLandscape, normOffset, WinSize } from "./utils";
+//import Svg, { Rect, Circle, Mask } from "react-native-svg";
+import { denormOffset, normOffset, WinSize } from "./utils";
 import { IconButton } from "./common/components";
 import { translate } from "./lang";
 import { Text } from "@rneui/themed";
+import { MainButton } from "./uielements";
 
 
 interface ImageAdjustModalProps {
@@ -41,13 +39,13 @@ export default function ImageResizerModal({
     const [scale, setScale] = useState<number>(initialScale);
     const [offset, setOffset] = useState(denormInitialOffset);
 
-    const [imageSize, setImageSize] = useState<ImageSize>({ width: 500, height: 500 });
+    //const [imageSize, setImageSize] = useState<ImageSize>({ width: 500, height: 500 });
 
 
 
-    useEffect(() => {
-        Image.getSize(imageUrl).then((size) => setImageSize(size))
-    }, []);
+    // useEffect(() => {
+    //     Image.getSize(imageUrl).then((size) => setImageSize(size))
+    // }, []);
 
     const lastScale = useRef(initialScale);
     const lastPan = useRef(denormInitialOffset);
@@ -87,7 +85,7 @@ export default function ImageResizerModal({
                                 (distance / initialDistance.current) * lastScale.current;
 
                             if (scaleFactor < 1) {
-                                scaleFactor = 1;
+                                //scaleFactor = 1;
                             }
                             setScale(scaleFactor);
                             scaleRef.current = scaleFactor
@@ -104,65 +102,29 @@ export default function ImageResizerModal({
         })
     ).current;
 
-    const baseScale = cWidth / imageSize.height;
-    const cLeft = (windowSize.width - cWidth) / 2;
-    const imageLeft = (cWidth / 2 - imageSize.width * baseScale / 2);
-    const imageTop = (windowSize.height - cWidth) / 2;
-
-    console.log("ai2", normOffset(offset, cWidth))
 
     return (
-        <View style={[gStyles.screenContainer, { backgroundColor: backgroundColor, direction: "ltr" }]}>
+        <View style={[gStyles.screenContainer, { direction: "ltr" }]} {...panResponder.panHandlers}>
+
             <View style={styles.title}>
                 <Text allowFontScaling={false} style={styles.titleText}>{translate("EditImageTitle")}</Text>
             </View>
-            <View style={{ position: "absolute", left: 0, top: windowSize.height / 2, borderBottomWidth: 1, width: cLeft }} />
-            <View style={{ position: "absolute", right: 0, top: windowSize.height / 2, borderBottomWidth: 1, width: cLeft }} />
-            <View
-                style={{
-                    position: "absolute",
-                    transform: [
-                        // { translateX: cLeft },
-                        // { scale: FIX_IMAGE_SCALE },
-                        { translateX: imageLeft + offset.x },
-                        { translateY: imageTop + offset.y },
-                        { scale: scale },
-                    ],
-                    left: cLeft,
-                    width: cWidth, height: cWidth,
-                }}
-            >
-                <Image
-                    source={{ uri: imageUrl }}
-                    resizeMode="stretch"
-                    style={{
-                        width: imageSize.width * baseScale,
-                        height: imageSize.height * baseScale,
-                        backgroundColor,
-                    }}
+            <View style={{ position: "absolute", top: windowSize.height / 2 - cWidth, width:"100%"  }}>
+                <MainButton
+                    name=""
+                    fontSize={22}
+                    showName={false}
+                    width={cWidth}
+                    raisedLevel={10}
+                    color={backgroundColor}
+                    imageUrl={imageUrl}
+                    appBackground={"white"}
+                    showProgress={false}
+                    recName={""}
+                    imageOffset={normOffset(offset, cWidth)}
+                    scale={scale}
                 />
             </View>
-
-            {/* Semi-transparent white overlay with circle cutout */}
-            <Svg style={StyleSheet.absoluteFill} {...panResponder.panHandlers}>
-                <Mask id="mask">
-                    {/* Full opaque rectangle */}
-                    <Rect x={0} y={0} width={windowSize.width} height={windowSize.height} fill="white" />
-                    {/* Transparent circle */}
-                    <Circle cx={windowSize.width / 2} cy={windowSize.height / 2} r={cWidth / 2} fill="black" />
-                </Mask>
-
-                {/* Apply the mask */}
-                <Rect
-                    x="0"
-                    y="0"
-                    width={windowSize.width}
-                    height={windowSize.height}
-                    fill="white"
-                    opacity={0.6}
-                    mask="url(#mask)"
-                />
-            </Svg>
 
             <View style={styles.buttonContainer}>
                 <IconButton
