@@ -11,6 +11,8 @@ Special thanks to the volunteers at the SAP Labs Israel, who are attentive to ev
 ## preparing a video to appstore
 `ffmpeg -i input.mp4 -vf "scale=1200:1600,setdar=1200/1600" output.mp4`
 
+for iPhone: 1920 × 886
+
 ## Android
 android/gradle.properties
 newArchEnabled=true

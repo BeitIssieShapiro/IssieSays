@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   SafeAreaProvider,
+  useSafeAreaFrame,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 
@@ -15,7 +16,7 @@ import Toast, { BaseToast, ErrorToast, SuccessToast } from 'react-native-toast-m
 import { Settings } from './setting-storage';
 import { getImagePath, readCurrentProfile } from './profile';
 import { BACKGROUND, BUTTONS, CURRENT_PROFILE, ONE_AFTER_THE_OTHER, SettingsPage } from './settings';
-import { Alert, Dimensions, NativeModules, Platform, View } from 'react-native';
+import { Alert, NativeModules, Platform, View } from 'react-native';
 import { CountdownButton } from './common/countdown-btn';
 import { useIncomingURL } from './common/linking-hook';
 import { GlobalContext } from './common/global-context';
@@ -24,6 +25,7 @@ import { ImportInfo, importPackage } from './import-export';
 import { Text } from '@rneui/themed';
 import { ImportInfoDialog } from './common/import-info-dialog';
 import { gStyles } from './common/common-style';
+import { getIsMobile, isLandscape as isLandscapeUtil } from './utils';
 const { FileCopyModule } = NativeModules;
 
 const toastConfig = {
@@ -52,7 +54,7 @@ const toastConfig = {
 export const audioRecorderPlayer = createSound();
 
 function Main(): React.JSX.Element {
-  const [windowSize, setWindowSize] = useState(Dimensions.get("window"));
+  // const [windowSize, setWindowSize] = useState(Dimensions.get("window"));
 
   const [log, setLog] = useState("");
   const [showSettings, setShowSettings] = useState(false);
@@ -64,16 +66,16 @@ function Main(): React.JSX.Element {
     precent: number;
   } | undefined>();
 
-  const isLandscape = () => windowSize.height < windowSize.width;
 
+  const windowSize = useSafeAreaFrame()
 
-  useEffect(() => {
-    const subscription = Dimensions.addEventListener('change', ({ window }: any) => setWindowSize(window));
-    return () => {
-      // Cleanup 
-      subscription?.remove()
-    }
-  }, [])
+  // useEffect(() => {
+  //   const subscription = Dimensions.addEventListener('change', ({ window }: any) => setWindowSize(window));
+  //   return () => {
+  //     // Cleanup 
+  //     subscription?.remove()
+  //   }
+  // }, [])
 
 
   async function handleImport(event: any) {
@@ -123,6 +125,9 @@ function Main(): React.JSX.Element {
 
   const safeAreaInsets = useSafeAreaInsets();
 
+  // Use utility function to detect mobile vs tablet/iPad
+  const isMobile = getIsMobile(windowSize);
+  const isIPad = () => !isMobile;
 
   const backgroundStyle = {
     direction: "ltr",
@@ -140,21 +145,19 @@ function Main(): React.JSX.Element {
 
   if (showSettings) {
     return <>
-      <SafeAreaProvider>
-        {/* @ts-ignore*/}
-        <View style={backgroundStyle} >
-          <SettingsPage
-            windowSize={windowSize}
-            onAbout={() => {
-              console.log("On About")
-              setShowAbout(true);
+      {/* @ts-ignore*/}
+      <View style={backgroundStyle} >
+        <SettingsPage
+          windowSize={windowSize}
+          onAbout={() => {
+            console.log("On About")
+            setShowAbout(true);
 
-              setShowSettings(false);
-            }}
-            onClose={() => setShowSettings(false)}
-          />
-        </View >
-      </SafeAreaProvider>
+            setShowSettings(false);
+          }}
+          onClose={() => setShowSettings(false)}
+        />
+      </View >
 
       <Toast position='bottom' bottomOffset={30} config={toastConfig} />
     </>
@@ -167,17 +170,36 @@ function Main(): React.JSX.Element {
     Array.from(Array(p.buttons.length).keys());
 
 
-  const buttonsInCol = activeButtons.length < 2 ? 1 : 2
+  const isLandscape = isLandscapeUtil(windowSize)
+  const h = windowSize.height //- safeAreaInsets.top - safeAreaInsets.bottom;
+  const w = windowSize.width //- safeAreaInsets.left - safeAreaInsets.right;
+  const n = activeButtons.length;
 
-  let bottonWidth = (isLandscape() ? windowSize.height : windowSize.width) * (buttonsInCol > 1 ?
-    (activeButtons.length > 2 ? .32 : .4) : .6);
+  let buttonWidth = 0;
+  let hMargin = 0;
 
-  if (windowSize.height < 450) {
-    bottonWidth *= .8;
+  if (isLandscape) {
+    if (isMobile) {
+      buttonWidth = Math.min(w / activeButtons.length, h * (n == 1 ? .6 : (n > 3 ? 1.3 : 1.1)) / n)
+      hMargin = 10;
+    } else {
+      buttonWidth = (n == 4 ? Math.min(w / 4, h * .6 / 2) : h / (n + 1))
+      hMargin = 50;
+    }
+  } else {
+    if (isMobile) {
+      buttonWidth = Math.min(n == 4 ? w / 2 : w * .5, h * .6 / n)
+      hMargin = 10;
+
+    } else {
+      buttonWidth = (n == 4 ? w / 3.5 : w / (n + 1))
+      hMargin = n == 4 ? 20 : 90;
+
+    }
+
   }
 
-  console.log("w/h", windowSize)
-
+  //console.log("rendering stats", w, h, "land", isLandscape, "mobile", isMobile, buttonWidth, hMargin)
 
   const handlePlayComplete = () => {
     console.log("handlePlayComplete")
@@ -192,9 +214,9 @@ function Main(): React.JSX.Element {
 
 
   // @ts-ignore
-  return (<View style={backgroundStyle} >
+  return (<View style={[backgroundStyle, { marginTop: safeAreaInsets.top }]} >
     <CountdownButton iconSize={45} onComplete={() => setShowSettings(true)} style={{
-      top: Math.max(25, 20 + safeAreaInsets.top),
+      top: isLandscapeUtil(windowSize) ? Math.max(25, 20 + safeAreaInsets.top) : 25, // No safe area top in portrait to avoid camera hole
       right: Math.max(20, 15 + safeAreaInsets.right),
 
     }}
@@ -218,7 +240,7 @@ function Main(): React.JSX.Element {
       importInfo && <ImportInfoDialog importInfo={importInfo} onClose={() => setImportInfo(undefined)} />
     }
 
-    <RectView buttonWidth={bottonWidth} width={windowSize.width} height={windowSize.height} isLandscape={isLandscape()}>
+    <RectView buttonWidth={buttonWidth} width={windowSize.width - safeAreaInsets.left - safeAreaInsets.right} height={windowSize.height - safeAreaInsets.top - safeAreaInsets.bottom} isLandscape={isLandscapeUtil(windowSize)}>
 
       {activeButtons.map((i: any) => (
         <MainButton
@@ -226,7 +248,7 @@ function Main(): React.JSX.Element {
           name={p.buttons[i].name}
           fontSize={27}
           showName={p.buttons[i].showName}
-          width={bottonWidth}
+          width={buttonWidth}
           raisedLevel={10}
           color={p.buttons[i].color == "#000000" && mainBackgroundColor == BACKGROUND.DARK ? "white" : p.buttons[i].color}
           imageUrl={getImagePath(p.buttons[i].imageUrl)}
@@ -236,6 +258,7 @@ function Main(): React.JSX.Element {
           onPlayComplete={oneAfterTheOther ? handlePlayComplete : undefined}
           imageOffset={p.buttons[i].offset}
           scale={p.buttons[i].scale}
+          hMargin={hMargin}
         />
       ))
       }
@@ -244,7 +267,7 @@ function Main(): React.JSX.Element {
 
     {oneAfterTheOther &&
       <CountdownButton iconSize={50} onComplete={() => setNextButton(0)}
-        style={{ bottom: 10 + safeAreaInsets.bottom, right: windowSize.width / 2 - 25 }}
+        style={{ bottom: Math.max(10, 10 + safeAreaInsets.bottom), right: isLandscape ? 50 : windowSize.width / 2 - 25 }}
         countdownStyle={{ backgroundColor: mainBackgroundColor == BACKGROUND.LIGHT ? "gray" : "white" }}
         icon="restart"
         iconType="MDI"
@@ -263,6 +286,8 @@ function Main(): React.JSX.Element {
 }
 
 
+import * as ScreenSizer from '@bam.tech/react-native-screen-sizer';
+ScreenSizer.setup();
 
 export default function App(props: any) {
 
@@ -285,7 +310,15 @@ export default function App(props: any) {
     url: props.url
   }}>
     <SafeAreaProvider>
-      <Main />
+      {
+        __DEV__ ?
+          <ScreenSizer.Wrapper
+            devices={[...ScreenSizer.defaultDevices.all, 'hostDevice']}
+          >
+            <Main />
+          </ScreenSizer.Wrapper>
+          : <Main />
+      }
     </SafeAreaProvider>
   </GlobalContext.Provider>
 }

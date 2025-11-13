@@ -10,7 +10,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { audioRecorderPlayer } from "./App";
 import { playRecording, stopPlayback } from "./recording";
 import { MyIcon } from "./common/icons";
-import { denormOffset, FIX_IMAGE_SCALE } from "./utils";
+import { denormOffset, FIX_IMAGE_SCALE, getIsMobile, isLandscape as isLandscapeUtil } from "./utils";
 
 export const BTN_COLOR = "#6E6E6E";
 const BTN_FOR_COLOR = "#CD6438";
@@ -60,38 +60,50 @@ export function getNumButtonsSelection(num: number, size: number) {
 
 export function RectView({ children, width, height, buttonWidth, isLandscape }: any) {
 
-    const space = buttonWidth / 3;
-    console.log("rectview", height)
+    // Use utility function to detect mobile vs tablet/iPad
+    const windowSize = { width, height };
+    const isMobile = getIsMobile(windowSize);
+    const isIPad = !isMobile;
+
+   
     return <View style={{
-        flexDirection: "column",
+        flexDirection: "row",
         flexWrap: "wrap",
         alignItems: "center",
         justifyContent: "center",
         alignContent: "center",
         width,
-        height: height < 450 ? 450 : height,
+        height,
 
-    }}>
-        <View style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <View style={{ display: "flex", alignItems: "center", justifyContent: "center", flexDirection: !isLandscape && children.length < 3 ? "column" : (isRTL() ? "row-reverse" : "row") }}>
+    }}>{children}
+        {/* <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <View style={{
+                width,
+                alignItems: "center", justifyContent: "center",
+                backgroundColor: "yellow", borderWidth: 1, borderStyle: "solid",
+                flexDirection:"row",
+                // flexDirection: !isLandscape && (children.length < 3 || children.length === 3) ? "column" : (isRTL() ? "row-reverse" : "row")
+            }}>
                 {children[0]}
                 {children.length > 1 && <Spacer w={space} h={space} />}
                 {children.length > 1 && children[1]}
+                {children.length === 3 && <Spacer w={space} h={space} />} 
+                {children.length === 3 && children[2]}
             </View>
 
-            {children.length > 2 && <View style={{ flexDirection: (isRTL() ? "row-reverse" : "row") }}>
+            {children.length > 3 && <View style={{ flexDirection: (isRTL() ? "row-reverse" : "row") }}>
                 {children[2]}
                 {children.length > 3 && <Spacer w={space} h={space} />}
                 {children.length > 3 && children[3]}
             </View>}
 
-        </View>
+        </View> */}
     </View >
 
 }
 
 export function MainButton({ name, showName, width, fontSize, raisedLevel, color, imageUrl, appBackground,
-    showProgress, recName, onPlayComplete, imageOffset = { x: 0, y: 0 }, scale = 1
+    showProgress, recName, onPlayComplete, imageOffset = { x: 0, y: 0 }, scale = 1, hMargin = 0,
 }: {
     width: number;
     raisedLevel: number;
@@ -105,7 +117,8 @@ export function MainButton({ name, showName, width, fontSize, raisedLevel, color
     recName: string;
     onPlayComplete?: () => void,
     imageOffset?: { x: number, y: number },
-    scale?: number
+    scale?: number,
+    hMargin?:number,
 }) {
     const [playing, setPlaying] = useState<string | undefined>(undefined);
     const [playingInProgress, setPlayingInProgress] = useState(false);
@@ -164,9 +177,11 @@ export function MainButton({ name, showName, width, fontSize, raisedLevel, color
     const baseScale = cWidth / imageSize.height;
     const imageLeft = cWidth / 2 - imageSize.width * baseScale / 2;
 
+    const footerHeight = cWidth / 5;
+
     //console.log("imgSize", (imageLeft + actOffset.x) * scale / cWidth)
     return (
-        <View style={{ alignItems: "center", justifyContent: "center" }}>
+        <View style={{ alignItems: "center", justifyContent: "center" , marginHorizontal:hMargin}}>
             <View style={{
                 backgroundColor: color,
                 width: width * 1.3,
@@ -195,7 +210,7 @@ export function MainButton({ name, showName, width, fontSize, raisedLevel, color
                             width: cWidth,
                             height: cWidth,
                             borderRadius: cWidth / 2,
-                            backgroundColor: "white" 
+                            backgroundColor: "white"
                         }}
                     >
                         <Image source={{ uri: imageUrl }}
@@ -217,18 +232,19 @@ export function MainButton({ name, showName, width, fontSize, raisedLevel, color
             </View>
 
             {/* <View style={{ height: fontSize * 1.1, flexDirection: "row", alignItems: "center", justifyContent: "center" }}> */}
-            {showName &&
+            {showName ?
                 <Text allowFontScaling={false} style={{
                     fontSize,
                     textAlign: "center",
                     color: appBackground == BACKGROUND.LIGHT ? "black" : "white"
-                }}>{name}</Text>
+                }}>{name}</Text> :
+                <Spacer h={fontSize} />
             }
             {/* </View> */}
 
 
-            {showProgress && (playing ? <AudioWaveForm width={width} height={50} progress={duration && currDuration && currDuration / duration || 0} color={BTN_FOR_COLOR} baseColor={"lightgray"} /> :
-                <Spacer h={50} />)}
+            {showProgress && (playing ? <AudioWaveForm width={width} height={footerHeight} progress={duration && currDuration && currDuration / duration || 0} color={BTN_FOR_COLOR} baseColor={"lightgray"} /> :
+                <Spacer h={footerHeight} />)}
 
         </View>
 
@@ -249,5 +265,3 @@ export function isTooWhite(color: string) {
     }
     return false;
 }
-
-

@@ -7,6 +7,8 @@ export function AudioWaveForm({height, color, progress, infiniteProgress, baseCo
     const wave = [15, 30, 15, 15, 30, 15, 15, 30, 15, 15, 30, 15];
     const inc = (width/ 3) / wave.length;
 
+    const hFactor = height / 50
+
     return <View style={{
         flex: 1,
         flexDirection: "row",
@@ -17,7 +19,7 @@ export function AudioWaveForm({height, color, progress, infiniteProgress, baseCo
     }}>
         {wave.map((w, i) => (<View key={i}
             style={{
-                height: w,
+                height: w*hFactor,
                 width: inc,
                 backgroundColor: progress > 0 ?
                     (wave.length * progress > i ? color || filledColor : baseColor) :
