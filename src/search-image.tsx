@@ -202,6 +202,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         fontSize: 18,
         height: 35,
+        lineHeight:18,
         color: '#1A1A1A',
     },
     cleanSearchX: {

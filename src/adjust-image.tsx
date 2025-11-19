@@ -34,7 +34,7 @@ export default function ImageResizerModal({
     onSave,
     backgroundColor
 }: ImageAdjustModalProps) {
-    const cWidth = windowSize.width * 0.6;
+    const cWidth = Math.min(windowSize.width, windowSize.height) * 0.6;
     const denormInitialOffset = denormOffset(initialOffset, cWidth);
     const [scale, setScale] = useState<number>(initialScale);
     const [offset, setOffset] = useState(denormInitialOffset);
@@ -104,28 +104,31 @@ export default function ImageResizerModal({
 
 
     return (
-        <View style={[gStyles.screenContainer, { direction: "ltr" }]} {...panResponder.panHandlers}>
+        <>
+            <View style={[gStyles.screenContainer, { direction: "ltr", zIndex: 100 }]} {...panResponder.panHandlers}>
 
-            <View style={styles.title}>
-                <Text allowFontScaling={false} style={styles.titleText}>{translate("EditImageTitle")}</Text>
-            </View>
-            <View style={{ position: "absolute", top: windowSize.height / 2 - cWidth, width:"100%"  }}>
-                <MainButton
-                    name=""
-                    fontSize={22}
-                    showName={false}
-                    width={cWidth}
-                    raisedLevel={10}
-                    color={backgroundColor}
-                    imageUrl={imageUrl}
-                    appBackground={"white"}
-                    showProgress={false}
-                    recName={""}
-                    imageOffset={normOffset(offset, cWidth)}
-                    scale={scale}
-                />
-            </View>
+                <View style={styles.title}>
+                    <Text allowFontScaling={false} style={styles.titleText}>{translate("EditImageTitle")}</Text>
+                </View>
+                <View style={{ position: "absolute", top: windowSize.height / 2 - cWidth/1.5, width: "100%" }}>
+                    <MainButton
+                        name=""
+                        fontSize={22}
+                        showName={false}
+                        width={cWidth}
+                        raisedLevel={8}
+                        color={backgroundColor}
+                        imageUrl={imageUrl}
+                        appBackground={"white"}
+                        showProgress={false}
+                        recName={""}
+                        imageOffset={normOffset(offset, cWidth)}
+                        scale={scale}
+                    />
+                </View>
 
+
+            </View>
             <View style={styles.buttonContainer}>
                 <IconButton
                     text={translate("Save")}
@@ -140,7 +143,7 @@ export default function ImageResizerModal({
                     icon={{ name: "close" }}
                 />
             </View>
-        </View>
+        </>
     );
 }
 
@@ -171,5 +174,6 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         bottom: 100,
+        zIndex: 2000,
     },
 });

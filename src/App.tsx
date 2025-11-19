@@ -33,7 +33,7 @@ const toastConfig = {
   success: (props: any) => (
     <BaseToast
       {...props}
-      style={{ borderLeftColor: '#69C779', width: "80%" }}
+      style={{ borderLeftColor: '#69C779', width: "80%", zIndex: 9999 }}
       text1Style={{ textAlign: "center", fontSize: 16 }}
     />
   ),
@@ -45,7 +45,7 @@ const toastConfig = {
     <BaseToast
       {...props}
       style={{ borderLeftColor: '#FE6301', width: "80%" }}
-      text1Style={{ textAlign: "center", fontSize: 16 }}
+      text1Style={{ textAlign: "center", fontSize: 16, zIndex: 9999 }}
     />
   )
 };
@@ -158,8 +158,8 @@ function Main(): React.JSX.Element {
           onClose={() => setShowSettings(false)}
         />
       </View >
-
       <Toast position='bottom' bottomOffset={30} config={toastConfig} />
+
     </>
   }
 
@@ -181,10 +181,10 @@ function Main(): React.JSX.Element {
   if (isLandscape) {
     if (isMobile) {
       buttonWidth = Math.min(w / activeButtons.length, h * (n == 1 ? .6 : (n > 3 ? 1.3 : 1.1)) / n)
-      hMargin = 10;
+      hMargin = windowSize.width < 830 ? 0 : 10;
     } else {
       buttonWidth = (n == 4 ? Math.min(w / 4, h * .6 / 2) : h / (n + 1))
-      hMargin = 50;
+      hMargin = windowSize.width < 1200 ? 50 : 70;
     }
   } else {
     if (isMobile) {
@@ -313,7 +313,15 @@ export default function App(props: any) {
       {
         __DEV__ ?
           <ScreenSizer.Wrapper
-            devices={[...ScreenSizer.defaultDevices.all, 'hostDevice']}
+            devices={[...ScreenSizer.defaultDevices.all,
+            {
+              name: 'android A9',
+              width: 700,
+              height: 1040,
+              insets: { top: 10 },
+            },
+
+              'hostDevice']}
           >
             <Main />
           </ScreenSizer.Wrapper>

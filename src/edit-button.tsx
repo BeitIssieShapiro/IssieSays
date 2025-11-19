@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image, TextInput, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image, TextInput, ActivityIndicator, Alert, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, gStyles } from "./common/common-style";
 import { IconButton, LabeledIconButton } from "./common/components";
@@ -46,6 +46,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
     const colorWidth = Math.min(windowSize.width, windowSize.height);
     const isLandscape = windowSize.height < windowSize.width;
     const isMobile = getIsMobile(windowSize);
+    const isShort = windowSize.height < 850;
 
     console.log("isMobile", isMobile);
     const handleButtonDelete = async (name: string, afterDelete: () => void, force = false) => {
@@ -63,7 +64,9 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
     }
 
 
+
     const handleSaveButton = (btn: EditedButton, index: number, afterSave?: () => void) => {
+
         if (!btn.name || btn.name.trim().length == 0) {
             Alert.alert(translate("ButtonMissingName"), "", [{ text: translate("OK") }]);
             return;
@@ -115,7 +118,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
             fontSize={22}
             showName={localButton.showName}
             width={isMobile ? 80 : 180}
-            raisedLevel={10}
+            raisedLevel={5}
             color={localButton.color}
             imageUrl={getImagePath(localButton.imageUrl)}
             appBackground={"white"}
@@ -123,6 +126,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
             recName={""}
             imageOffset={localButton.offset}
             scale={localButton.scale}
+
         />
         {localButton.showName || <Spacer h={26} />}
         {!!localButton.imageUrl && <View style={styles.editImageButton}>
@@ -286,87 +290,89 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                 onClose={() => setOpenLoadButton(false)}
                 onDelete={handleButtonDelete}
             />
+            <ScrollView horizontal={false} scrollEnabled={isShort}>
 
-            {/* Preview */}
-            <View style={[styles.row, { justifyContent: isLandscape ? "space-around" : "center" }]}>
-                {isLandscape && txtEdit}
-                {isLandscape && <View style={gStyles.verticalSeperator} />}
-                {preview}
-            </View>
+                {/* Preview */}
+                <View style={[styles.row, { justifyContent: isLandscape ? "space-around" : "center" }]}>
+                    {isLandscape && txtEdit}
+                    {isLandscape && <View style={gStyles.verticalSeperator} />}
+                    {preview}
+                </View>
 
-            <View style={gStyles.horizontalSeperator} />
+                <View style={gStyles.horizontalSeperator} />
 
-            {!isLandscape && txtEdit}
-            {!isLandscape && <View style={gStyles.horizontalSeperator} />}
+                {!isLandscape && txtEdit}
+                {!isLandscape && <View style={gStyles.horizontalSeperator} />}
 
-            {/* Appearance */}
-            <View style={[styles.section, isMobile ? { marginVertical: 5 } : {}]}>
-                <Text allowFontScaling={false} style={styles.label}>{translate("Appearance")}</Text>
-                <View style={styles.row}>
-                    <LabeledIconButton
-                        type="MDI"
-                        icon="palette-outline"
-                        label={translate("ButtonBackgroundColor")}
-                        color={colors.defaultIconColor}
-                        onPress={() => setColorPickerOpen(true)}
-                        size={buttonSize}
-                    />
-                    <Spacer w={gapSize} />
-                    <LabeledIconButton
-                        type="MDI"
-                        icon="image-search-outline"
-                        label={translate("SearchImage")}
-                        color={colors.defaultIconColor}
-                        onPress={() => setImageSearchOpen(true)}
-                        size={buttonSize}
-                    />
-                    <Spacer w={gapSize} />
-                    <LabeledIconButton
-                        type="MDI"
-                        icon="view-gallery-outline"
-                        label={translate("Gallery")}
-                        color={colors.defaultIconColor}
-                        onPress={async () => {
-                            const url = await SelectFromGallery();
-                            if (url) updateButton({ imageUrl: url, scale: 1, offset: { x: 0, y: 0 } });
+                {/* Appearance */}
+                <View style={[styles.section, isMobile ? { marginVertical: 5 } : {}]}>
+                    <Text allowFontScaling={false} style={styles.label}>{translate("Appearance")}</Text>
+                    <View style={styles.row}>
+                        <LabeledIconButton
+                            type="MDI"
+                            icon="palette-outline"
+                            label={translate("ButtonBackgroundColor")}
+                            color={colors.defaultIconColor}
+                            onPress={() => setColorPickerOpen(true)}
+                            size={buttonSize}
+                        />
+                        <Spacer w={gapSize} />
+                        <LabeledIconButton
+                            type="MDI"
+                            icon="image-search-outline"
+                            label={translate("SearchImage")}
+                            color={colors.defaultIconColor}
+                            onPress={() => setImageSearchOpen(true)}
+                            size={buttonSize}
+                        />
+                        <Spacer w={gapSize} />
+                        <LabeledIconButton
+                            type="MDI"
+                            icon="view-gallery-outline"
+                            label={translate("Gallery")}
+                            color={colors.defaultIconColor}
+                            onPress={async () => {
+                                const url = await SelectFromGallery();
+                                if (url) updateButton({ imageUrl: url, scale: 1, offset: { x: 0, y: 0 } });
+                            }}
+                            size={buttonSize}
+                        />
+                        <Spacer w={gapSize} />
+                        <LabeledIconButton
+                            type="MDI"
+                            icon="close"
+                            label={translate("RemoveImage")}
+                            color={"red"}
+                            onPress={() => updateButton({ imageUrl: "", scale: 1, offset: { x: 0, y: 0 } })}
+                            size={buttonSize}
+                        />
+                    </View>
+                </View>
+
+                <View style={gStyles.horizontalSeperator} />
+
+                {/* Text and Voice */}
+                <View style={[styles.section, isMobile ? { marginVertical: 5 } : {}]}>
+                    <Text allowFontScaling={false} style={styles.label}>{translate("Voice")}</Text>
+
+                    <RecordButton
+                        onSave={(tmpName) => {
+                            updateButton({ audioName: tmpName })
                         }}
+                        name={localButton.audioName != undefined ? localButton.audioName : index + ""}
+                        backgroundColor={"#013D76"}
                         size={buttonSize}
-                    />
-                    <Spacer w={gapSize} />
-                    <LabeledIconButton
-                        type="MDI"
-                        icon="close"
-                        label={translate("RemoveImage")}
-                        color={"red"}
-                        onPress={() => updateButton({ imageUrl: "", scale: 1, offset: { x: 0, y: 0 } })}
-                        size={buttonSize}
+                        height={60}
+                        revision={0}
                     />
                 </View>
-            </View>
-
-            <View style={gStyles.horizontalSeperator} />
-
-            {/* Text and Voice */}
-            <View style={[styles.section, isMobile ? { marginVertical: 5 } : {}]}>
-                <Text allowFontScaling={false} style={styles.label}>{translate("Voice")}</Text>
-
-                <RecordButton
-                    onSave={(tmpName) => {
-                        updateButton({ audioName: tmpName })
-                    }}
-                    name={localButton.audioName != undefined ? localButton.audioName : index + ""}
-                    backgroundColor={"#013D76"}
-                    size={buttonSize}
-                    height={60}
-                    revision={0}
-                />
-            </View>
-            <View style={gStyles.horizontalSeperator} />
-            <Spacer h={10} />
-            <View style={styles.row}>
-                <IconButton text={translate("LoadFromList")} icon={{ name: "list", type: "Ionicons" }} onPress={() => setOpenLoadButton(true)} />
-                <IconButton text={translate("SaveToList")} onPress={() => handleSaveButton(localButton, index)} icon={{ name: "save" }} />
-            </View>
+                <View style={gStyles.horizontalSeperator} />
+                <Spacer h={10} />
+                <View style={styles.row}>
+                    <IconButton text={translate("LoadFromList")} icon={{ name: "list", type: "Ionicons" }} onPress={() => setOpenLoadButton(true)} />
+                    <IconButton text={translate("SaveToList")} onPress={() => handleSaveButton(localButton, index)} icon={{ name: "save" }} />
+                </View>
+            </ScrollView>
         </View>
     );
 }

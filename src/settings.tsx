@@ -1,4 +1,4 @@
-import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View, Alert } from "react-native";
+import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View, Alert, NativeModules } from "react-native";
 import { BTN_COLOR } from "./uielements";
 import { useEffect, useRef, useState } from "react";
 import { fTranslate, isRTL, translate } from "./lang";
@@ -18,6 +18,7 @@ import { IconButton } from "./common/components";
 import Share from 'react-native-share';
 import { doNothing, exportAll, exportProfile } from "./import-export";
 import { getIsMobile, Point } from "./utils";
+const { FileCopyModule } = NativeModules;
 
 
 
@@ -170,7 +171,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     }, []);
 
 
-    const isScreenNarrow = windowSize.width < 500;
+    const isScreenNarrow = windowSize.width < 750;
 
     const changeBackgroundColor = (color: string) => {
         const current = Settings.getString(BACKGROUND.name, BACKGROUND.LIGHT);
@@ -456,10 +457,13 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             .finally(() => setBusy(false))
         ) as string;
 
+        const contentZipPath = await FileCopyModule.getUriForFile(zipPath);
+
         const shareOptions = {
             title: translate("ShareProfileWithTitle"),
             subject: translate("ShareProfileEmailSubject"),
-            urls: [zipPath],
+            urls: [contentZipPath],
+            type: "application/zip", 
         };
 
         Share.open(shareOptions).then(() => {
@@ -499,10 +503,13 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         ) as string;
 
         console.log("Export All", zipPath)
+
+        const contentZipPath = await FileCopyModule.getUriForFile(zipPath);
+
         const shareOptions = {
             title: translate("ShareBackupWithTitle"),
             subject: translate("ShareBackupEmailSubject"),
-            urls: [zipPath],
+            urls: [contentZipPath],
         };
 
         Share.open(shareOptions).then(() => {

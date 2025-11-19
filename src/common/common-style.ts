@@ -22,7 +22,7 @@ export const gStyles = StyleSheet.create({
         top: 0, left: 0,
         width: "100%", height: "100%",
         backgroundColor: "#F5F5F5",
-        zIndex: 800,
+        //zIndex: 10, if left, toast won't show
     },
     screenTitle: {
         width: "100%",

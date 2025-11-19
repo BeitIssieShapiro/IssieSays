@@ -42,7 +42,7 @@ export function ButtonCard({ width, height, button, onSetActive, onEditButton, r
                 fontSize={22}
                 showName={false}
                 width={width / (isMobile ? 4 : 3)}
-                raisedLevel={10}
+                raisedLevel={5}
                 color={button.color}
                 imageUrl={getImagePath(button.imageUrl)}
                 appBackground={'white'}
