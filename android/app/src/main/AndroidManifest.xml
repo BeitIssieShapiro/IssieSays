@@ -41,6 +41,7 @@
         <intent-filter>
             <action android:name="android.intent.action.SEND" />
             <category android:name="android.intent.category.DEFAULT" />
+            <data android:mimeType="application/x-says" />
             <data android:mimeType="application/octet-stream" />
             <data android:pathPattern=".*\\.says" />
         </intent-filter>

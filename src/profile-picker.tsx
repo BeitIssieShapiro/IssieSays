@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from "react";
 import { Folders, ListElements } from "./profile";
 import FadeInView from "./FadeInView";
-import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { isRTL, translate } from "./lang";
 //import Icon from 'react-native-vector-icons/AntDesign';
 import { MyCloseIcon } from "./common/icons";
@@ -143,7 +143,8 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                             )}
                             {item.key !== DefaultProfileName && onExport && (
                                 <IconButton
-                                    icon={{ name: "share-social-outline", type: "Ionicons", ...menuActionIcon }}
+                                    icon={{ name: Platform.select({ios:"share-social-outline", android:"download-outline"})!
+                                        , type: "Ionicons", ...menuActionIcon }}
                                     onPress={() => onExport(item.key)}
                                 />
                             )}

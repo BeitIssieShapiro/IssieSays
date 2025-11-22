@@ -5,6 +5,7 @@ import java.io.File
 import android.net.Uri
 import java.io.FileOutputStream
 import java.io.InputStream
+import java.io.FileInputStream
 import java.io.OutputStream
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -12,6 +13,12 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.Promise
 import androidx.core.net.toUri
 import androidx.core.content.FileProvider
+import android.os.Environment
+import android.content.Intent
+
+import android.app.DownloadManager
+import android.content.Context
+import com.facebook.react.bridge.*
 
 class FileCopyModule(private val reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
@@ -69,8 +76,10 @@ class FileCopyModule(private val reactContext: ReactApplicationContext) :
             cleanPath = when {
                 cleanPath.startsWith("${packageBase}files/") ->
                     cleanPath.removePrefix("${packageBase}files/")
+
                 cleanPath.startsWith("${packageBase}cache/") ->
                     cleanPath.removePrefix("${packageBase}cache/")
+
                 else ->
                     cleanPath // fallback
             }
@@ -96,4 +105,42 @@ class FileCopyModule(private val reactContext: ReactApplicationContext) :
             promise.reject("ERROR", e)
         }
     }
-} 
+
+
+    @ReactMethod
+    fun saveToDownloads(sourcePath: String, filename: String, promise: Promise) {
+        try {
+            val context = reactApplicationContext
+
+            val sourceFile = File(sourcePath)
+
+            if (!sourceFile.exists()) {
+                promise.reject("FILE_NOT_FOUND", "Source file does not exist")
+                return
+            }
+
+            val downloadsDir = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS
+            )
+            val outFile = File(downloadsDir, filename)
+
+            // copy file
+            FileInputStream(sourceFile).use { input ->
+                FileOutputStream(outFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+
+            // Make visible in "Downloads"
+            val scanIntent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
+            scanIntent.data = Uri.fromFile(outFile)
+            context.sendBroadcast(scanIntent)
+
+            promise.resolve(true)
+
+        } catch (e: Exception) {
+            promise.reject("SAVE_FAILED", e)
+        }
+    }
+}
+

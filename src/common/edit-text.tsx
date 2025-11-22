@@ -30,7 +30,7 @@ export const EditText: React.FC<EditTextProps> = ({
 
     return (
         <View style={[StyleSheet.absoluteFill, styles.overlay, { zIndex: 999999 }, { top }]}>
-            <View style={[styles.container, { width: width || "90%" }]}>
+            <View style={[styles.container, { width: width > 400 ? width : "90%" }]}>
                 {/* Editable Text Input */}
                 <View style={{ flexDirection: "column", alignItems: "center", }}>
                     <Text allowFontScaling={false} style={styles.label}>{label}</Text>
@@ -83,6 +83,10 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         alignItems: "center",
         backgroundColor: "white",
+        borderWidth: 1,
+        borderColor: "lightgray"
+
+
     },
     label: {
         fontSize: 28,

@@ -1,4 +1,4 @@
-import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View, Alert, NativeModules } from "react-native";
+import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View, Alert, NativeModules, Platform } from "react-native";
 import { BTN_COLOR } from "./uielements";
 import { useEffect, useRef, useState } from "react";
 import { fTranslate, isRTL, translate } from "./lang";
@@ -19,6 +19,7 @@ import Share from 'react-native-share';
 import { doNothing, exportAll, exportProfile } from "./import-export";
 import { getIsMobile, Point } from "./utils";
 const { FileCopyModule } = NativeModules;
+
 
 
 
@@ -457,20 +458,35 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             .finally(() => setBusy(false))
         ) as string;
 
-        const contentZipPath = await FileCopyModule.getUriForFile(zipPath);
+        return shareFile(zipPath);
 
-        const shareOptions = {
-            title: translate("ShareProfileWithTitle"),
-            subject: translate("ShareProfileEmailSubject"),
-            urls: [contentZipPath],
-            type: "application/zip", 
-        };
 
-        Share.open(shareOptions).then(() => {
-            Alert.alert(translate("ShareSuccessful"));
-        }).catch(err => {
-            Alert.alert(translate("ActionCancelled"));
-        });
+    }
+
+    async function shareFile(filePath:string) {
+                if (Platform.OS == "ios") {
+            const shareOptions = {
+                title: translate("ShareProfileWithTitle"),
+                subject: translate("ShareProfileEmailSubject"),
+                urls: [filePath],
+            };
+
+            Share.open(shareOptions)
+                .then(() => {
+                    Alert.alert(translate("ShareSuccessful"));
+                }).catch(() => {
+                    Alert.alert(translate("ActionCancelled"));
+                });
+        } else {
+            const filenameWithExtension = filePath.split('/').pop();
+            FileCopyModule.saveToDownloads(filePath, filenameWithExtension)
+                .then(() => {
+                    Alert.alert(translate("SavedSuccessful"));
+                }).catch((err:any) => {
+                    Alert.alert(translate("ActionCancelled")+err);
+                });
+        }
+
     }
 
     async function handleCloseSettings() {
@@ -504,19 +520,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
         console.log("Export All", zipPath)
 
-        const contentZipPath = await FileCopyModule.getUriForFile(zipPath);
-
-        const shareOptions = {
-            title: translate("ShareBackupWithTitle"),
-            subject: translate("ShareBackupEmailSubject"),
-            urls: [contentZipPath],
-        };
-
-        Share.open(shareOptions).then(() => {
-            Alert.alert(translate("ShareSuccessful"));
-        }).catch(err => {
-            Alert.alert(translate("ActionCancelled"));
-        });
+        shareFile(zipPath);
     }
 
 
