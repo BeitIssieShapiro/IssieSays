@@ -225,7 +225,7 @@ async function migrateProfile_1_to_2(filePath: string) {
     return RNFS.writeFile(ensureAndroidCompatible(filePath), JSON.stringify(p, undefined, " "), 'utf8');
 }
 
-export async function SaveProfile(name: string, p: Profile, overwrite = false, allowDefProfile = false) {
+export async function SaveProfile(name: string, p: Profile, overwrite = false, allowDefProfile = false, fromImport = false) {
     if (!isValidFilename(name)) {
         throw new InvalidFileName(name);
     }
@@ -244,18 +244,26 @@ export async function SaveProfile(name: string, p: Profile, overwrite = false, a
     // load the audio into the json
     let index = 0
     for (const btn of p.buttons) {
-        const audioB64 = await RNFS.exists(getRecordingFileName(index)) ?
-            await RNFS.readFile(getRecordingFileName(index), 'base64') :
-            "";
 
-        const imageB64 = await RNFS.exists(getImagePath(btn.imageUrl, false)) ?
-            await file2base64(getImagePath(btn.imageUrl, false)) :
-            undefined;
+        let addedFiles = {}
+        if (!fromImport) {
+            const audioB64 = await RNFS.exists(getRecordingFileName(index)) ?
+                await RNFS.readFile(getRecordingFileName(index), 'base64') :
+                "";
+
+            const imageB64 = await RNFS.exists(getImagePath(btn.imageUrl, false)) ?
+                await file2base64(getImagePath(btn.imageUrl, false)) :
+                undefined;
+
+            addedFiles = {
+                recording: audioB64,
+                imageB64,
+            };
+        }
 
         profileToSave.buttons.push({
             ...btn,
-            recording: audioB64,
-            imageB64,
+            ...addedFiles
         } as Button);
         index++;
     }

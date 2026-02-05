@@ -85,7 +85,7 @@ export async function importPackage(packagePath: string, importInfo: ImportInfo,
                 oneAfterTheOther: md.oneAfterTheOther,
             };
             try {
-                await SaveProfile(name, p, false, true);
+                await SaveProfile(name, p, false, true, true);
                 importInfo.importedProfiles.push(md.name);
             } catch (err) {
                 if (err instanceof AlreadyExists) {
