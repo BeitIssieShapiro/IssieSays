@@ -26,7 +26,8 @@ export const ImportInfoDialog: React.FC<Props> = ({ importInfo, onClose }) => {
     );
 
     return (
-        <Modal visible={true} animationType="slide" transparent={true}>
+        <Modal visible={true} animationType="slide" transparent={true}
+            supportedOrientations={['portrait', 'portrait-upside-down', 'landscape', 'landscape-left', 'landscape-right']}>
             <View style={styles.overlay}>
                 <View style={[styles.container,]}>
                     <Text style={styles.title}>{translate("SuccessfulImport")}</Text>

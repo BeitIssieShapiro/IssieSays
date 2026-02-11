@@ -92,7 +92,7 @@ export function SearchImage({ onSelectImage, open, height, onClose, isScreenNarr
     return <View style={styles.overlay} >
 
         <Modal transparent={true} animationType="slide" presentationStyle="overFullScreen"
-            supportedOrientations={['portrait', 'portrait-upside-down', 'landscape']}>
+            supportedOrientations={['portrait', 'portrait-upside-down', 'landscape', 'landscape-left', 'landscape-right']}>
 
             <View style={[styles.pickerView, { margin: isScreenNarrow ? 10 : 80, top: safeAreaInsets.top }]}>
                 <ScreenTitle onClose={onClose} title={translate("SearchImageTitle")} icon={{ name: "close", color: "black" }} />
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         fontSize: 18,
         height: 35,
-        lineHeight:18,
+        lineHeight: 18,
         color: '#1A1A1A',
     },
     cleanSearchX: {
