@@ -184,6 +184,7 @@ export function MainButton({
   const [currDuration, setCurrDuration] = useState(0.0);
   const [duration, setDuration] = useState(0.0);
   const playCompleteSent = useRef<boolean>(false);
+  const isOperating = useRef<boolean>(false);
 
   const [imageSize, setImageSize] = useState<ImageSize>({
     width: 500,
@@ -195,57 +196,78 @@ export function MainButton({
   }, [imageUrl]);
 
   const onStartPlay = useCallback(async () => {
-    if (playingInProgress && currentlyPlayingRecName === recName) return;
-    playCompleteSent.current = false;
+    // Prevent multiple simultaneous operations
+    if (isOperating.current) {
+      console.log(`Button ${recName} operation already in progress, ignoring click`);
+      return;
+    }
+    
+    // If this button is already playing, ignore
+    if (playingInProgress && currentlyPlayingRecName === recName) {
+      console.log(`Button ${recName} already playing, ignoring click`);
+      return;
+    }
+    
+    isOperating.current = true;
+    
+    try {
+      playCompleteSent.current = false;
 
-    const success = await playRecording(
-      recName,
-      e => {
-        // Only update state if this button is still the active playback
-        if (currentlyPlayingRecName !== recName) {
-          console.log(
-            `Ignoring callback for ${recName}, currently playing: ${currentlyPlayingRecName}`,
-          );
+      const success = await playRecording(
+        recName,
+        e => {
+          // Only update state if this button is still the active playback
+          if (currentlyPlayingRecName !== recName) {
+            console.log(
+              `Ignoring callback for ${recName}, currently playing: ${currentlyPlayingRecName}`,
+            );
+            return;
+          }
+
+          setCurrDuration(e.currentPosition);
+          setDuration(e.duration);
+
+          const newState = {
+            currentPositionSec: e.currentPosition,
+            currentDurationSec: e.duration,
+            playTime: audioRecorderPlayer.mmssss(Math.floor(e.currentPosition)),
+            duration: audioRecorderPlayer.mmssss(Math.floor(e.duration)),
+          };
+          if (e.currentPosition >= e.duration - 100) {
+            // We're within 100ms of the end → treat it as "finished".
+            setPlaying(undefined);
+            setPlayingInProgress(false);
+            stopPlayback();
+            if (onPlayComplete && !playCompleteSent.current) {
+              onPlayComplete();
+              playCompleteSent.current = true;
+            }
+          }
+          //setState(newState);
+          console.log(newState);
           return;
-        }
-
-        setCurrDuration(e.currentPosition);
-        setDuration(e.duration);
-
-        const newState = {
-          currentPositionSec: e.currentPosition,
-          currentDurationSec: e.duration,
-          playTime: audioRecorderPlayer.mmssss(Math.floor(e.currentPosition)),
-          duration: audioRecorderPlayer.mmssss(Math.floor(e.duration)),
-        };
-        if (e.currentPosition >= e.duration - 100) {
-          // We're within 100ms of the end → treat it as "finished".
+        },
+        () => {
           setPlaying(undefined);
           setPlayingInProgress(false);
-          stopPlayback();
-          if (onPlayComplete && !playCompleteSent.current) {
-            onPlayComplete();
-            playCompleteSent.current = true;
-          }
+        },
+      );
+      if (success) {
+        setPlaying(recName);
+        setPlayingInProgress(true);
+      } else {
+        if (onPlayComplete) {
+          onPlayComplete();
         }
-        //setState(newState);
-        console.log(newState);
-        return;
-      },
-      () => {
-        setPlaying(undefined);
-        setPlayingInProgress(false);
-      },
-    );
-    if (success) {
-      setPlaying(recName);
-      setPlayingInProgress(true);
-    } else {
-      if (onPlayComplete) {
-        onPlayComplete();
       }
+    } catch (error) {
+      console.error(`Error in onStartPlay for ${recName}:`, error);
+      setPlaying(undefined);
+      setPlayingInProgress(false);
+    } finally {
+      isOperating.current = false;
     }
-  }, [playing, playingInProgress, recName]);
+  }, [playingInProgress, recName, onPlayComplete]);
 
   const cWidth = (width * 5.5) / 6;
   const actOffset = denormOffset(imageOffset, cWidth);

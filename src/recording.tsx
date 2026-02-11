@@ -13,19 +13,32 @@ import { MyIcon } from './common/icons';
 const TEMP_NAME = '_temp_';
 
 let interruptCallback: (() => void) | null = null;
+let stopInProgress = false;
 
 export function registerInterruptCallback(callback: (() => void) | null) {
   interruptCallback = callback;
 }
 
 export async function stopPlayback() {
-  if (interruptCallback) {
-    interruptCallback();
-    interruptCallback = null;
+  if (stopInProgress) {
+    console.log('stopPlayback already in progress, skipping');
+    return;
   }
-  await audioRecorderPlayer.stopPlayer();
-  audioRecorderPlayer.removePlayBackListener();
-  setCurrentlyPlaying(null);
+  stopInProgress = true;
+  
+  try {
+    if (interruptCallback) {
+      interruptCallback();
+      interruptCallback = null;
+    }
+    await audioRecorderPlayer.stopPlayer();
+    audioRecorderPlayer.removePlayBackListener();
+    setCurrentlyPlaying(null);
+  } catch (error) {
+    console.error('Error in stopPlayback:', error);
+  } finally {
+    stopInProgress = false;
+  }
 }
 
 export async function playRecording(
@@ -37,21 +50,27 @@ export async function playRecording(
   return RNFS.exists(filePath).then(async exists => {
     if (exists) {
       console.log('Start playing ', name, filePath);
-      // Stop any currently playing audio and remove existing listeners
-      await stopPlayback();
-      // Set this recording as the currently playing one
-      setCurrentlyPlaying(name);
-      // Register interrupt callback
-      if (onInterrupted) {
-        registerInterruptCallback(onInterrupted);
-      }
-      // Start the new playback
-      audioRecorderPlayer.startPlayer(filePath);
-      if (playbackListner) {
-        audioRecorderPlayer.addPlayBackListener(playbackListner);
-      }
+      try {
+        // Stop any currently playing audio and remove existing listeners
+        await stopPlayback();
+        // Set this recording as the currently playing one
+        setCurrentlyPlaying(name);
+        // Register interrupt callback
+        if (onInterrupted) {
+          registerInterruptCallback(onInterrupted);
+        }
+        // Start the new playback
+        await audioRecorderPlayer.startPlayer(filePath);
+        if (playbackListner) {
+          audioRecorderPlayer.addPlayBackListener(playbackListner);
+        }
 
-      return true;
+        return true;
+      } catch (error) {
+        console.error('Error starting playback:', error);
+        setCurrentlyPlaying(null);
+        return false;
+      }
     } else {
       console.log('No recording exists', name);
       return false;
@@ -224,22 +243,29 @@ export function RecordButton({
             marginRight: size / 2,
             marginBottom: 10,
           }}
+          disabled={recording}
           onPress={async () => {
             if (recording) {
               return;
             }
             if (paused) {
-              audioRecorderPlayer.resumePlayer().then(() => {
+              try {
+                await audioRecorderPlayer.resumePlayer();
                 setPlaying(true);
                 setPaused(false);
-              });
+              } catch (error) {
+                console.error('Error resuming player:', error);
+              }
               return;
             }
             if (playing) {
-              audioRecorderPlayer.pausePlayer().then(() => {
+              try {
+                await audioRecorderPlayer.pausePlayer();
                 setPlaying(false);
                 setPaused(true);
-              });
+              } catch (error) {
+                console.error('Error pausing player:', error);
+              }
               return;
             }
             const success = await playRecording(name, e => {
@@ -253,7 +279,7 @@ export function RecordButton({
               };
 
               if (e.currentPosition >= e.duration - 100) {
-                // We’re within 100ms of the end → treat it as “finished”.
+                // We're within 100ms of the end → treat it as "finished".
                 setPlaying(false);
                 stopPlayback();
               }
