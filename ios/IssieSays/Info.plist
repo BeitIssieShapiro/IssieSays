@@ -54,6 +54,10 @@
 	<string>Give $(PRODUCT_NAME) permission to use your microphone, to be able to record a message.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Give $(PRODUCT_NAME) permission to use your Image Library, to be able to use your images as a button image</string>
+	<key>NSCameraUsageDescription</key>
+	<string>$(PRODUCT_NAME) needs access to your camera to take photos for voice buttons</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>$(PRODUCT_NAME) needs permission to save photos captured for voice buttons to your library</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIAppFonts</key>

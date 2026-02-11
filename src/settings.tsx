@@ -57,6 +57,10 @@ export const BUTTONS_OFFSET_Y = {
     name: 'buttons_offset_y',
 }
 
+export const BUTTONS_ROTATION = {
+    name: 'buttons_rotation',
+}
+
 export const BUTTONS_IMAGE_URLS = {
     name: 'buttons_image_urls',
 }
@@ -76,6 +80,7 @@ const buttonSettingArrays: any = [
     BUTTONS_NAMES,
     BUTTONS_OFFSET_X,
     BUTTONS_OFFSET_Y,
+    BUTTONS_ROTATION,
     BUTTONS_SCALES,
     BUTTONS_SHOW_NAMES,
 ]
@@ -270,6 +275,15 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         return true;
     }
 
+    const saveRotation = (index: number, newVal: number): boolean => {
+        let newRotations = profile.buttons.map(b => b.rotation || 0);
+        if (newRotations[index] == newVal) return false;
+
+        newRotations[index] = newVal;
+        Settings.setArray(BUTTONS_ROTATION.name, newRotations);
+        return true;
+    }
+
     const saveDirty = (index: number, newVal: boolean) => {
         let dirty = profile.buttons.map(b => b.dirty);
         dirty[index] = newVal;
@@ -284,6 +298,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         dirty = changeButtonName(index, btn.name) || dirty;
         dirty = saveScale(index, btn.scale || 1) || dirty;
         dirty = saveOffset(index, btn.offset?.x != undefined ? btn.offset : { x: 0, y: 0 }) || dirty;
+        dirty = saveRotation(index, btn.rotation || 0) || dirty;
 
 
         console.log("dirty button", dirty, btn.audioName, "rec", btn.recording != undefined)

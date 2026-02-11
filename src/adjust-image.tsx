@@ -20,7 +20,8 @@ interface ImageAdjustModalProps {
     imageUrl: string;
     initialOffset: { x: number, y: number };
     initialScale: number;
-    onSave: (scale: number, offset: { x: number; y: number }) => void;
+    initialRotation: number;
+    onSave: (scale: number, offset: { x: number; y: number }, rotation: number) => void;
     windowSize: WinSize;
     backgroundColor: string;
 }
@@ -31,6 +32,7 @@ export default function ImageResizerModal({
     windowSize,
     initialOffset,
     initialScale,
+    initialRotation,
     onSave,
     backgroundColor
 }: ImageAdjustModalProps) {
@@ -38,6 +40,7 @@ export default function ImageResizerModal({
     const denormInitialOffset = denormOffset(initialOffset, cWidth);
     const [scale, setScale] = useState<number>(initialScale);
     const [offset, setOffset] = useState(denormInitialOffset);
+    const [rotation, setRotation] = useState<number>(initialRotation);
 
     //const [imageSize, setImageSize] = useState<ImageSize>({ width: 500, height: 500 });
 
@@ -49,11 +52,14 @@ export default function ImageResizerModal({
 
     const lastScale = useRef(initialScale);
     const lastPan = useRef(denormInitialOffset);
+    const lastRotation = useRef(initialRotation);
     const scaleRef = useRef(initialScale);
     const offsetRef = useRef(denormInitialOffset);
+    const rotationRef = useRef(initialRotation);
 
-    // For pinch
+    // For pinch and rotation
     const initialDistance = useRef<number | null>(null);
+    const initialAngle = useRef<number | null>(null);
 
     const panResponder = useRef(
         PanResponder.create({
@@ -78,9 +84,14 @@ export default function ImageResizerModal({
                         const dy = touches[0].pageY - touches[1].pageY;
                         const distance = Math.sqrt(dx * dx + dy * dy);
 
+                        // Calculate angle for rotation
+                        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
                         if (initialDistance.current === null) {
                             initialDistance.current = distance;
+                            initialAngle.current = angle;
                         } else {
+                            // Scale
                             let scaleFactor =
                                 (distance / initialDistance.current) * lastScale.current;
 
@@ -88,7 +99,20 @@ export default function ImageResizerModal({
                                 //scaleFactor = 1;
                             }
                             setScale(scaleFactor);
-                            scaleRef.current = scaleFactor
+                            scaleRef.current = scaleFactor;
+
+                            // Rotation
+                            if (initialAngle.current !== null) {
+                                let angleDelta = angle - initialAngle.current;
+                                let newRotation = lastRotation.current + angleDelta;
+                                
+                                // Normalize to 0-360
+                                newRotation = newRotation % 360;
+                                if (newRotation < 0) newRotation += 360;
+                                
+                                setRotation(newRotation);
+                                rotationRef.current = newRotation;
+                            }
                         }
                     }
                 }
@@ -97,7 +121,9 @@ export default function ImageResizerModal({
             onPanResponderRelease: () => {
                 lastPan.current = offsetRef.current;
                 lastScale.current = scaleRef.current;
+                lastRotation.current = rotationRef.current;
                 initialDistance.current = null;
+                initialAngle.current = null;
             },
         })
     ).current;
@@ -124,6 +150,7 @@ export default function ImageResizerModal({
                         recName={""}
                         imageOffset={normOffset(offset, cWidth)}
                         scale={scale}
+                        rotation={rotation}
                     />
                 </View>
 
@@ -132,7 +159,7 @@ export default function ImageResizerModal({
             <View style={styles.buttonContainer}>
                 <IconButton
                     text={translate("Save")}
-                    onPress={() => onSave(scale, normOffset(offset, cWidth))}
+                    onPress={() => onSave(scale, normOffset(offset, cWidth), rotation)}
                     backgroundColor={colors.titleButtonsBG}
                     icon={{ name: "check" }}
                 />

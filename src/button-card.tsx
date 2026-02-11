@@ -50,6 +50,7 @@ export function ButtonCard({ width, height, button, onSetActive, onEditButton, r
                 recName={recName}
                 imageOffset={button.offset}
                 scale={button.scale}
+                rotation={button.rotation || 0}
             />
         </View>
         <View style={[gStyles.cardFooter, { flexDirection: "row", justifyContent: isNarrow ? "space-between" : "flex-start", alignItems: "center", direction: (isRTL() ? "rtl" : "ltr") }]}>

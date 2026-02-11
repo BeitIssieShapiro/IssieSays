@@ -162,6 +162,7 @@ export function MainButton({
   onPlayComplete,
   imageOffset = { x: 0, y: 0 },
   scale = 1,
+  rotation = 0,
   hMargin = 0,
 }: {
   width: number;
@@ -177,6 +178,7 @@ export function MainButton({
   onPlayComplete?: () => void;
   imageOffset?: { x: number; y: number };
   scale?: number;
+  rotation?: number;
   hMargin?: number;
 }) {
   const [playing, setPlaying] = useState<string | undefined>(undefined);
@@ -328,6 +330,7 @@ export function MainButton({
                     { translateX: imageLeft + actOffset.x },
                     { translateY: actOffset.y },
                     { scale: scale },
+                    { rotate: `${rotation}deg` },
                   ],
                   width: imageSize.width * baseScale,
                   height: imageSize.height * baseScale,

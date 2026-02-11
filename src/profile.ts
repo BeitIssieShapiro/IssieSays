@@ -1,6 +1,6 @@
 import * as RNFS from 'react-native-fs';
 import * as path from 'path';
-import { BACKGROUND, BUTTONS, BUTTONS_COLOR, BUTTONS_DIRTY, BUTTONS_IMAGE_URLS, BUTTONS_NAMES, BUTTONS_OFFSET_X, BUTTONS_OFFSET_Y, BUTTONS_SCALES, BUTTONS_SHOW_NAMES, CURRENT_PROFILE, INSTALL, LAST_COLORS, ONE_AFTER_THE_OTHER } from './settings';
+import { BACKGROUND, BUTTONS, BUTTONS_COLOR, BUTTONS_DIRTY, BUTTONS_IMAGE_URLS, BUTTONS_NAMES, BUTTONS_OFFSET_X, BUTTONS_OFFSET_Y, BUTTONS_ROTATION, BUTTONS_SCALES, BUTTONS_SHOW_NAMES, CURRENT_PROFILE, INSTALL, LAST_COLORS, ONE_AFTER_THE_OTHER } from './settings';
 import Button from 'react-native-really-awesome-button';
 import { Settings } from './setting-storage';
 import { Platform, Settings as RNSettings } from 'react-native'
@@ -36,6 +36,7 @@ export interface Button {
 
     scale: number;
     offset: Point;
+    rotation: number; // rotation in degrees
     dirty: boolean;
 }
 
@@ -113,6 +114,7 @@ export async function Init() {
                     recording: undefined,
                     scale: 1,
                     offset: { x: 0, y: 0 },
+                    rotation: 0,
                     dirty: false,
                 });
             }
@@ -218,6 +220,7 @@ async function migrateProfile_1_to_2(filePath: string) {
         btn.dirty = false;
         btn.offset = { x: 0, y: 0 };
         btn.scale = 1;
+        btn.rotation = 0;
         btn.imageUrl = btn.imageUrl.split('/').pop() || "";
         btn.imageB64 = await file2base64(getImagePath(btn.imageUrl, false))
     }
@@ -344,6 +347,7 @@ export function newProfile(): Profile {
                 showName: false,
                 name: "",
                 recording: "", // will delete the file
+                rotation: 0,
             }
         ]
     } as Profile;
@@ -374,6 +378,7 @@ async function writeCurrentProfile(p: Profile, name: string) {
     const buttonScales = [];
     const buttonOffsetsX = [];
     const buttonOffsetsY = [];
+    const buttonRotations = [];
 
     for (let i = 0; i < 20; i++) {
         if (p.buttons.length > i) {
@@ -385,6 +390,7 @@ async function writeCurrentProfile(p: Profile, name: string) {
             buttonScales.push(btn.scale);
             buttonOffsetsX.push(btn.offset.x);
             buttonOffsetsY.push(btn.offset.y);
+            buttonRotations.push(btn.rotation || 0);
 
             if (btn.recording && btn.recording.length > 0) {
                 await RNFS.writeFile(getRecordingFileName(i), btn.recording, 'base64');
@@ -409,6 +415,7 @@ async function writeCurrentProfile(p: Profile, name: string) {
             buttonScales.push(1);
             buttonOffsetsX.push(0);
             buttonOffsetsY.push(0);
+            buttonRotations.push(0);
 
             try {
                 await RNFS.unlink(getRecordingFileName(i));
@@ -423,6 +430,7 @@ async function writeCurrentProfile(p: Profile, name: string) {
     Settings.setArray(BUTTONS_SCALES.name, buttonScales);
     Settings.setArray(BUTTONS_OFFSET_X.name, buttonOffsetsX);
     Settings.setArray(BUTTONS_OFFSET_Y.name, buttonOffsetsY);
+    Settings.setArray(BUTTONS_ROTATION.name, buttonRotations);
 
 }
 
@@ -454,6 +462,7 @@ export function readCurrentProfile(): Profile {
     const buttonScales = Settings.getArray<number>(BUTTONS_SCALES.name, "number", Array(numOfButtons).fill(1));
     const offsetX = Settings.getArray<number>(BUTTONS_OFFSET_X.name, "number", Array(numOfButtons).fill(0));
     const offsetY = Settings.getArray<number>(BUTTONS_OFFSET_Y.name, "number", Array(numOfButtons).fill(0));
+    const buttonRotations = Settings.getArray<number>(BUTTONS_ROTATION.name, "number", Array(numOfButtons).fill(0));
     const dirty = Settings.getArray<boolean>(BUTTONS_DIRTY.name, "boolean", [false, false, false, false]);
 
     const buttons = [] as Button[];
@@ -471,6 +480,7 @@ export function readCurrentProfile(): Profile {
             recording: undefined,
             offset: { x: offsetX[i], y: offsetY[i] },
             scale: buttonScales[i],
+            rotation: buttonRotations[i] || 0,
             dirty: dirty[i],
         });
     }

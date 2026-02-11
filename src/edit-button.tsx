@@ -14,6 +14,7 @@ import { ButtonPicker } from "./profile-picker";
 import Toast from "react-native-toast-message";
 import { getIsMobile } from "./utils";
 import ImageAdjustModal from "./adjust-image";
+import CameraCapture from "./camera-capture";
 
 
 interface EditButtonProps {
@@ -37,6 +38,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
     const [imageSearchOpen, setImageSearchOpen] = useState<boolean>(false);
     const [openLoadButton, setOpenLoadButton] = useState<boolean>(false);
     const [isEditingImage, setIsEditingImage] = useState(false);
+    const [cameraOpen, setCameraOpen] = useState<boolean>(false);
 
 
     const updateButton = (updates: Partial<EditedButton>) => {
@@ -126,7 +128,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
             recName={""}
             imageOffset={localButton.offset}
             scale={localButton.scale}
-
+            rotation={localButton.rotation || 0}
         />
         {localButton.showName || <Spacer h={26} />}
         {!!localButton.imageUrl && <View style={styles.editImageButton}>
@@ -174,12 +176,24 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
     </View>;
 
     const buttonSize = isNarrow ? 30 : 50;
-    const gapSize = isNarrow ? 0 : 25;
+    const gapSize = isNarrow ? 0 : 7;
 
 
 
     return (
         <View style={[gStyles.screenContainer, { top: safeAreaInsets.top, direction: isRTL() ? "rtl" : "ltr" }]}>
+            {cameraOpen && (
+                <View style={[StyleSheet.absoluteFill, { zIndex: 9999 }]}>
+                    <CameraCapture
+                        onCapture={(fileName: string) => {
+                            console.log("Image captured", fileName);
+                            updateButton({ imageUrl: fileName, scale: 1, offset: { x: 0, y: 0 }, rotation: 0 });
+                            setCameraOpen(false);
+                        }}
+                        onClose={() => setCameraOpen(false)}
+                    />
+                </View>
+            )}
             {/* Header */}
             <View style={[gStyles.screenTitle, { justifyContent: "center" }, isNarrow && { height: 110, alignItems: "flex-start" }]}>
                 <Text allowFontScaling={false} style={gStyles.screenTitleText}>
@@ -206,15 +220,16 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                 backgroundColor={localButton.color}
                 initialOffset={localButton.offset}
                 initialScale={localButton.scale}
+                initialRotation={localButton.rotation || 0}
                 imageUrl={getImagePath(localButton.imageUrl)}
                 onClose={() => setIsEditingImage(false)}
-                onSave={(scale, offset) => {
-                    updateButton({ offset, scale })
+                onSave={(scale, offset, rotation) => {
+                    updateButton({ offset, scale, rotation })
                     setIsEditingImage(false)
                 }}
             />}
 
-            {colorPickerOpen && <MyColorPicker
+            {!cameraOpen && colorPickerOpen && <MyColorPicker
                 open={colorPickerOpen}
                 title={translate("BackgroundColor")}
                 top={100}
@@ -231,10 +246,10 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                 }}
                 maxHeight={500} />
             }
-            <SearchImage open={imageSearchOpen} onClose={() => setImageSearchOpen(false)}
+            <SearchImage open={!cameraOpen && imageSearchOpen} onClose={() => setImageSearchOpen(false)}
                 onSelectImage={(url: string) => {
                     console.log("image selected", url)
-                    updateButton({ imageUrl: url, scale: 1, offset: { x: 0, y: 0 } });
+                    updateButton({ imageUrl: url, scale: 1, offset: { x: 0, y: 0 }, rotation: 0 });
                     setImageSearchOpen(false);
                 }}
                 isScreenNarrow={isNarrow}
@@ -319,6 +334,28 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                         <Spacer w={gapSize} />
                         <LabeledIconButton
                             type="MDI"
+                            icon="camera-outline"
+                            label={translate("TakePhoto")}
+                            color={colors.defaultIconColor}
+                            onPress={() => setCameraOpen(true)}
+                            size={buttonSize}
+                        />
+                        <Spacer w={gapSize} />
+                        
+                        <LabeledIconButton
+                            type="MDI"
+                            icon="view-gallery-outline"
+                            label={translate("Gallery")}
+                            color={colors.defaultIconColor}
+                            onPress={async () => {
+                                const url = await SelectFromGallery();
+                                if (url) updateButton({ imageUrl: url, scale: 1, offset: { x: 0, y: 0 }, rotation: 0 });
+                            }}
+                            size={buttonSize}
+                        />
+                        <Spacer w={gapSize} />
+                        <LabeledIconButton
+                            type="MDI"
                             icon="image-search-outline"
                             label={translate("SearchImage")}
                             color={colors.defaultIconColor}
@@ -328,22 +365,10 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                         <Spacer w={gapSize} />
                         <LabeledIconButton
                             type="MDI"
-                            icon="view-gallery-outline"
-                            label={translate("Gallery")}
-                            color={colors.defaultIconColor}
-                            onPress={async () => {
-                                const url = await SelectFromGallery();
-                                if (url) updateButton({ imageUrl: url, scale: 1, offset: { x: 0, y: 0 } });
-                            }}
-                            size={buttonSize}
-                        />
-                        <Spacer w={gapSize} />
-                        <LabeledIconButton
-                            type="MDI"
                             icon="close"
                             label={translate("RemoveImage")}
                             color={"red"}
-                            onPress={() => updateButton({ imageUrl: "", scale: 1, offset: { x: 0, y: 0 } })}
+                            onPress={() => updateButton({ imageUrl: "", scale: 1, offset: { x: 0, y: 0 }, rotation: 0 })}
                             size={buttonSize}
                         />
                     </View>
