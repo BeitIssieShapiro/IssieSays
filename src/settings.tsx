@@ -755,7 +755,6 @@ const styles = StyleSheet.create({
         marginTop: 10,
         marginHorizontal: 40,
         flexWrap: "wrap",
-        justifyContent: "space-between",
 
     },
     closeButtonHost: {

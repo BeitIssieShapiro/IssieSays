@@ -19,6 +19,8 @@ interface CameraCaptureProps {
 export default function CameraCapture({ onCapture, onClose }: CameraCaptureProps) {
     const [captureInProgress, setCaptureInProgress] = useState(false);
     const [permission, setPermission] = useState(false);
+    const [cameraType, setCameraType] = useState<CameraType>(CameraType.Back);
+    const [hasFrontCamera, setHasFrontCamera] = useState(false);
     const camera = useRef<any>(null);
 
     useEffect(() => {
@@ -27,6 +29,9 @@ export default function CameraCapture({ onCapture, onClose }: CameraCaptureProps
             .then((result) => {
                 if (result === RESULTS.GRANTED || result === RESULTS.LIMITED) {
                     setPermission(true);
+                    // Assume front camera is available on devices with camera permission
+                    // Most modern devices have both front and back cameras
+                    setHasFrontCamera(true);
                 }
                 console.log('Camera permission:', result);
             })
@@ -65,6 +70,12 @@ export default function CameraCapture({ onCapture, onClose }: CameraCaptureProps
         }
     };
 
+    const toggleCamera = () => {
+        setCameraType(prevType => 
+            prevType === CameraType.Back ? CameraType.Front : CameraType.Back
+        );
+    };
+
     const cancel = () => {
         onClose();
     };
@@ -75,7 +86,7 @@ export default function CameraCapture({ onCapture, onClose }: CameraCaptureProps
                 <Camera
                     ref={camera}
                     style={styles.camera}
-                    cameraType={CameraType.Back}
+                    cameraType={cameraType}
                     showFrame={false}
                     scanBarcode={false}
                     zoomMode="on"
@@ -98,6 +109,7 @@ export default function CameraCapture({ onCapture, onClose }: CameraCaptureProps
                     backgroundColor={colors.titleButtonsBG}
                     icon={{ name: 'close' }}
                 />
+                
             </View>
 
             <View style={styles.bottomButtonContainer}>
@@ -110,7 +122,18 @@ export default function CameraCapture({ onCapture, onClose }: CameraCaptureProps
                         <Ellipse cx="53.5" cy="53.5" rx="53.5" ry="53.5" fill="#ffffff" stroke="#000000" />
                         <Ellipse cx="54" cy="54" rx="40" ry="40" fill="#ffffff" stroke="#000000" strokeWidth="4" />
                     </Svg>
+
+                    
                 </TouchableOpacity>
+                {hasFrontCamera && (
+                    <View style={{position:"absolute", right:50, top:15}}>
+                        <IconButton
+                            text=""
+                            onPress={toggleCamera}
+                            icon={{ name: 'camera-flip-outline', type: 'MDI', size:40, color:"white" }}
+                        />
+                    </View>
+                )}
             </View>
         </View>
     );

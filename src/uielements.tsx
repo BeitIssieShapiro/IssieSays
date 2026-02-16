@@ -294,6 +294,7 @@ export function MainButton({
           height: width * 1.3,
           padding: width * 0.15,
           borderRadius: (width * 1.3) / 2,
+
         }}
       >
         <AwesomeButton
@@ -347,10 +348,13 @@ export function MainButton({
       {showName ? (
         <Text
           allowFontScaling={false}
+          numberOfLines={1}
+         // ellipsizeMode="tail"
           style={{
             fontSize,
             textAlign: 'center',
             color: appBackground == BACKGROUND.LIGHT ? 'black' : 'white',
+            maxWidth: width * 1.3,
           }}
         >
           {name}

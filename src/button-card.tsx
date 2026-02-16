@@ -25,8 +25,12 @@ export function ButtonCard({ width, height, button, onSetActive, onEditButton, r
 
     return <View style={[gStyles.card, { width, height, padding: isMobile ? 0 : 10 }]}>
         <View style={[gStyles.cardTitle, dirStyle,]}>
-            <Text allowFontScaling={false} style={[styles.textValue, { textAlign: isRTL() ? "right" : "left" },
-            isMobile ? { fontSize: 22 } : {}]}>
+            <Text 
+                allowFontScaling={false} 
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                style={[styles.textValue, { textAlign: isRTL() ? "right" : "left" },
+                isMobile ? { fontSize: 22 } : {}]}>
                 {button.name}
             </Text>
             {/* <Switch
