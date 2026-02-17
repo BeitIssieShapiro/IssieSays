@@ -203,15 +203,15 @@ export function MainButton({
       console.log(`Button ${recName} operation already in progress, ignoring click`);
       return;
     }
-    
+
     // If this button is already playing, ignore
     if (playingInProgress && currentlyPlayingRecName === recName) {
       console.log(`Button ${recName} already playing, ignoring click`);
       return;
     }
-    
+
     isOperating.current = true;
-    
+
     try {
       playCompleteSent.current = false;
 
@@ -284,7 +284,8 @@ export function MainButton({
       style={{
         alignItems: 'center',
         justifyContent: 'center',
-        marginHorizontal: hMargin,
+        margin: hMargin, // Use margin on all sides for consistent spacing
+        alignSelf: 'center',
       }}
     >
       <View
@@ -342,6 +343,18 @@ export function MainButton({
             ' '
           )}
         </AwesomeButton>
+        {showProgress && playing &&
+          <View style={{width:width * 1.3, position: "absolute", bottom: 0, left:0, justifyContent:"center" }}>
+            <AudioWaveForm
+              width={width / 2}
+              height={footerHeight}
+              progress={
+                (duration && currDuration && currDuration / duration) || 0
+              }
+              color={BTN_FOR_COLOR}
+              baseColor={'lightgray'}
+            />
+          </View>}
       </View>
 
       {/* <View style={{ height: fontSize * 1.1, flexDirection: "row", alignItems: "center", justifyContent: "center" }}> */}
@@ -349,7 +362,7 @@ export function MainButton({
         <Text
           allowFontScaling={false}
           numberOfLines={1}
-         // ellipsizeMode="tail"
+          // ellipsizeMode="tail"
           style={{
             fontSize,
             textAlign: 'center',
@@ -364,20 +377,7 @@ export function MainButton({
       )}
       {/* </View> */}
 
-      {showProgress &&
-        (playing ? (
-          <AudioWaveForm
-            width={width}
-            height={footerHeight}
-            progress={
-              (duration && currDuration && currDuration / duration) || 0
-            }
-            color={BTN_FOR_COLOR}
-            baseColor={'lightgray'}
-          />
-        ) : (
-          <Spacer h={footerHeight} />
-        ))}
+
     </View>
   );
 }
@@ -391,6 +391,6 @@ export function isTooWhite(color: string) {
     const b = bigint & 255;
 
     return r > limit && g > limit && b > limit;
-  } catch (e) {}
+  } catch (e) { }
   return false;
 }

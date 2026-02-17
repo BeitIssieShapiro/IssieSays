@@ -1,0 +1,14 @@
+progress in backup
+user feedback
+bigger buttons
+
+V - long names (portrait)
+V- flip camera
+V- add buttons on landscape should be flex-start
+
+bugs:
+? - edit name is not reflected after save buttons
+
+
+features:
+- hide/show buttons?

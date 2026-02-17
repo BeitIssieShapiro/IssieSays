@@ -67,6 +67,121 @@ export function setCurrentlyPlaying(recName: string | null) {
   currentlyPlayingRecName = recName;
 }
 
+type LayoutCandidate = {
+  rows: number;
+  cols: number;
+  isVertical: boolean;
+};
+
+function getLayoutCandidates(n: number): LayoutCandidate[] {
+  switch (n) {
+    case 1:
+      return [{ rows: 1, cols: 1, isVertical: false }];
+    case 2:
+      return [
+        { rows: 1, cols: 2, isVertical: false }, // horizontal
+        { rows: 2, cols: 1, isVertical: true },  // vertical
+      ];
+    case 3:
+      return [
+        { rows: 1, cols: 3, isVertical: false }, // horizontal
+        { rows: 3, cols: 1, isVertical: true },  // vertical
+      ];
+    case 4:
+      return [
+        { rows: 1, cols: 4, isVertical: false }, // horizontal
+        { rows: 4, cols: 1, isVertical: true },  // vertical
+        { rows: 2, cols: 2, isVertical: false }, // grid
+      ];
+    default:
+      return [{ rows: 1, cols: 1, isVertical: false }];
+  }
+}
+
+function calculateOptimalLayout(
+  w: number,
+  h: number,
+  n: number,
+  margin: number = 0,
+): { buttonWidth: number; isVertical: boolean } {
+  // Safety check for invalid dimensions
+  if (w <= 0 || h <= 0 || n <= 0) {
+    return { buttonWidth: 0, isVertical: false };
+  }
+
+  const layouts = getLayoutCandidates(n);
+
+  let bestLayout = layouts[0];
+  let maxButtonSize = 0;
+
+  // console.log('calculateOptimalLayout: evaluating layouts for n=' + n, { w, h });
+  for (const layout of layouts) {
+    // MainButton renders at width * 1.3, so account for that
+    // For grid layouts (2x2), we need to prevent 3 buttons from fitting
+    // Calculate spacing dynamically: ensure 2.5 buttons worth of space doesn't fit 3 rendered buttons
+    const isGrid = layout.rows > 1 && layout.cols > 1;
+    let colSpacing, rowSpacing;
+
+    let buttonSize;
+
+    // Account for margins on all sides of buttons:
+    // Each button takes: (buttonSize * 1.3) + 2*margin
+    // Total width = cols * ((buttonSize * 1.3) + 2*margin)
+    // Solving for buttonSize:
+    // w = cols * (buttonSize * 1.3 + 2*margin)
+    // buttonSize = (w - cols * 2*margin) / (cols * 1.3)
+
+    const wForButtons = w - (layout.cols * 2 * margin);
+    const hForButtons = h - (layout.rows * 2 * margin);
+
+    if (isGrid) {
+      // For 2x2 grid: use tighter spacing when height-constrained (landscape)
+      // to prevent 3 buttons from fitting horizontally
+      const widthPerCol = wForButtons / layout.cols;
+      const heightPerRow = hForButtons / layout.rows;
+
+      if (heightPerRow < widthPerCol) {
+        // Height-constrained (landscape): balance between preventing 3-in-a-row and fitting vertically
+        buttonSize = Math.min(
+          wForButtons / (layout.cols * 1.30),
+          hForButtons / (layout.rows * 1.33) // More row spacing for extra bottom margin
+        );
+      } else {
+        // Width-constrained (portrait): use more row spacing for bottom margin
+        buttonSize = Math.min(
+          wForButtons / (layout.cols * 1.30),
+          hForButtons / (layout.rows * 1.45) // Extra row spacing for portrait grid bottom margin
+        );
+      }
+    } else {
+      // Linear layouts: use more spacing for vertical layouts with multiple buttons
+      const isVerticalLine = layout.rows > 1 && layout.cols === 1;
+      const rowSpacing = isVerticalLine ? 1.40 : 1.35; // More vertical spacing
+      buttonSize = Math.min(
+        wForButtons / (layout.cols * 1.35),
+        hForButtons / (layout.rows * rowSpacing)
+      );
+    }
+
+    // console.log('  layout:', layout, 'buttonSize:', buttonSize, 'will render at:', buttonSize * 1.3, 'would 3 fit?', (buttonSize * 1.3) * 3 <= w, 'isGrid:', isGrid);
+
+    if (buttonSize > maxButtonSize) {
+      maxButtonSize = buttonSize;
+      bestLayout = layout;
+    }
+  }
+
+  // console.log('  WINNER:', bestLayout, 'maxButtonSize:', maxButtonSize, 'will render at:', maxButtonSize * 1.3);
+
+  // No longer need to divide by 1.3 since we already accounted for it above
+  const finalButtonWidth = maxButtonSize;
+
+  return {
+    buttonWidth: finalButtonWidth,
+    isVertical: bestLayout.isVertical,
+  };
+}
+
 function Main(): React.JSX.Element {
   // const [windowSize, setWindowSize] = useState(Dimensions.get("window"));
 
@@ -79,9 +194,9 @@ function Main(): React.JSX.Element {
   );
   const [importInProgress, setImportInProgress] = useState<
     | {
-        message: string;
-        precent: number;
-      }
+      message: string;
+      precent: number;
+    }
     | undefined
   >();
 
@@ -146,10 +261,6 @@ function Main(): React.JSX.Element {
 
   const safeAreaInsets = useSafeAreaInsets();
 
-  // Use utility function to detect mobile vs tablet/iPad
-  const isMobile = getIsMobile(windowSize);
-  const isIPad = () => !isMobile;
-
   const backgroundStyle = {
     direction: 'ltr',
     width: '100%',
@@ -192,35 +303,53 @@ function Main(): React.JSX.Element {
     : Array.from(Array(p.buttons.length).keys());
 
   const isLandscape = isLandscapeUtil(windowSize);
-  const h = windowSize.height; //- safeAreaInsets.top - safeAreaInsets.bottom;
-  const w = windowSize.width; //- safeAreaInsets.left - safeAreaInsets.right;
+  const h = windowSize.height - safeAreaInsets.top - safeAreaInsets.bottom;
+  const w = windowSize.width - safeAreaInsets.left - safeAreaInsets.right;
   const n = activeButtons.length;
 
-  let buttonWidth = 0;
-  let hMargin = 0;
+  {/** all layout options
 
-  if (isLandscape) {
-    if (isMobile) {
-      buttonWidth = Math.min(
-        w / activeButtons.length,
-        (h * (n == 1 ? 0.6 : n > 3 ? 1.3 : 1.1)) / n,
-      );
-      hMargin = windowSize.width < 830 ? 0 : 10;
-    } else {
-      buttonWidth = n == 4 ? Math.min(w / 4, (h * 0.6) / 2) : h / (n + 1);
-      hMargin = windowSize.width < 1200 ? 50 : 70;
-    }
-  } else {
-    if (isMobile) {
-      buttonWidth = Math.min(n == 4 ? w / 2 : w * 0.5, (h * 0.6) / n);
-      hMargin = 10;
-    } else {
-      buttonWidth = n == 4 ? w / 3.5 : w / (n + 1);
-      hMargin = n == 4 ? 20 : 90;
-    }
-  }
+    hLine
+    X X
 
-  //console.log("rendering stats", w, h, "land", isLandscape, "mobile", isMobile, buttonWidth, hMargin)
+    X X X
+
+    X X X X
+    ----
+
+
+    X X
+    X X
+
+    // vLine
+    X
+
+    X
+    X
+
+    X
+    X
+    X
+
+    X
+    X
+    X
+    X
+
+    */}
+
+  // Add margins between buttons for spacing
+  const buttonMargin = 12; // 12px margin around each button
+  const containerPadding = 30; // Padding on container edges (more at edges)
+
+  // Subtract container padding from available space
+  const wAvailable = w - (2 * containerPadding);
+  const hAvailable = h - (2 * containerPadding);
+
+  const { buttonWidth, isVertical } = calculateOptimalLayout(wAvailable, hAvailable, n, buttonMargin);
+  let hMargin = buttonMargin;
+
+  // console.log("LAYOUT DEBUG:", { w, h, n, buttonWidth, isVertical, isLandscape })
 
   const handlePlayComplete = () => {
     console.log('handlePlayComplete');
@@ -233,10 +362,51 @@ function Main(): React.JSX.Element {
     });
   };
 
+  const visButtons = activeButtons.map((i: any) => (
+    <MainButton
+      key={i}
+      name={p.buttons[i].name}
+      fontSize={27}
+      showName={p.buttons[i].showName}
+      width={buttonWidth}
+      raisedLevel={10}
+      color={
+        p.buttons[i].color == '#000000' &&
+          mainBackgroundColor == BACKGROUND.DARK
+          ? 'white'
+          : p.buttons[i].color
+      }
+      imageUrl={getImagePath(p.buttons[i].imageUrl)}
+      appBackground={mainBackgroundColor}
+      showProgress={true}
+      recName={i + ''}
+      onPlayComplete={oneAfterTheOther ? handlePlayComplete : undefined}
+      imageOffset={p.buttons[i].offset}
+      scale={p.buttons[i].scale}
+      hMargin={hMargin}
+    />
+  ));
+
+  // For 2x2 grid layout, explicitly group into rows to avoid flexWrap issues
+  const isGrid = n === 4 && !isVertical;
+  const buttonContent = isGrid ? (
+    <>
+      <View style={{ flexDirection: 'row' }}>
+        {visButtons[0]}
+        {visButtons[1]}
+      </View>
+      <View style={{ flexDirection: 'row' }}>
+        {visButtons[2]}
+        {visButtons[3]}
+      </View>
+    </>
+  ) : visButtons;
+
   // @ts-ignore
   return (
-    <View style={[backgroundStyle, { marginTop: safeAreaInsets.top }]}>
-      <CountdownButton
+    <View style={{ flex: 1, backgroundColor: mainBackgroundColor }}>
+      <View style={[backgroundStyle, { marginTop: safeAreaInsets.top, marginBottom: safeAreaInsets.bottom }]}>
+        <CountdownButton
         iconSize={45}
         onComplete={() => setShowSettings(true)}
         style={{
@@ -283,37 +453,20 @@ function Main(): React.JSX.Element {
         )
       }
 
-      <RectView
-        buttonWidth={buttonWidth}
-        width={windowSize.width - safeAreaInsets.left - safeAreaInsets.right}
-        height={windowSize.height - safeAreaInsets.top - safeAreaInsets.bottom}
-        isLandscape={isLandscapeUtil(windowSize)}
+      <View style={{
+        width: "100%",
+        height: "100%",
+        alignItems: "center",
+        justifyContent: "center",
+        alignContent: "center",
+        flexDirection: isGrid ? "column" : (isVertical ? "column" : "row"),
+        flexWrap: isGrid ? "nowrap" : (isVertical ? "nowrap" : "wrap"),
+        padding: containerPadding, // Add padding to container for edge spacing
+        backgroundColor: mainBackgroundColor, // Match main background
+      }}
       >
-        {activeButtons.map((i: any) => (
-          <MainButton
-            key={i}
-            name={p.buttons[i].name}
-            fontSize={27}
-            showName={p.buttons[i].showName}
-            width={buttonWidth}
-            raisedLevel={10}
-            color={
-              p.buttons[i].color == '#000000' &&
-              mainBackgroundColor == BACKGROUND.DARK
-                ? 'white'
-                : p.buttons[i].color
-            }
-            imageUrl={getImagePath(p.buttons[i].imageUrl)}
-            appBackground={mainBackgroundColor}
-            showProgress={true}
-            recName={i + ''}
-            onPlayComplete={oneAfterTheOther ? handlePlayComplete : undefined}
-            imageOffset={p.buttons[i].offset}
-            scale={p.buttons[i].scale}
-            hMargin={hMargin}
-          />
-        ))}
-      </RectView>
+        {buttonContent}
+      </View>
 
       {oneAfterTheOther && (
         <CountdownButton
@@ -336,11 +489,7 @@ function Main(): React.JSX.Element {
           }
         />
       )}
-
-      {/* <ScrollView style={{ maxHeight: 200, width: "100%" }}>
-        <Text style={{ margin: 20, width: "100%" }}>Log:{"\n" + log}</Text>
-      </ScrollView>
-      <Button onPress={() => setLog("")} title="Clear" /> */}
+      </View>
     </View>
   );
 }
@@ -364,33 +513,38 @@ export default function App(props: any) {
     }, remaining);
   }, []);
 
+  // Get background color from settings at app level
+  const appBackground = Settings.getString(BACKGROUND.name, BACKGROUND.LIGHT);
+
   return (
     <GlobalContext.Provider
       value={{
         url: props.url,
       }}
     >
-      <SafeAreaProvider>
-        {__DEV__ ? (
-          <ScreenSizer.Wrapper
-            devices={[
-              ...ScreenSizer.defaultDevices.all,
-              {
-                name: 'android A9',
-                width: 700,
-                height: 1040,
-                insets: { top: 10 },
-              },
+      <View style={{ flex: 1, backgroundColor: appBackground }}>
+        <SafeAreaProvider>
+          {__DEV__ ? (
+            <ScreenSizer.Wrapper
+              devices={[
+                ...ScreenSizer.defaultDevices.all,
+                {
+                  name: 'android A9',
+                  width: 700,
+                  height: 1040,
+                  insets: { top: 10 },
+                },
 
-              'hostDevice',
-            ]}
-          >
+                'hostDevice',
+              ]}
+            >
+              <Main />
+            </ScreenSizer.Wrapper>
+          ) : (
             <Main />
-          </ScreenSizer.Wrapper>
-        ) : (
-          <Main />
-        )}
-      </SafeAreaProvider>
+          )}
+        </SafeAreaProvider>
+      </View>
     </GlobalContext.Provider>
   );
 }
