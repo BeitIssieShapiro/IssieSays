@@ -343,37 +343,65 @@ export function MainButton({
             ' '
           )}
         </AwesomeButton>
-        {showProgress && playing &&
-          <View style={{width:width * 1.3, position: "absolute", bottom: 0, left:0, justifyContent:"center" }}>
+      </View>
+
+      {/* <View style={{ height: fontSize * 1.1, flexDirection: "row", alignItems: "center", justifyContent: "center" }}> */}
+      {showName ? (
+        <View style={{
+          position: 'relative',
+          width: width * 1.3, // Fixed width, not maxWidth
+          overflow: 'hidden',
+          borderRadius: fontSize * 0.3,
+          borderWidth: showProgress && playing ? 2 : 0,
+          borderColor: appBackground == BACKGROUND.LIGHT ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.4)',
+        }}>
+          {/* Progress bar background when playing */}
+          {showProgress && playing && (() => {
+            const progress = (duration && currDuration && (currDuration / duration) * 100) || 0;
+            console.log('Progress:', progress, 'currDuration:', currDuration, 'duration:', duration);
+            return (
+              <View style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: `${Math.min(100, progress)}%`,
+                backgroundColor: appBackground == BACKGROUND.LIGHT ? 'rgba(0, 0, 0, 0.15)' : 'rgba(255, 255, 255, 0.2)',
+              }} />
+            );
+          })()}
+          <Text
+            allowFontScaling={false}
+            numberOfLines={1}
+            // ellipsizeMode="tail"
+            style={{
+              fontSize,
+              textAlign: 'center',
+              color: appBackground == BACKGROUND.LIGHT ? 'black' : 'white',
+              paddingHorizontal: fontSize * 0.5,
+              paddingVertical: fontSize * 0.2,
+            }}
+          >
+            {name}
+          </Text>
+        </View>
+      ) : (
+        // When name is not shown, display AudioWaveForm in the name's position
+        showProgress && playing ? (
+          <View style={{ alignItems: 'center', justifyContent: 'center', height: fontSize * 1.2 }}>
             <AudioWaveForm
               width={width / 2}
-              height={footerHeight}
+              height={fontSize * 0.8}
               progress={
                 (duration && currDuration && currDuration / duration) || 0
               }
               color={BTN_FOR_COLOR}
               baseColor={'lightgray'}
             />
-          </View>}
-      </View>
-
-      {/* <View style={{ height: fontSize * 1.1, flexDirection: "row", alignItems: "center", justifyContent: "center" }}> */}
-      {showName ? (
-        <Text
-          allowFontScaling={false}
-          numberOfLines={1}
-          // ellipsizeMode="tail"
-          style={{
-            fontSize,
-            textAlign: 'center',
-            color: appBackground == BACKGROUND.LIGHT ? 'black' : 'white',
-            maxWidth: width * 1.3,
-          }}
-        >
-          {name}
-        </Text>
-      ) : (
-        <Spacer h={fontSize} />
+          </View>
+        ) : (
+          <Spacer h={fontSize} />
+        )
       )}
       {/* </View> */}
 

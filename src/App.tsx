@@ -389,13 +389,15 @@ function Main(): React.JSX.Element {
 
   // For 2x2 grid layout, explicitly group into rows to avoid flexWrap issues
   const isGrid = n === 4 && !isVertical;
+  const isRtl = isRTL();
+
   const buttonContent = isGrid ? (
     <>
-      <View style={{ flexDirection: 'row' }}>
+      <View style={{ flexDirection: isRtl ? 'row-reverse' : 'row' }}>
         {visButtons[0]}
         {visButtons[1]}
       </View>
-      <View style={{ flexDirection: 'row' }}>
+      <View style={{ flexDirection: isRtl ? 'row-reverse' : 'row' }}>
         {visButtons[2]}
         {visButtons[3]}
       </View>
@@ -459,7 +461,7 @@ function Main(): React.JSX.Element {
         alignItems: "center",
         justifyContent: "center",
         alignContent: "center",
-        flexDirection: isGrid ? "column" : (isVertical ? "column" : "row"),
+        flexDirection: isGrid ? "column" : (isVertical ? "column" : (isRtl ? "row-reverse" : "row")),
         flexWrap: isGrid ? "nowrap" : (isVertical ? "nowrap" : "wrap"),
         padding: containerPadding, // Add padding to container for edge spacing
         backgroundColor: mainBackgroundColor, // Match main background
