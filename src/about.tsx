@@ -1,59 +1,112 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { MyCloseIcon } from "./common/icons";
+import { useState } from "react";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ScreenTitle } from "./common/settings-elements";
+import { colors, gStyles } from "./common/common-style";
+import { gCurrentLang, strings, translate } from "./lang";
+
+const languages = [
+    { code: "he", label: "עברית", dir: "rtl" as const },
+    { code: "en", label: "English", dir: "ltr" as const },
+    { code: "ar", label: "العربية", dir: "rtl" as const },
+];
+
+const paragraphKeys = ["AboutP1", "AboutP2", "AboutP3", "AboutP4"];
 
 export function About({ onClose }: { onClose: () => void }) {
-    return <View>
-        <View style={{ position: "absolute", top: 30, right: 10 }}>
-            <MyCloseIcon onClose={onClose}/>
+    const [lang, setLang] = useState(gCurrentLang);
+    const currentLang = languages.find(l => l.code === lang) || languages[1];
+    const safeAreaInsets = useSafeAreaInsets();
+
+    return (
+        <View style={[gStyles.screenContainer, { top: safeAreaInsets.top }]}>
+            <ScreenTitle
+                title={translate("About")}
+                onClose={onClose}
+                icon={{ name: "close", type: "MDI", size: 30, color: colors.titleBlue }}
+            />
+
+            {/* Language toggle */}
+            <View style={styles.toggleRow}>
+                {languages.map(l => (
+                    <TouchableOpacity
+                        key={l.code}
+                        style={[
+                            styles.toggleButton,
+                            lang === l.code && styles.toggleButtonActive,
+                        ]}
+                        onPress={() => setLang(l.code)}
+                    >
+                        <Text
+                            allowFontScaling={false}
+                            style={[
+                                styles.toggleText,
+                                lang === l.code && styles.toggleTextActive,
+                            ]}
+                        >
+                            {l.label}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+
+            {/* Content */}
+            <ScrollView
+                style={styles.content}
+                contentContainerStyle={{ paddingBottom: 40 }}
+            >
+                {paragraphKeys.map(key => (
+                    <Text
+                        key={key}
+                        style={[
+                            styles.paragraph,
+                            { writingDirection: currentLang.dir },
+                        ]}
+                    >
+                        {strings[lang]?.[key] || key}
+                    </Text>
+                ))}
+            </ScrollView>
         </View>
-
-        <ScrollView style={{ margin: 30, marginTop: 50, width: "80%" }}>
-            <Text style={styles.textHE}>IssieSays היא אפליקציה המשמשת כפלט קולי ומאפשרת הקלטה מהיר של מסר והשמעתו באמצעות לחיצה על המסך.
-            </Text>
-            <View style={{ height: 10 }} />
-            <Text style={styles.textHE}>האפליקציה פותחה במיוחד עבור אנשים עם צרכים תקשורתיים מורכבים (CCN), היכולים להשתמש באפליקציה להבעת מסר מהיר וקבוע או לשיתוף בחוויה.
-            </Text>
-            <View style={{ height: 10 }} />
-            <Text style={styles.textHE}>האפליקציה פותחה על ידי המרכז הטכנולוגי בבית איזי שפירא בשיתוף מעבדות SAP ישראל והיא חלק ממארז אפליקציות שפותחו והותאמו לצרכים התקשורתיים, החברתיים והלימודיים של ילדים ובוגרים עם מוגבלות.
-            </Text>
-            <View style={{ height: 10 }} />
-            <Text style={styles.textHE}>
-                תודה מיוחדת למתנדבים במעבדות SAP ישראל, שקשובים לכל צורך חינוכי וטיפולי העולה מן השטח ומפתחים לנו אפליקציות משנות חיים.
-            </Text>
-            <View style={{ height: 40 }} />
-
-
-            <Text style={styles.textEN}>IssieSays is an application that serves as a voice output and allows you to quickly record a message and play it by clicking on the screen.
-            </Text>
-            <View style={{ height: 10 }} />
-            <Text style={styles.textEN}>The application was developed especially for people with complex communication needs (CCN), who can use the application to express a quick and regular message or to share an experience.
-            </Text>
-            <View style={{ height: 10 }} />
-            <Text style={styles.textEN}>The application was developed by the Beit Issie Shapiro Technology Center in collaboration with SAP Labs Israel and is part of a package of applications developed and adapted to the communicative, social and educational needs of children and adults with disabilities.
-            </Text>
-            <View style={{ height: 10 }} />
-            <Text style={styles.textEN}>Special thanks to the volunteers at the SAP Labs Israel, who are attentive to every educational and therapeutic need that arises from the field and develop life-changing applications with us.
-            </Text>
-
-
-        </ScrollView>
-
-    </View >
+    );
 }
 
-
-
 const styles = StyleSheet.create({
-    textHE: {
-        width: "100%",
-        fontSize: 25,
-        alignSelf: 'flex-start',
-        writingDirection: "rtl"
+    toggleRow: {
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 12,
+        paddingVertical: 16,
+        paddingHorizontal: 20,
+        backgroundColor: "white",
     },
-    textEN: {
-        width: "100%",
-        fontSize: 25,
-        alignSelf: 'flex-start',
-        writingDirection: "ltr"
-    }
-})
+    toggleButton: {
+        paddingVertical: 8,
+        paddingHorizontal: 20,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: colors.titleBlue,
+    },
+    toggleButtonActive: {
+        backgroundColor: colors.titleBlue,
+    },
+    toggleText: {
+        fontSize: 18,
+        color: colors.titleBlue,
+    },
+    toggleTextActive: {
+        color: "white",
+    },
+    content: {
+        flex: 1,
+        paddingHorizontal: 30,
+        paddingTop: 20,
+    },
+    paragraph: {
+        fontSize: 22,
+        lineHeight: 34,
+        marginBottom: 16,
+        color: "#333",
+    },
+});

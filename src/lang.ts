@@ -16,7 +16,7 @@ console.log("Detected Language", deviceLanguageRaw, "Using Language", gCurrentLa
 export const isRight2Left = gCurrentLang.startsWith("he") || gCurrentLang.startsWith("ar");
 
 
-var strings: any = {
+export var strings: Record<string, Record<string, string>> = {
     "he": {
         "Welcome": "ברוכים הבאים",
         "Settings": "הגדרות",
@@ -110,6 +110,10 @@ var strings: any = {
         "AboutToReloadSameButton": "טעינת אותו כפתור-שמע תדרוס את השינויים שנעשו בכפתור בפרופיל זה. להמשיך?",
         "Load": "טוען...",
         "ProfileSaveAsTitle": "שמירת '{1}' בשם",
+        "AboutP1": "IssieSays היא אפליקציה המשמשת כפלט קולי ומאפשרת הקלטה מהיר של מסר והשמעתו באמצעות לחיצה על המסך.",
+        "AboutP2": "האפליקציה פותחה במיוחד עבור אנשים עם צרכים תקשורתיים מורכבים (CCN), היכולים להשתמש באפליקציה להבעת מסר מהיר וקבוע או לשיתוף בחוויה.",
+        "AboutP3": "האפליקציה פותחה על ידי המרכז הטכנולוגי בבית איזי שפירא בשיתוף מעבדות SAP ישראל והיא חלק ממארז אפליקציות שפותחו והותאמו לצרכים התקשורתיים, החברתיים והלימודיים של ילדים ובוגרים עם מוגבלות.",
+        "AboutP4": "תודה מיוחדת למתנדבים במעבדות SAP ישראל, שקשובים לכל צורך חינוכי וטיפולי העולה מן השטח ומפתחים לנו אפליקציות משנות חיים.",
     },
     "en": {
         "Welcome": "Welcome",
@@ -204,6 +208,10 @@ var strings: any = {
         "ContinueWithoutSave": "Load Without Save",
         "EditImage": "Edit Image",
         "EditImageTitle": "Pinch: Scale & Rotate | Drag: Move",
+        "AboutP1": "IssieSays is an application that serves as a voice output and allows you to quickly record a message and play it by clicking on the screen.",
+        "AboutP2": "The application was developed especially for people with complex communication needs (CCN), who can use the application to express a quick and regular message or to share an experience.",
+        "AboutP3": "The application was developed by the Beit Issie Shapiro Technology Center in collaboration with SAP Labs Israel and is part of a package of applications developed and adapted to the communicative, social and educational needs of children and adults with disabilities.",
+        "AboutP4": "Special thanks to the volunteers at the SAP Labs Israel, who are attentive to every educational and therapeutic need that arises from the field and develop life-changing applications with us.",
 
     },
     "ar": {
@@ -299,6 +307,10 @@ var strings: any = {
         "AboutToReloadSameButtonTitle": "إعادة تحميل نفس زر الصوت",
         "AboutToReloadSameButton": "سيؤدي تحميل نفس زر الصوت إلى استبدال التغييرات التي أُجريت على الزر في هذا الملف الشخصي. هل تريد المتابعة؟",
         "ProfileSaveAsTitle": "حفظ '{1}' باسم",
+        "AboutP1": "IssieSays هو تطبيق يعمل كمخرج صوتي ويتيح لك تسجيل رسالة بسرعة وتشغيلها بالنقر على الشاشة.",
+        "AboutP2": "تم تطوير التطبيق خصيصًا للأشخاص ذوي الاحتياجات التواصلية المعقدة (CCN)، الذين يمكنهم استخدام التطبيق للتعبير عن رسالة سريعة ومنتظمة أو لمشاركة تجربة.",
+        "AboutP3": "تم تطوير التطبيق من قبل المركز التكنولوجي في بيت إيزي شبيرا بالتعاون مع مختبرات SAP إسرائيل، وهو جزء من مجموعة تطبيقات تم تطويرها وتكييفها لتلبية الاحتياجات التواصلية والاجتماعية والتعليمية للأطفال والبالغين ذوي الإعاقة.",
+        "AboutP4": "شكر خاص للمتطوعين في مختبرات SAP إسرائيل، الذين يستجيبون لكل حاجة تعليمية وعلاجية تنشأ من الميدان ويطورون معنا تطبيقات تغير الحياة.",
     }
 };
 
