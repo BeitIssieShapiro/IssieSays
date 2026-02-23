@@ -114,6 +114,9 @@ export var strings: Record<string, Record<string, string>> = {
         "AboutP2": "האפליקציה פותחה במיוחד עבור אנשים עם צרכים תקשורתיים מורכבים (CCN), היכולים להשתמש באפליקציה להבעת מסר מהיר וקבוע או לשיתוף בחוויה.",
         "AboutP3": "האפליקציה פותחה על ידי המרכז הטכנולוגי בבית איזי שפירא בשיתוף מעבדות SAP ישראל והיא חלק ממארז אפליקציות שפותחו והותאמו לצרכים התקשורתיים, החברתיים והלימודיים של ילדים ובוגרים עם מוגבלות.",
         "AboutP4": "תודה מיוחדת למתנדבים במעבדות SAP ישראל, שקשובים לכל צורך חינוכי וטיפולי העולה מן השטח ומפתחים לנו אפליקציות משנות חיים.",
+        "ExportInProgress": "מייצא פרופיל...",
+        "BackupInProgress": "מגבה...",
+        "ImportInProgress": "מייבא...",
     },
     "en": {
         "Welcome": "Welcome",
@@ -212,6 +215,9 @@ export var strings: Record<string, Record<string, string>> = {
         "AboutP2": "The application was developed especially for people with complex communication needs (CCN), who can use the application to express a quick and regular message or to share an experience.",
         "AboutP3": "The application was developed by the Beit Issie Shapiro Technology Center in collaboration with SAP Labs Israel and is part of a package of applications developed and adapted to the communicative, social and educational needs of children and adults with disabilities.",
         "AboutP4": "Special thanks to the volunteers at the SAP Labs Israel, who are attentive to every educational and therapeutic need that arises from the field and develop life-changing applications with us.",
+        "ExportInProgress": "Exporting profile...",
+        "BackupInProgress": "Backing up...",
+        "ImportInProgress": "Importing...",
 
     },
     "ar": {
@@ -311,6 +317,9 @@ export var strings: Record<string, Record<string, string>> = {
         "AboutP2": "تم تطوير التطبيق خصيصًا للأشخاص ذوي الاحتياجات التواصلية المعقدة (CCN)، الذين يمكنهم استخدام التطبيق للتعبير عن رسالة سريعة ومنتظمة أو لمشاركة تجربة.",
         "AboutP3": "تم تطوير التطبيق من قبل المركز التكنولوجي في بيت إيزي شبيرا بالتعاون مع مختبرات SAP إسرائيل، وهو جزء من مجموعة تطبيقات تم تطويرها وتكييفها لتلبية الاحتياجات التواصلية والاجتماعية والتعليمية للأطفال والبالغين ذوي الإعاقة.",
         "AboutP4": "شكر خاص للمتطوعين في مختبرات SAP إسرائيل، الذين يستجيبون لكل حاجة تعليمية وعلاجية تنشأ من الميدان ويطورون معنا تطبيقات تغير الحياة.",
+        "ExportInProgress": "جاري التصدير...",
+        "BackupInProgress": "جاري النسخ الاحتياطي...",
+        "ImportInProgress": "جاري الاستيراد...",
     }
 };
 

@@ -9,7 +9,7 @@ import { Settings } from './setting-storage';
 import { MyIcon } from "./common/icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenSubTitle, ScreenTitle } from "./common/settings-elements";
-import { colors } from "./common/common-style";
+import { colors, gStyles } from "./common/common-style";
 import { ButtonCard } from "./button-card";
 import { EditButton, EditedButton } from "./edit-button";
 import { DocumentDirectoryPath, moveFile, unlink, writeFile } from "react-native-fs";
@@ -18,6 +18,7 @@ import { IconButton } from "./common/components";
 import Share from 'react-native-share';
 import { doNothing, exportAll, exportProfile } from "./import-export";
 import { getIsMobile, Point } from "./utils";
+import * as Progress from 'react-native-progress';
 const { FileCopyModule } = NativeModules;
 
 
@@ -115,6 +116,13 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     const [inputProfile, setInputProfile] = useState<boolean>(false);
     const [editProfileName, setEditProfileName] = useState<{ name: string, afterSave: () => void } | undefined>();
     const [profileSaveAs, setProfileSaveAs] = useState<{ name: string, afterSave: () => void } | undefined>();
+    const [exportInProgress, setExportInProgress] = useState<
+        | {
+            message: string;
+            precent: number;
+        }
+        | undefined
+    >();
 
     const textInputRef = [useRef<TextInput>(null), useRef<TextInput>(null), useRef<TextInput>(null), useRef<TextInput>(null)];
     const scrollViewRef = useRef<ScrollView>(null);
@@ -462,6 +470,10 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
     async function handleExportProfile(name: string) {
         setBusy(true);
+        setExportInProgress({
+            message: translate('ExportInProgress'),
+            precent: 0,
+        });
 
         const currentProfileName = Settings.getString(CURRENT_PROFILE.name, "")
         if (name == currentProfileName) {
@@ -469,8 +481,16 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             await SaveProfile(name, profile, true, false);
         }
 
-        const zipPath = (await exportProfile(name)
-            .finally(() => setBusy(false))
+        const zipPath = (await exportProfile(name, (percent) => {
+            setExportInProgress({
+                message: translate('ExportInProgress'),
+                precent: percent,
+            });
+        })
+            .finally(() => {
+                setBusy(false);
+                setExportInProgress(undefined);
+            })
         ) as string;
 
         return shareFile(zipPath);
@@ -521,16 +541,28 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     }
 
     async function handleBackupAll() {
-        setBusy(true)
+        setBusy(true);
+        setExportInProgress({
+            message: translate('BackupInProgress'),
+            precent: 0,
+        });
 
         // first save current profile to disk:
         const currentProfileName = Settings.getString(CURRENT_PROFILE.name, DefaultProfileName);
         const p = readCurrentProfile();
         await SaveProfile(currentProfileName, p, true, true);
 
-        const zipPath = (await exportAll()
+        const zipPath = (await exportAll((percent) => {
+            setExportInProgress({
+                message: translate('BackupInProgress'),
+                precent: percent,
+            });
+        })
             .catch(err => console.log("export all failed", err))
-            .finally(() => setBusy(false))
+            .finally(() => {
+                setBusy(false);
+                setExportInProgress(undefined);
+            })
         ) as string;
 
         console.log("Export All", zipPath)
@@ -639,6 +671,23 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         />}
 
         <ScreenTitle title={translate("Settings")} onClose={handleCloseSettings} onAbout={onAbout} icon={{ name: "check-bold", type: "MDI", size: 30, color: colors.titleBlue }} />
+
+        {/** Export Progress */}
+        {exportInProgress && (
+            <View style={gStyles.progressBarHost}>
+                <Text
+                    allowFontScaling={false}
+                    style={{ fontSize: 28, marginBottom: 5 }}
+                >
+                    {exportInProgress.message}
+                </Text>
+                <Progress.Bar
+                    width={windowSize.width * 0.6}
+                    progress={exportInProgress.precent / 100}
+                    style={[isRTL() && { transform: [{ scaleX: -1 }] }]}
+                />
+            </View>
+        )}
 
         {/* Profile Name */}
         <ScreenSubTitle

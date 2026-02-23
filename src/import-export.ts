@@ -19,11 +19,13 @@ export function loadFile(path: string) {
 }
 
 
-export async function exportProfile(name: string): Promise<string> {
+export async function exportProfile(name: string, onProgress?: (percent: number) => void): Promise<string> {
+    onProgress?.(10);
     const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
     const fileContents = await RNFS.readFile(ensureAndroidCompatible(profilePath), 'utf8');
     const p: Profile = JSON.parse(fileContents);
 
+    onProgress?.(30);
     const metaData = {
         version: "1.0",
         type: "profile",
@@ -32,30 +34,45 @@ export async function exportProfile(name: string): Promise<string> {
     }
     const metadataTargetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "metadata__" + name + ".json"))
     await RNFS.writeFile(metadataTargetFile, JSON.stringify(metaData, undefined, " "));
+    onProgress?.(60);
     const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "profile__" + name + ".says"));
     // delete if exists before
     await RNFS.unlink(ensureAndroidCompatible(targetFile)).catch(doNothing);
 
-    return zip([metadataTargetFile], targetFile);
+    onProgress?.(80);
+    return zip([metadataTargetFile], targetFile).then((result) => {
+        onProgress?.(100);
+        return result;
+    });
 }
 
-export async function exportAll(): Promise<string> {
+export async function exportAll(onProgress?: (percent: number) => void): Promise<string> {
     const files = [];
 
+    onProgress?.(5);
     const profileList = await ListElements(Folders.Profiles);
-    for (const profileName of profileList) {
+    const totalProfiles = profileList.length;
+
+    for (let i = 0; i < profileList.length; i++) {
+        const profileName = profileList[i];
         files.push(
             (await exportProfile(profileName))
         );
+        // Progress from 10% to 80% based on profile export completion
+        const percent = 10 + Math.floor((i + 1) / totalProfiles * 70);
+        onProgress?.(percent);
     }
 
+    onProgress?.(85);
     const date = new Date()
     let fn = date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + ('0' + date.getDate()).slice(-2) + ' ' + ('0' + date.getHours()).slice(-2) + '-' + ('0' + date.getMinutes()).slice(-2) + '-' + ('0' + date.getSeconds()).slice(-2);
     console.log("about to zip a says file", files)
     const targetPath = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "IssieSays Backup-" + fn + ".says"));
     await RNFS.unlink(targetPath).catch(doNothing);
 
+    onProgress?.(90);
     return zip(files, targetPath).then(path => {
+        onProgress?.(100);
         return ensureAndroidCompatible(path);
     });
 }
