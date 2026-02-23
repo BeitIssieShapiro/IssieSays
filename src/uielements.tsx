@@ -14,7 +14,7 @@ import { increaseColor } from './color-picker';
 import { BACKGROUND } from './settings';
 import { AudioWaveForm } from './audio-progress';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { audioRecorderPlayer, currentlyPlayingRecName } from './App';
+import { audioRecorderPlayer, currentlyPlayingRecName, setCurrentlyPlaying } from './App';
 import { playRecording, stopPlayback } from './recording';
 import { MyIcon } from './common/icons';
 import {
@@ -182,35 +182,55 @@ export function MainButton({
   hMargin?: number;
 }) {
   const [playing, setPlaying] = useState<string | undefined>(undefined);
-  const [playingInProgress, setPlayingInProgress] = useState(false);
   const [currDuration, setCurrDuration] = useState(0.0);
   const [duration, setDuration] = useState(0.0);
   const playCompleteSent = useRef<boolean>(false);
   const isOperating = useRef<boolean>(false);
+  const onPlayCompleteRef = useRef(onPlayComplete);
 
   const [imageSize, setImageSize] = useState<ImageSize>({
     width: 500,
     height: 500,
   });
 
+  // Keep onPlayCompleteRef up to date
+  useEffect(() => {
+    onPlayCompleteRef.current = onPlayComplete;
+  }, [onPlayComplete]);
+
+  // Cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      if (currentlyPlayingRecName === recName) {
+        console.log(`MainButton ${recName} unmounting while playing, stopping playback`);
+        stopPlayback();
+      }
+    };
+  }, [recName]);
+
   useEffect(() => {
     if (imageUrl) Image.getSize(imageUrl).then(size => setImageSize(size));
   }, [imageUrl]);
 
   const onStartPlay = useCallback(async () => {
+    const clickTime = Date.now();
+    console.log(`[${clickTime}] Button ${recName} clicked - isOperating: ${isOperating.current}, currentlyPlaying: ${currentlyPlayingRecName}`);
+
     // Prevent multiple simultaneous operations
     if (isOperating.current) {
-      console.log(`Button ${recName} operation already in progress, ignoring click`);
+      console.log(`[${clickTime}] Button ${recName} operation already in progress, ignoring click`);
       return;
     }
 
     // If this button is already playing, ignore
-    if (playingInProgress && currentlyPlayingRecName === recName) {
-      console.log(`Button ${recName} already playing, ignoring click`);
+    // Check global state (more reliable than local state due to async updates)
+    if (currentlyPlayingRecName === recName) {
+      console.log(`[${clickTime}] Button ${recName} already playing (global check), ignoring click`);
       return;
     }
 
     isOperating.current = true;
+    console.log(`[${clickTime}] Button ${recName} starting operation, isOperating set to true`);
 
     try {
       playCompleteSent.current = false;
@@ -236,12 +256,15 @@ export function MainButton({
             duration: audioRecorderPlayer.mmssss(Math.floor(e.duration)),
           };
           if (e.currentPosition >= e.duration - 100) {
+            const finishTime = Date.now();
             // We're within 100ms of the end → treat it as "finished".
+            console.log(`[${finishTime}] Button ${recName} audio finished, clearing global state immediately`);
+            // Clear global state immediately so button becomes responsive
+            setCurrentlyPlaying(null);
             setPlaying(undefined);
-            setPlayingInProgress(false);
-            stopPlayback();
-            if (onPlayComplete && !playCompleteSent.current) {
-              onPlayComplete();
+            stopPlayback(); // Clean up player resources (async, but state already cleared)
+            if (onPlayCompleteRef.current && !playCompleteSent.current) {
+              onPlayCompleteRef.current();
               playCompleteSent.current = true;
             }
           }
@@ -250,26 +273,26 @@ export function MainButton({
           return;
         },
         () => {
+          console.log(`Button ${recName} interrupted callback fired`);
           setPlaying(undefined);
-          setPlayingInProgress(false);
         },
       );
+      console.log(`[${clickTime}] Button ${recName} playRecording returned, success: ${success}`);
       if (success) {
         setPlaying(recName);
-        setPlayingInProgress(true);
       } else {
-        if (onPlayComplete) {
-          onPlayComplete();
+        if (onPlayCompleteRef.current) {
+          onPlayCompleteRef.current();
         }
       }
     } catch (error) {
       console.error(`Error in onStartPlay for ${recName}:`, error);
       setPlaying(undefined);
-      setPlayingInProgress(false);
     } finally {
       isOperating.current = false;
+      console.log(`[${clickTime}] Button ${recName} operation complete, isOperating set to false`);
     }
-  }, [playingInProgress, recName, onPlayComplete]);
+  }, [recName]);
 
   const cWidth = (width * 5.5) / 6;
   const actOffset = denormOffset(imageOffset, cWidth);
@@ -307,8 +330,13 @@ export function MainButton({
           width={width}
           height={width}
           borderRadius={width / 2}
-          onPress={onStartPlay}
+          onPress={(next) => {
+            console.log(`[${Date.now()}] AwesomeButton onPress fired for ${recName}`);
+            onStartPlay();
+            if (next) next();
+          }}
           animatedPlaceholder={false}
+          springRelease={false}
           paddingHorizontal={0}
           paddingTop={0}
         >
