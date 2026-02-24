@@ -3,7 +3,10 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-nati
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenTitle } from "./common/settings-elements";
 import { colors, gStyles } from "./common/common-style";
-import { gCurrentLang, strings, translate } from "./lang";
+import { gCurrentLang, translate } from "./lang";
+import { languageMap } from "./lang";
+import { FeedbackDialog } from '@beitissieshapiro/issie-shared';
+import { IconButton } from "./common/components";
 
 const languages = [
     { code: "he", label: "עברית", dir: "rtl" as const },
@@ -14,7 +17,8 @@ const languages = [
 const paragraphKeys = ["AboutP1", "AboutP2", "AboutP3", "AboutP4"];
 
 export function About({ onClose }: { onClose: () => void }) {
-    const [lang, setLang] = useState(gCurrentLang);
+    const [lang, setLang] = useState(gCurrentLang.languageTag);
+    const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
     const currentLang = languages.find(l => l.code === lang) || languages[1];
     const safeAreaInsets = useSafeAreaInsets();
 
@@ -50,6 +54,16 @@ export function About({ onClose }: { onClose: () => void }) {
                 ))}
             </View>
 
+            {/* Feedback Button */}
+            <View style={styles.feedbackContainer}>
+                <IconButton
+                    backgroundColor="white"
+                    text={translate("UserFeedback")}
+                    icon={{ name: "message", type: "AntDesign", color: colors.titleBlue }}
+                    onPress={() => setShowFeedbackDialog(true)}
+                />
+            </View>
+
             {/* Content */}
             <ScrollView
                 style={styles.content}
@@ -63,10 +77,16 @@ export function About({ onClose }: { onClose: () => void }) {
                             { writingDirection: currentLang.dir },
                         ]}
                     >
-                        {strings[lang]?.[key] || key}
+                        {languageMap[lang]?.[key] || key}
                     </Text>
                 ))}
             </ScrollView>
+
+            <FeedbackDialog
+                appName='IssieSays'
+                visible={showFeedbackDialog}
+                onClose={() => setShowFeedbackDialog(false)}
+            />
         </View>
     );
 }
@@ -97,6 +117,11 @@ const styles = StyleSheet.create({
     },
     toggleTextActive: {
         color: "white",
+    },
+    feedbackContainer: {
+        alignItems: "center",
+        paddingVertical: 16,
+        backgroundColor: "white",
     },
     content: {
         flex: 1,

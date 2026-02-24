@@ -1,4 +1,15 @@
 import * as RNLocalize from 'react-native-localize';
+
+export {
+    translate,
+    fTranslate,
+    isRTL,
+    gCurrentLang,
+    initLang,
+    loadLanguage,
+    findMissingTranslations,
+} from '@beitissieshapiro/issie-shared';
+
 const locales = RNLocalize.getLocales();
 const bestLanguage = locales[0]?.languageTag || 'en';
 const deviceLanguageRaw =  //'ar'
@@ -10,13 +21,12 @@ const supportedLanguages = ['he', 'en', 'ar'];
 const deviceLanguage = deviceLanguageRaw.split(/[-_]/)[0];
 
 // Check if the detected language is supported, otherwise default to 'en'
-export const gCurrentLang: string = supportedLanguages.includes(deviceLanguage) ? deviceLanguage : 'en';
+export const detectedLanguage: string = supportedLanguages.includes(deviceLanguage) ? deviceLanguage : 'en';
 
-console.log("Detected Language", deviceLanguageRaw, "Using Language", gCurrentLang);
-export const isRight2Left = gCurrentLang.startsWith("he") || gCurrentLang.startsWith("ar");
+console.log("Detected Language", deviceLanguageRaw, "Using Language", detectedLanguage);
+export const isRight2Left = detectedLanguage.startsWith("he") || detectedLanguage.startsWith("ar");
 
-
-export var strings: Record<string, Record<string, string>> = {
+export const languageMap: Record<string, Record<string, string>> = {
     "he": {
         "Welcome": "ברוכים הבאים",
         "Settings": "הגדרות",
@@ -117,6 +127,22 @@ export var strings: Record<string, Record<string, string>> = {
         "ExportInProgress": "מייצא פרופיל...",
         "BackupInProgress": "מגבה...",
         "ImportInProgress": "מייבא...",
+        "UserFeedback": "משוב משתמש",
+        "Feedback": "משוב",
+        "FeedbackTitleLabel": "כותרת / נושא",
+        "FeedbackTitlePlaceholder": "כותרת קצרה או נושא",
+        "FeedbackPlaceholder": "שתפו אותנו במה שעל ליבכם...",
+        "EmailTitle": "אימייל (אופציונלי)",
+        "EmailPlaceholder": "your@email.com",
+        "BtnSubmitFeedback": "שליחה",
+        "BtnCancel": "ביטול",
+        "FeedbackSubmitted": "תודה! המשוב נשלח בהצלחה",
+        "FeedbackError": "שליחת המשוב נכשלה. נסו שוב.",
+        "TitleMinLength": "הכותרת חייבת להכיל לפחות 3 תווים",
+        "TitleMaxLength": "הכותרת חייבת להכיל פחות מ-100 תווים",
+        "FeedbackMinLength": "המשוב חייב להכיל לפחות 5 תווים",
+        "FeedbackMaxLength": "המשוב חייב להכיל פחות מ-1000 תווים",
+        "InvalidEmail": "כתובת אימייל לא תקינה",
     },
     "en": {
         "Welcome": "Welcome",
@@ -218,6 +244,22 @@ export var strings: Record<string, Record<string, string>> = {
         "ExportInProgress": "Exporting profile...",
         "BackupInProgress": "Backing up...",
         "ImportInProgress": "Importing...",
+        "UserFeedback": "User Feedback",
+        "Feedback": "Feedback",
+        "FeedbackTitleLabel": "Title / Subject",
+        "FeedbackTitlePlaceholder": "Enter a brief title or subject",
+        "FeedbackPlaceholder": "Share your thoughts with us...",
+        "EmailTitle": "Email (optional)",
+        "EmailPlaceholder": "your@email.com",
+        "BtnSubmitFeedback": "Submit",
+        "BtnCancel": "Cancel",
+        "FeedbackSubmitted": "Thank you! Your feedback was submitted successfully",
+        "FeedbackError": "Failed to submit feedback. Please try again.",
+        "TitleMinLength": "Title must be at least 3 characters",
+        "TitleMaxLength": "Title must be less than 100 characters",
+        "FeedbackMinLength": "Feedback must be at least 5 characters",
+        "FeedbackMaxLength": "Feedback must be less than 1000 characters",
+        "InvalidEmail": "Invalid email address",
 
     },
     "ar": {
@@ -320,60 +362,21 @@ export var strings: Record<string, Record<string, string>> = {
         "ExportInProgress": "جاري التصدير...",
         "BackupInProgress": "جاري النسخ الاحتياطي...",
         "ImportInProgress": "جاري الاستيراد...",
+        "UserFeedback": "ملاحظات المستخدم",
+        "Feedback": "ملاحظات",
+        "FeedbackTitleLabel": "العنوان / الموضوع",
+        "FeedbackTitlePlaceholder": "أدخل عنوانًا موجزًا أو موضوعًا",
+        "FeedbackPlaceholder": "شارك أفكارك معنا...",
+        "EmailTitle": "البريد الإلكتروني (اختياري)",
+        "EmailPlaceholder": "your@email.com",
+        "BtnSubmitFeedback": "إرسال",
+        "BtnCancel": "إلغاء",
+        "FeedbackSubmitted": "شكرًا! تم إرسال ملاحظاتك بنجاح",
+        "FeedbackError": "فشل إرسال الملاحظات. حاول مرة أخرى.",
+        "TitleMinLength": "يجب أن يكون العنوان 3 أحرف على الأقل",
+        "TitleMaxLength": "يجب أن يكون العنوان أقل من 100 حرف",
+        "FeedbackMinLength": "يجب أن تكون الملاحظات 5 أحرف على الأقل",
+        "FeedbackMaxLength": "يجب أن تكون الملاحظات أقل من 1000 حرف",
+        "InvalidEmail": "عنوان البريد الإلكتروني غير صالح",
     }
 };
-
-function findMissing() {
-    let missing = ""
-    //English
-    console.log("Missing in English:")
-    Object.entries(strings.he).forEach(([key, value]) => {
-        if (!strings.en[key]) {
-            missing += "\"" + key + "\":" + "\"" + value + "\",\n";
-        }
-    })
-    console.log(missing);
-    missing = "";
-    console.log("\n\nMissing in Arabic:")
-    Object.entries(strings.he).forEach(([key, value]) => {
-        if (!strings.ar[key]) {
-            missing += "\"" + key + "\":" + "\"" + value + "\",\n";
-        }
-    })
-    console.log(missing);
-
-    missing = "";
-    console.log("\n\nMissing in Hebrew:")
-    Object.entries(strings.en).forEach(([key, value]) => {
-        if (!strings.he[key]) {
-            missing += "\"" + key + "\":" + "\"" + value + "\",\n";
-        }
-    })
-    console.log(missing);
-
-}
-//findMissing();
-
-
-const currStrings = strings[deviceLanguage];
-
-export function isRTL() {
-    return isRight2Left;
-}
-
-export function translate(id: string) {
-    return currStrings[id] || id;
-}
-
-export function fTranslate(id: string, ...args: any[]) {
-    return replaceArgs(translate(id), args);
-}
-
-function replaceArgs(s: string, args: any) {
-    return s.replace(/{(\d+)}/g, function (match, number) {
-        return typeof args[number - 1] != 'undefined'
-            ? args[number - 1]
-            : match
-            ;
-    });
-}

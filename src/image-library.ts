@@ -12,7 +12,7 @@ export default class ImageLibrary {
     }
 
     async search(keyword: string) {
-        const locale = gCurrentLang.substring(0, 2);
+        const locale = gCurrentLang.languageTag.substring(0, 2);
         const searchPath = `/pictograms/${locale}/search/${keyword}`
         return axios.get(ImageLibrary.BASE_URL + searchPath).then(
             (res) => {

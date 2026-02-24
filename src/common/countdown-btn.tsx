@@ -71,7 +71,7 @@ export const CountdownButton: React.FC<CountdownButtonProps> = ({
                 info={{ type: iconType, name: icon, color: iconColor, size: iconSize }}
             />
             {countdown !== null && (
-                <Text allowFontScaling={false} style={[styles.countdownText, countdownStyle]}>{fTranslate(textKey, countdown)}</Text>
+                <Text allowFontScaling={false} style={[styles.countdownText, countdownStyle]}>{fTranslate(textKey, countdown.toString())}</Text>
             )}
         </Pressable>
     );

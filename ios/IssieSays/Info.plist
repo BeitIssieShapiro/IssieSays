@@ -87,25 +87,25 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-  <key>UTExportedTypeDeclarations</key>
-  <array>
-	<dict>
-	<key>UTTypeIdentifier</key>
-	<string>com.issieshapiro.issiesays.says</string>
-	<key>UTTypeDescription</key>
-	<string>IssieSays Package</string>
-	<key>UTTypeConformsTo</key>
+	<key>UTExportedTypeDeclarations</key>
 	<array>
-		<string>public.data</string>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>com.issieshapiro.issiesays.says</string>
+			<key>UTTypeDescription</key>
+			<string>IssieSays Package</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<string>says</string>
+				<key>public.mime-type</key>
+				<string>application/x-issiesays</string>
+			</dict>
+		</dict>
 	</array>
-	<key>UTTypeTagSpecification</key>
-	<dict>
-		<key>public.filename-extension</key>
-		<string>says</string>
-		<key>public.mime-type</key>
-		<string>application/x-issiesays</string>
-	</dict>
-	</dict>
-  </array>
-  </dict>
+</dict>
 </plist>

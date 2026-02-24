@@ -67,3 +67,4 @@ yarn-error.log
 /coverage
 /store-images/
 opencode.json
+.env

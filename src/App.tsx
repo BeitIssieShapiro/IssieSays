@@ -36,7 +36,6 @@ import { ImportInfoDialog } from './common/import-info-dialog';
 import { gStyles } from './common/common-style';
 import { getIsMobile, isLandscape as isLandscapeUtil } from './utils';
 const { FileCopyModule } = NativeModules;
-
 const toastConfig = {
   success: (props: any) => (
     <BaseToast
@@ -497,10 +496,15 @@ function Main(): React.JSX.Element {
 }
 
 import * as ScreenSizer from '@bam.tech/react-native-screen-sizer';
+import { initializeFirebase } from './firebase-config';
+import { MyIcon } from '@beitissieshapiro/issie-shared';
+
 ScreenSizer.setup();
 
 export default function App(props: any) {
   useEffect(() => {
+    initializeFirebase();
+
     const now = Date.now();
     const nativeStartTime = props.nativeStartTime ?? now;
     const elapsed = now - nativeStartTime;

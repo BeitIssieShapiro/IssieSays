@@ -2,6 +2,9 @@ import UIKit
 import React
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
+import RNFBAppCheck
+import FirebaseCore
+import Firebase
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -19,6 +22,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
    ) -> Bool {
      let delegate = ReactNativeDelegate()
      let factory = RCTReactNativeFactory(delegate: delegate)
+     
+     RNFBAppCheckModule.sharedInstance()
+     FirebaseApp.configure()
+
      delegate.dependencyProvider = RCTAppDependencyProvider()
 
      reactNativeDelegate = delegate
