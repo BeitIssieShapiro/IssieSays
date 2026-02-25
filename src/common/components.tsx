@@ -39,7 +39,7 @@ export function LabeledIconButton({ type, icon, label, onPress, size = 40, color
 
     return <Pressable onPress={onPress} style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", width: size * 3 }}>
         <MyIcon info={{ type, name: icon, size, color }} />
-        <Text allowFontScaling={false} style={gStyles.labeledIconText}>{label}</Text>
+        <Text  numberOfLines={1} allowFontScaling={false} style={gStyles.labeledIconText}>{label}</Text>
     </Pressable>
 }
 

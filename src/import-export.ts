@@ -35,7 +35,7 @@ export async function exportProfile(name: string, onProgress?: (percent: number)
     const metadataTargetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "metadata__" + name + ".json"))
     await RNFS.writeFile(metadataTargetFile, JSON.stringify(metaData, undefined, " "));
     onProgress?.(60);
-    const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "profile__" + name + ".says"));
+    const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "profile__" + name + ".zip"));
     // delete if exists before
     await RNFS.unlink(ensureAndroidCompatible(targetFile)).catch(doNothing);
 
@@ -67,7 +67,7 @@ export async function exportAll(onProgress?: (percent: number) => void): Promise
     const date = new Date()
     let fn = date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + ('0' + date.getDate()).slice(-2) + ' ' + ('0' + date.getHours()).slice(-2) + '-' + ('0' + date.getMinutes()).slice(-2) + '-' + ('0' + date.getSeconds()).slice(-2);
     console.log("about to zip a says file", files)
-    const targetPath = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "IssieSays Backup-" + fn + ".says"));
+    const targetPath = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "IssieSays Backup-" + fn + ".zip"));
     await RNFS.unlink(targetPath).catch(doNothing);
 
     onProgress?.(90);

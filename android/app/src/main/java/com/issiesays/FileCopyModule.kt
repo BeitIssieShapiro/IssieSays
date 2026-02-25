@@ -38,7 +38,7 @@ class FileCopyModule(private val reactContext: ReactApplicationContext) :
                 return
             }
 
-            val fileName = "shared_${System.currentTimeMillis()}.says"
+            val fileName = "shared_${System.currentTimeMillis()}.zip"
             val tempFile = File(reactContext.cacheDir, fileName)
             val outputStream: OutputStream = FileOutputStream(tempFile)
 

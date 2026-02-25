@@ -436,7 +436,9 @@ const styles = StyleSheet.create({
     },
     row: {
         flexDirection: "row",
-        alignItems: "center",
+        width:"100%",
+        alignItems: "stretch",
+        justifyContent:"center",
         flexWrap: "wrap",
     },
     nameInput: {

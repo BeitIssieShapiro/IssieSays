@@ -35,6 +35,7 @@
 
             <data android:mimeType="*/*" />
             <data android:pathPattern=".*\\.says" />
+            <data android:mimeType="application/zip" />
         </intent-filter>
 
         <!-- Be available as target for Share > .says files -->
@@ -44,6 +45,7 @@
             <data android:mimeType="application/x-says" />
             <data android:mimeType="application/octet-stream" />
             <data android:pathPattern=".*\\.says" />
+            <data android:mimeType="application/zip" />
         </intent-filter>
       </activity>
       <provider

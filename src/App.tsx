@@ -383,6 +383,7 @@ function Main(): React.JSX.Element {
       imageOffset={p.buttons[i].offset}
       scale={p.buttons[i].scale}
       hMargin={hMargin}
+      rotation={p.buttons[i].rotation}
     />
   ));
 
