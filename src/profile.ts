@@ -144,9 +144,9 @@ export async function Init() {
     if (numOfButtons == -1) {
         const filePath = getRecordingFileName(0);
         if (Platform.OS == 'android') {
-            await RNFS.copyFileAssets(`welcome_${gCurrentLang}.mp4`, filePath)
+            await RNFS.copyFileAssets(`welcome_${gCurrentLang.languageTag}.mp4`, filePath)
         } else {
-            const sourcePath = `${RNFS.MainBundlePath}/welcome_${gCurrentLang}.mp4`;
+            const sourcePath = `${RNFS.MainBundlePath}/welcome_${gCurrentLang.languageTag}.mp4`;
             await RNFS.copyFile(sourcePath, filePath).catch(doNothing); // probably already exists
         }
         Settings.setArray(BUTTONS_NAMES.name, [(translate("Welcome"))]);
@@ -404,7 +404,7 @@ async function writeCurrentProfile(p: Profile, name: string) {
                 // save image to disk if do not exist
                 const imgPath = getImagePath(btn.imageUrl, false);
                 if (!await RNFS.exists(imgPath)) {
-                    await RNFS.writeFile(imgPath, imgPath, 'base64');
+                    await RNFS.writeFile(imgPath, btn.imageB64, 'base64');
                 }
             }
         } else {

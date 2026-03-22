@@ -16,6 +16,7 @@ export async function SelectFromGallery(): Promise<string> {
     const options: any = {
         mediaType: 'photo',
         selectionLimit: 1,
+        assetRepresentationMode: 'compatible',
     };
     return new Promise((resolve, reject) => {
         launchImageLibrary(options, async (response) => {

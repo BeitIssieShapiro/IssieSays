@@ -3,7 +3,7 @@ import { BTN_COLOR } from "./uielements";
 import { useEffect, useRef, useState } from "react";
 import { fTranslate, isRTL, translate } from "./lang";
 import { DefaultProfileName, ProfilePicker } from "./profile-picker";
-import { AlreadyExists, Button, createNewProfile, deleteButton, deleteProfile, Folders, getRecordingFileName, InvalidCharachters, InvalidFileName, isEmptyButton, isValidFilename, LoadProfile, Profile, readCurrentProfile, renameProfile, ReservedFileName, SaveProfile, saveProfileAs, verifyProfileNameFree } from "./profile";
+import { AlreadyExists, Button, deleteButton, deleteProfile, Folders, getRecordingFileName, InvalidCharachters, InvalidFileName, isEmptyButton, isValidFilename, LoadProfile, Profile, readCurrentProfile, renameProfile, ReservedFileName, SaveProfile, saveProfileAs, verifyProfileNameFree } from "./profile";
 import Toast from 'react-native-toast-message';
 import { Settings } from './setting-storage';
 import { MyIcon } from "./common/icons";
@@ -632,11 +632,20 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         {inputProfile && <EditText initialText="" label={translate("ProfileNameTitle")} onClose={() => setInputProfile(false)}
             onDone={async (name) => {
                 setInputProfile(false);
-                await createNewProfile(name);
-                await LoadProfile(name).finally(() => {
-                    setProfileBusy(false)
+                try {
+                    const currentProfile = readCurrentProfile();
+                    await SaveProfile(name, currentProfile, false);
+                    Settings.set(CURRENT_PROFILE.name, name);
                     setRevision(prev => prev + 1);
-                });
+                } catch (err) {
+                    if (err instanceof AlreadyExists) {
+                        Alert.alert(translate("ProfileExistsTitle"), fTranslate("ProfileExists", name));
+                    } else if (err instanceof InvalidFileName) {
+                        Alert.alert(fTranslate("InvalidName", InvalidCharachters));
+                    } else if (err instanceof ReservedFileName) {
+                        Alert.alert(translate("ReservedName"));
+                    }
+                }
             }}
             width={Math.min(windowSize.width / 2, 300)}
             textHeight={70}

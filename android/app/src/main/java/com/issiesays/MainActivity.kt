@@ -12,6 +12,8 @@ import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.facebook.react.ReactInstanceManager
 import com.facebook.react.ReactNativeHost
 import android.os.Bundle
+import java.io.File
+import java.io.FileOutputStream
 
 class MainActivity : ReactActivity() {
 
@@ -54,8 +56,30 @@ class MainActivity : ReactActivity() {
     }
 
     /**
+     * Copy a content:// URI to a temp file while we still have read permission,
+     * then return a file:// URI pointing at the copy.
+     */
+    private fun copyContentUriToTempFile(uri: Uri): Uri? {
+        try {
+            val inputStream = contentResolver.openInputStream(uri) ?: return null
+            val fileName = "shared_${System.currentTimeMillis()}.zip"
+            val tempFile = File(cacheDir, fileName)
+            FileOutputStream(tempFile).use { output ->
+                inputStream.use { input ->
+                    input.copyTo(output)
+                }
+            }
+            return Uri.fromFile(tempFile)
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Failed to copy content URI to temp", e)
+            return null
+        }
+    }
+
+    /**
      * Utility function to apply the common logic for modifying the Intent.
      * This function extracts ACTION_SEND data and remaps it to an ACTION_VIEW deep link format.
+     * For content:// URIs, the file is copied to temp immediately while permission is valid.
      */
     private fun modifyIntentForSharing(intent: Intent?): Intent? {
         intent ?: return null
@@ -73,11 +97,16 @@ class MainActivity : ReactActivity() {
 
         // 2. Process the extracted URI if it exists
         sharedUri?.let { uri ->
-            // Convert the URI to a string.
-            val uriString = uri.toString()
+            // For content:// URIs, copy to temp file now while we have read permission.
+            // The JS side will receive a file:// path it can access without permission issues.
+            val resolvedUri = if (uri.scheme == "content") {
+                copyContentUriToTempFile(uri) ?: uri
+            } else {
+                uri
+            }
 
             // Modify the existing intent object to be read as a deep link (ACTION_VIEW).
-            intent.data = Uri.parse(uriString)
+            intent.data = resolvedUri
             intent.action = Intent.ACTION_VIEW
         }
 
