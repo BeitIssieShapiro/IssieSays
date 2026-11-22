@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@bam.tech/react-native-screen-sizer": "^0.3.2",
-    "@beitissieshapiro/issie-shared": "^1.0.9",
+    "@beitissieshapiro/issie-shared": "^1.0.10",
     "@react-native-community/image-editor": "^4.3.0",
     "@react-native-firebase/analytics": "^23.8.6",
     "@react-native-firebase/app": "^23.8.6",
