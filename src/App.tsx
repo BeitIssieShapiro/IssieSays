@@ -28,6 +28,7 @@ import {
 import { Alert, NativeModules, Platform, View } from 'react-native';
 import { CountdownButton } from './common/countdown-btn';
 import { useIncomingURL } from './common/linking-hook';
+import { splashClosed } from './common/splash-state';
 import { GlobalContext } from './common/global-context';
 import { isRTL, translate } from './lang';
 import { ImportInfo, importPackage, plainPath } from './import-export';
@@ -537,6 +538,7 @@ export default function App(props: any) {
     setTimeout(() => {
       console.log('Splash Closed');
       SplashScreen.hide();
+      splashClosed();
     }, remaining);
   }, []);
 
