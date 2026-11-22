@@ -5,7 +5,7 @@ import Button from 'react-native-really-awesome-button';
 import { Settings } from './setting-storage';
 import { Platform, Settings as RNSettings } from 'react-native'
 import { MMKV } from 'react-native-mmkv';
-import { ensureAndroidCompatible, joinPaths } from './utils';
+import { ensureAndroidCompatible, joinPaths, readJsonFile, writeJsonFile } from './utils';
 import { DefaultProfileName } from './profile-picker';
 import { EditedButton } from './edit-button';
 import { colors } from './common/common-style';
@@ -183,6 +183,46 @@ export async function Init() {
     }
 
     await ensureDefaultProfile().catch(e => console.log("ensureDefaultProfile failed", e));
+
+    if (!Settings.getBoolean(INSTALL.imageUrlsRepaired, false)) {
+        await repairSearchImageUrls().catch(e => console.log("repairSearchImageUrls failed", e));
+        Settings.set(INSTALL.imageUrlsRepaired, true);
+    }
+}
+
+// The 1.0 -> 2.0 profile migration cut picture-search URLs down to "<id>?download=false"
+const CUT_SEARCH_IMAGE_URL = /^\d+\?download=false$/;
+const SEARCH_IMAGE_URL_PREFIX = "https://api.arasaac.org/api/pictograms/";
+
+function repairImageUrl(url: string): string {
+    return CUT_SEARCH_IMAGE_URL.test(url) ? SEARCH_IMAGE_URL_PREFIX + url : url;
+}
+
+async function repairSearchImageUrls() {
+    const urls = Settings.getArray<string>(BUTTONS_IMAGE_URLS.name, "string", []);
+    if (urls.some(u => u && CUT_SEARCH_IMAGE_URL.test(u))) {
+        Settings.setArray(BUTTONS_IMAGE_URLS.name, urls.map(u => u ? repairImageUrl(u) : u));
+    }
+
+    for (const folder of [Folders.Profiles, Folders.Buttons]) {
+        const dir = await RNFS.readDir(ensureAndroidCompatible(path.join(RNFS.DocumentDirectoryPath, folder)));
+        for (const elem of dir) {
+            if (!elem.name.endsWith(".json")) continue;
+            const data = await readJsonFile(elem.path);
+            const buttons: Button[] = folder == Folders.Profiles ? data.buttons : [data];
+            let changed = false;
+            for (const btn of buttons) {
+                const fixed = repairImageUrl(btn.imageUrl || "");
+                if (fixed != btn.imageUrl) {
+                    btn.imageUrl = fixed;
+                    changed = true;
+                }
+            }
+            if (changed) {
+                await writeJsonFile(elem.path, data);
+            }
+        }
+    }
 }
 
 // The default profile file is otherwise only written when switching away from it,
@@ -221,8 +261,7 @@ export async function file2base64(filePath: string): Promise<string> {
 }
 
 async function migrateProfile_1_to_2(filePath: string) {
-    const fileContents = await RNFS.readFile(ensureAndroidCompatible(filePath), 'utf8');
-    const p: Profile = JSON.parse(fileContents);
+    const p: Profile = await readJsonFile(filePath);
 
     p.oneAfterTheOther = false;
     for (let btn of p.buttons) {
@@ -230,11 +269,13 @@ async function migrateProfile_1_to_2(filePath: string) {
         btn.offset = { x: 0, y: 0 };
         btn.scale = 1;
         btn.rotation = 0;
-        btn.imageUrl = btn.imageUrl.split('/').pop() || "";
+        if (!btn.imageUrl.startsWith("http")) {
+            btn.imageUrl = btn.imageUrl.split('/').pop() || "";
+        }
         btn.imageB64 = await file2base64(getImagePath(btn.imageUrl, false))
     }
 
-    return RNFS.writeFile(ensureAndroidCompatible(filePath), JSON.stringify(p, undefined, " "), 'utf8');
+    return writeJsonFile(filePath, p, " ");
 }
 
 export async function SaveProfile(name: string, p: Profile, overwrite = false, allowDefProfile = false, fromImport = false) {
@@ -280,8 +321,7 @@ export async function SaveProfile(name: string, p: Profile, overwrite = false, a
         index++;
     }
 
-    const str = JSON.stringify(profileToSave);
-    return RNFS.writeFile(ensureAndroidCompatible(profilePath), str, 'utf8');
+    return writeJsonFile(profilePath, profileToSave);
 }
 
 export async function renameProfile(previousName: string, newName: string, overwrite = false) {
@@ -326,8 +366,7 @@ export async function LoadProfile(name: string) {
     }
 
     const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
-    const fileContents = await RNFS.readFile(ensureAndroidCompatible(profilePath), 'utf8');
-    const p: Profile = JSON.parse(fileContents);
+    const p: Profile = await readJsonFile(profilePath);
 
     return writeCurrentProfile(p, name);
 }
@@ -517,8 +556,7 @@ export function readCurrentProfile(): Profile {
 export async function loadButton2(name: string) {
     console.log("Load Button", name)
     const buttonPath = path.join(RNFS.DocumentDirectoryPath, Folders.Buttons, `${name}.json`);
-    const fileContents = await RNFS.readFile(ensureAndroidCompatible(buttonPath), 'utf8');
-    return JSON.parse(fileContents);
+    return readJsonFile(buttonPath);
 }
 
 export async function saveButton2(btn: EditedButton, index: number, overwrite = false) {
@@ -551,8 +589,7 @@ export async function saveButton2(btn: EditedButton, index: number, overwrite = 
     // voletile field
     delete btnToSave.audioName;
 
-    const str = JSON.stringify(btnToSave);
-    return RNFS.writeFile(ensureAndroidCompatible(buttonPath), str, 'utf8');
+    return writeJsonFile(buttonPath, btnToSave);
 }
 
 

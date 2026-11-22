@@ -1,7 +1,7 @@
 import * as RNFS from "react-native-fs";
 import path from "path";
 
-import { ensureAndroidCompatible, joinPaths } from "./utils";
+import { ensureAndroidCompatible, joinPaths, readJsonFile, writeJsonFile } from "./utils";
 import { unzip, zip } from "react-native-zip-archive";
 import { AlreadyExists, Folders, ListElements, Profile, SaveProfile, writeCurrentProfile } from "./profile";
 import { Settings } from "./setting-storage";
@@ -16,16 +16,11 @@ export function getTempFileName(ext: string) {
     return path.join(RNFS.TemporaryDirectoryPath, fn + "." + ext);
 }
 
-export function loadFile(path: string) {
-    return RNFS.readFile(ensureAndroidCompatible(path), 'utf8');
-}
-
 
 export async function exportProfile(name: string, onProgress?: (percent: number) => void): Promise<string> {
     onProgress?.(10);
     const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
-    const fileContents = await RNFS.readFile(ensureAndroidCompatible(profilePath), 'utf8');
-    const p: Profile = JSON.parse(fileContents);
+    const p: Profile = await readJsonFile(profilePath);
 
     onProgress?.(30);
     const metaData = {
@@ -35,7 +30,7 @@ export async function exportProfile(name: string, onProgress?: (percent: number)
         ...p,
     }
     const metadataTargetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "metadata__" + name + ".json"))
-    await RNFS.writeFile(metadataTargetFile, JSON.stringify(metaData, undefined, " "));
+    await writeJsonFile(metadataTargetFile, metaData, " ");
     onProgress?.(60);
     const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "profile__" + name + ".zip"));
     // delete if exists before
@@ -96,8 +91,7 @@ export async function importPackage(packagePath: string, importInfo: ImportInfo,
     const items = await RNFS.readDir(ensureAndroidCompatible(unzipFolderPath));
     const metaDataItem = items.find(f => f.name.startsWith("metadata__"));
     if (metaDataItem) {
-        const metadataStr = await loadFile(metaDataItem.path);
-        const md = JSON.parse(metadataStr);
+        const md = await readJsonFile(metaDataItem.path);
         if (md.type == "profile") {
             const name = md.name;
             const p: Profile = {

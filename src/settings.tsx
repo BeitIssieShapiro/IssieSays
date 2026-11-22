@@ -105,6 +105,7 @@ export const INSTALL = {
     fresh: 'fresh-install',
     firstTimeSettings: 'firstTimeSettings',
     version: 'settings-version',
+    imageUrlsRepaired: 'image-urls-repaired',
 }
 
 
@@ -652,10 +653,15 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                 console.log("Loading profile ", name)
                 setProfileBusy(true);
                 setOpenLoadProfile(false);
-                LoadProfile(name).finally(() => {
-                    setProfileBusy(false)
-                    setRevision(prev => prev + 1);
-                });
+                LoadProfile(name)
+                    .catch(err => {
+                        console.log("load profile failed", name, err);
+                        Alert.alert(translate("ProfileLoadFailed"));
+                    })
+                    .finally(() => {
+                        setProfileBusy(false)
+                        setRevision(prev => prev + 1);
+                    });
             }}
             editButton={{ name: translate("Rename") }}
             onCreate={() => {

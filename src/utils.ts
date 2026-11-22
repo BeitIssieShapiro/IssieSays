@@ -1,4 +1,5 @@
 import { Platform, PermissionsAndroid, ImageSize } from "react-native";
+import * as RNFS from "react-native-fs";
 
 
 export interface WinSize {
@@ -55,4 +56,18 @@ export async function requestAudioPermission() {
     }
   }
   return true; // iOS auto-allows if you declared NSMicrophoneUsageDescription
+}
+// react-native-fs converts utf8 text with a slow JS codec (seconds for a profile with photos),
+// so JSON files go through its native base64 path and the engine's atob/btoa instead
+export async function readJsonFile(path: string): Promise<any> {
+  const bin = atob(await RNFS.readFile(ensureAndroidCompatible(path), 'base64'));
+  // utf8 bytes -> string, only needed when there are non-ascii chars
+  return JSON.parse(/[\x80-\xff]/.test(bin) ? decodeURIComponent(escape(bin)) : bin);
+}
+
+export function writeJsonFile(path: string, data: any, space?: string): Promise<void> {
+  // non-ascii chars are written as \uXXXX escapes, keeping the file ascii (still valid utf8 JSON)
+  const ascii = JSON.stringify(data, undefined, space).replace(/[\u0080-￿]/g,
+    c => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"));
+  return RNFS.writeFile(ensureAndroidCompatible(path), btoa(ascii), 'base64');
 }

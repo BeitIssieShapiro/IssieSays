@@ -49,6 +49,31 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
         setLocalButton(prev => ({ ...prev, ...updates }));
     };
 
+    const hasChanges = () =>
+        localButton.name != button.name ||
+        localButton.color != button.color ||
+        localButton.imageUrl != button.imageUrl ||
+        localButton.showName != button.showName ||
+        (localButton.scale ?? 1) != (button.scale ?? 1) ||
+        (localButton.rotation ?? 0) != (button.rotation ?? 0) ||
+        localButton.offset?.x != button.offset?.x ||
+        localButton.offset?.y != button.offset?.y ||
+        localButton.audioName != undefined ||
+        localButton.recording !== button.recording;
+
+    // "Save to library" only stores a template, so leaving without Save used to silently drop the edit
+    const handleCancel = () => {
+        if (!hasChanges()) {
+            onClose();
+            return;
+        }
+        Alert.alert(translate("UnsavedChangesTitle"), translate("UnsavedChangesMsg"), [
+            { text: translate("Save"), onPress: () => onDone(localButton) },
+            { text: translate("Discard"), style: "destructive", onPress: onClose },
+            { text: translate("KeepEditing"), style: "cancel" },
+        ]);
+    };
+
     const loadFromList = async (buttonName: string) => {
         const loadedBtn = await loadButton2(buttonName);
         const previewFile = getRecordingFileName(LOADED_AUDIO_NAME);
@@ -222,7 +247,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                     />
                     <IconButton
                         text={translate("Cancel")}
-                        onPress={onClose}
+                        onPress={handleCancel}
                         backgroundColor={colors.titleButtonsBG}
                         icon={{ name: "close" }}
                     />
