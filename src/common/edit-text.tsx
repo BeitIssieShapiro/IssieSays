@@ -59,7 +59,7 @@ export const EditText: React.FC<EditTextProps> = ({
 
                 <View style={styles.buttonRow}>
                     <IconButton text={translate("OK")} icon={{ name: "check" }} onPress={() => {
-                        onDone(text)
+                        onDone(text.trim())
                     }} />
                     <IconButton text={translate("Cancel")} icon={{ name: "close" }} onPress={onClose} />
                 </View>

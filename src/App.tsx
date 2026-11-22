@@ -28,9 +28,12 @@ import {
 import { Alert, NativeModules, Platform, View } from 'react-native';
 import { CountdownButton } from './common/countdown-btn';
 import { useIncomingURL } from './common/linking-hook';
+import { splashClosed } from './common/splash-state';
 import { GlobalContext } from './common/global-context';
 import { isRTL, translate } from './lang';
-import { ImportInfo, importPackage } from './import-export';
+import { ImportInfo, importPackage, plainPath } from './import-export';
+import Share from 'react-native-share';
+import * as RNFS from 'react-native-fs';
 import { Text } from '@rneui/themed';
 import { ImportInfoDialog } from './common/import-info-dialog';
 import { gStyles } from './common/common-style';
@@ -200,6 +203,7 @@ function Main(): React.JSX.Element {
   >();
 
   const windowSize = useSafeAreaFrame();
+  const lastImportPath = useRef<string>('');
 
   // useEffect(() => {
   //   const subscription = Dimensions.addEventListener('change', ({ window }: any) => setWindowSize(window));
@@ -222,6 +226,12 @@ function Main(): React.JSX.Element {
 
     console.log('handleImport event:', url, JSON.stringify(event));
 
+    lastImportPath.current = url;
+    runImport(url, false);
+  }
+
+  function runImport(url: string, overwrite: boolean) {
+    setImportInfo(undefined);
     setImportInProgress({
       message: translate('ImportInProgress'),
       precent: 0,
@@ -230,11 +240,21 @@ function Main(): React.JSX.Element {
     let result: ImportInfo = {
       importedProfiles: [],
       skippedExistingProfiles: [],
+      failedProfiles: [],
     };
 
-    importPackage(url, result)
-      .then(() => setImportInfo(result))
-      .catch(err => Alert.alert(translate('ImportError'), err?.message || err))
+    checkPackage(RNFS, plainPath(url), 'issiesays')
+      .then(async check => {
+        if (!check.ok) {
+          // another Issie app's file: say whose it is, offer to get/open that app
+          showPackageCheckAlert(check, plainPath(url), 'issiesays',
+            p => Share.open({ url: 'file://' + p, type: 'application/zip', failOnCancel: false }));
+          return;
+        }
+        await importPackage(url, result, '', overwrite);
+        setImportInfo(result);
+      })
+      .catch(err => Alert.alert(translate('ImportError'), err?.message || String(err)))
       .finally(() => setImportInProgress(undefined));
   }
 
@@ -451,6 +471,7 @@ function Main(): React.JSX.Element {
           <ImportInfoDialog
             importInfo={importInfo}
             onClose={() => setImportInfo(undefined)}
+            onOverwrite={() => runImport(lastImportPath.current, true)}
           />
         )
       }
@@ -498,7 +519,7 @@ function Main(): React.JSX.Element {
 
 import * as ScreenSizer from '@bam.tech/react-native-screen-sizer';
 import { initializeFirebase } from './firebase-config';
-import { MyIcon } from '@beitissieshapiro/issie-shared';
+import { MyIcon, checkPackage, showPackageCheckAlert } from '@beitissieshapiro/issie-shared';
 
 ScreenSizer.setup();
 
@@ -517,6 +538,7 @@ export default function App(props: any) {
     setTimeout(() => {
       console.log('Splash Closed');
       SplashScreen.hide();
+      splashClosed();
     }, remaining);
   }, []);
 

@@ -32,15 +32,22 @@ export class Settings {
     static setArray(key: string, arr: any[]) {
         storage.set(key, arr.length);
         for (let i = 0; i < arr.length; i++) {
-            storage.set(key + "_" + i, arr[i]);
+            // MMKV throws on undefined/null - drop the item instead
+            if (arr[i] === undefined || arr[i] === null) {
+                storage.delete(key + "_" + i);
+            } else {
+                storage.set(key + "_" + i, arr[i]);
+            }
         }
     }
 
     static truncateArray(key: string, from:number, max:number) {
         for (let i = from; i <= max; i++) {
-            const val = storage.getString(key);
-            //console.log("about to delete:",key, i, val)
             storage.delete(key + "_" + i);
+        }
+        const count = storage.getNumber(key);
+        if (count !== undefined && count > from) {
+            storage.set(key, from);
         }
     }
 
@@ -80,6 +87,10 @@ export class Settings {
                 }
 
                 retValue.push(val);
+            }
+            // pad with defaults when the stored array is shorter than the default
+            for (let i = count; i < defValue.length; i++) {
+                retValue.push(defValue[i]);
             }
             return retValue;
         }

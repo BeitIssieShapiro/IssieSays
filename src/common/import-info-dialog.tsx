@@ -8,9 +8,10 @@ import { isRTL, translate } from '../lang';
 interface Props {
     importInfo: ImportInfo;
     onClose: () => void;
+    onOverwrite: () => void;
 }
 
-export const ImportInfoDialog: React.FC<Props> = ({ importInfo, onClose }) => {
+export const ImportInfoDialog: React.FC<Props> = ({ importInfo, onClose, onOverwrite }) => {
     const txtAlign: any = { textAlign: "left" };
 
 
@@ -30,17 +31,20 @@ export const ImportInfoDialog: React.FC<Props> = ({ importInfo, onClose }) => {
             supportedOrientations={['portrait', 'portrait-upside-down', 'landscape', 'landscape-left', 'landscape-right']}>
             <View style={styles.overlay}>
                 <View style={[styles.container,]}>
-                    <Text style={styles.title}>{translate("SuccessfulImport")}</Text>
+                    <Text style={styles.title}>{translate(importInfo.failedProfiles.length > 0 ? "PartialImport" : "SuccessfulImport")}</Text>
                     <View style={gStyles.horizontalSeperator} />
                     <ScrollView style={[{ maxHeight: 400 }, { direction: isRTL() ? 'rtl' : 'ltr' }]}>
                         {renderSection(translate("ImportedProfiles"), importInfo.importedProfiles)}
                         {importInfo.skippedExistingProfiles.length > 0 && renderSection(translate("SkippedProfiles"), importInfo.skippedExistingProfiles)}
+                        {importInfo.failedProfiles.length > 0 && renderSection(translate("FailedProfiles"), importInfo.failedProfiles)}
                     </ScrollView>
                     {(importInfo.skippedExistingProfiles.length > 0) && <Text
                         style={styles.note}
                     >{translate("NoteSkippedItems")}</Text>}
 
-                    <View style={{ width: "100%", alignItems: "center" }}>
+                    <View style={{ width: "100%", flexDirection: "row", justifyContent: "center" }}>
+                        {importInfo.skippedExistingProfiles.length > 0 &&
+                            <IconButton icon={{ name: "sync" }} onPress={onOverwrite} text={translate("OverwriteExisting")} />}
                         <View style={{ width: 120, }}>
                             <IconButton icon={{ name: "check" }} onPress={onClose} text={translate("OK")} />
                         </View>

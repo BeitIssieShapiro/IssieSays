@@ -5,7 +5,7 @@ import Button from 'react-native-really-awesome-button';
 import { Settings } from './setting-storage';
 import { Platform, Settings as RNSettings } from 'react-native'
 import { MMKV } from 'react-native-mmkv';
-import { ensureAndroidCompatible, joinPaths } from './utils';
+import { ensureAndroidCompatible, joinPaths, readJsonFile, writeJsonFile } from './utils';
 import { DefaultProfileName } from './profile-picker';
 import { EditedButton } from './edit-button';
 import { colors } from './common/common-style';
@@ -119,7 +119,7 @@ export async function Init() {
                 });
             }
 
-            writeCurrentProfile({ buttons, oneAfterTheOther }, currName);
+            await writeCurrentProfile({ buttons, oneAfterTheOther }, currName);
 
             RNSettings.set({ [BUTTONS.name]: 0 })
 
@@ -140,8 +140,12 @@ export async function Init() {
     }
     const numOfButtons = Settings.getNumber(BUTTONS.name, -1);
     const settingsVersion = Settings.getString(INSTALL.version, "1.0");
+    const versionStored = storage.getString(INSTALL.version) !== undefined;
 
-    if (numOfButtons == -1) {
+    if (numOfButtons == -1 && versionStored) {
+        // installs where the welcome setup ran but BUTTONS was never set - used to re-run welcome on every launch
+        Settings.set(BUTTONS.name, 1);
+    } else if (numOfButtons == -1) {
         const filePath = getRecordingFileName(0);
         if (Platform.OS == 'android') {
             await RNFS.copyFileAssets(`welcome_${gCurrentLang.languageTag}.mp4`, filePath)
@@ -151,6 +155,7 @@ export async function Init() {
         }
         Settings.setArray(BUTTONS_NAMES.name, [(translate("Welcome"))]);
         Settings.setArray(BUTTONS_SHOW_NAMES.name, [true]);
+        Settings.set(BUTTONS.name, 1);
         Settings.set(INSTALL.fresh, false);
         Settings.set(INSTALL.version, "2.0");
     } else if (settingsVersion == "1.0") {
@@ -175,21 +180,65 @@ export async function Init() {
         }
         Settings.set(INSTALL.fresh, false);
         Settings.set(INSTALL.version, "2.0");
+    }
 
-        // Migrate to home profile
-        const currName = Settings.getString(CURRENT_PROFILE.name, "");
-        if (currName == "") return;
+    await ensureDefaultProfile().catch(e => console.log("ensureDefaultProfile failed", e));
 
-        const p = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${DefaultProfileName}.json`);
-        const homeExists = await RNFS.exists(ensureAndroidCompatible(p));
-        if (!homeExists) {
-            // Add the home profile - empty:
-            createHomeProfile();
-            console.log("Home profile created")
-        } else {
-            console.log("Home profile exists")
+    if (!Settings.getBoolean(INSTALL.imageUrlsRepaired, false)) {
+        await repairSearchImageUrls().catch(e => console.log("repairSearchImageUrls failed", e));
+        Settings.set(INSTALL.imageUrlsRepaired, true);
+    }
+}
+
+// The 1.0 -> 2.0 profile migration cut picture-search URLs down to "<id>?download=false"
+const CUT_SEARCH_IMAGE_URL = /^\d+\?download=false$/;
+const SEARCH_IMAGE_URL_PREFIX = "https://api.arasaac.org/api/pictograms/";
+
+function repairImageUrl(url: string): string {
+    return CUT_SEARCH_IMAGE_URL.test(url) ? SEARCH_IMAGE_URL_PREFIX + url : url;
+}
+
+async function repairSearchImageUrls() {
+    const urls = Settings.getArray<string>(BUTTONS_IMAGE_URLS.name, "string", []);
+    if (urls.some(u => u && CUT_SEARCH_IMAGE_URL.test(u))) {
+        Settings.setArray(BUTTONS_IMAGE_URLS.name, urls.map(u => u ? repairImageUrl(u) : u));
+    }
+
+    for (const folder of [Folders.Profiles, Folders.Buttons]) {
+        const dir = await RNFS.readDir(ensureAndroidCompatible(path.join(RNFS.DocumentDirectoryPath, folder)));
+        for (const elem of dir) {
+            if (!elem.name.endsWith(".json")) continue;
+            const data = await readJsonFile(elem.path);
+            const buttons: Button[] = folder == Folders.Profiles ? data.buttons : [data];
+            let changed = false;
+            for (const btn of buttons) {
+                const fixed = repairImageUrl(btn.imageUrl || "");
+                if (fixed != btn.imageUrl) {
+                    btn.imageUrl = fixed;
+                    changed = true;
+                }
+            }
+            if (changed) {
+                await writeJsonFile(elem.path, data);
+            }
         }
     }
+}
+
+// The default profile file is otherwise only written when switching away from it,
+// which leaves it missing from the list (and unloadable) on fresh installs
+async function ensureDefaultProfile() {
+    const p = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${DefaultProfileName}.json`);
+    if (await RNFS.exists(ensureAndroidCompatible(p))) return;
+
+    const currName = Settings.getString(CURRENT_PROFILE.name, "");
+    if (currName == "" || currName == DefaultProfileName) {
+        await SaveProfile(DefaultProfileName, readCurrentProfile(), true, true);
+    } else {
+        // Add the home profile - empty:
+        await createHomeProfile();
+    }
+    console.log("Home profile created")
 }
 
 export function getImagePath(fileName?: string, addFilePrefix = true): string {
@@ -212,8 +261,7 @@ export async function file2base64(filePath: string): Promise<string> {
 }
 
 async function migrateProfile_1_to_2(filePath: string) {
-    const fileContents = await RNFS.readFile(ensureAndroidCompatible(filePath), 'utf8');
-    const p: Profile = JSON.parse(fileContents);
+    const p: Profile = await readJsonFile(filePath);
 
     p.oneAfterTheOther = false;
     for (let btn of p.buttons) {
@@ -221,11 +269,13 @@ async function migrateProfile_1_to_2(filePath: string) {
         btn.offset = { x: 0, y: 0 };
         btn.scale = 1;
         btn.rotation = 0;
-        btn.imageUrl = btn.imageUrl.split('/').pop() || "";
+        if (!btn.imageUrl.startsWith("http")) {
+            btn.imageUrl = btn.imageUrl.split('/').pop() || "";
+        }
         btn.imageB64 = await file2base64(getImagePath(btn.imageUrl, false))
     }
 
-    return RNFS.writeFile(ensureAndroidCompatible(filePath), JSON.stringify(p, undefined, " "), 'utf8');
+    return writeJsonFile(filePath, p, " ");
 }
 
 export async function SaveProfile(name: string, p: Profile, overwrite = false, allowDefProfile = false, fromImport = false) {
@@ -271,8 +321,7 @@ export async function SaveProfile(name: string, p: Profile, overwrite = false, a
         index++;
     }
 
-    const str = JSON.stringify(profileToSave);
-    return RNFS.writeFile(ensureAndroidCompatible(profilePath), str, 'utf8');
+    return writeJsonFile(profilePath, profileToSave);
 }
 
 export async function renameProfile(previousName: string, newName: string, overwrite = false) {
@@ -284,6 +333,10 @@ export async function renameProfile(previousName: string, newName: string, overw
 
     // only rename if file existed
     if (await RNFS.exists(ensureAndroidCompatible(prevPath))) {
+        if (overwrite) {
+            // moveFile fails on iOS when the target exists
+            await RNFS.unlink(ensureAndroidCompatible(newPath)).catch(doNothing);
+        }
         await RNFS.moveFile(ensureAndroidCompatible(prevPath), ensureAndroidCompatible(newPath));
     }
 }
@@ -313,8 +366,7 @@ export async function LoadProfile(name: string) {
     }
 
     const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
-    const fileContents = await RNFS.readFile(ensureAndroidCompatible(profilePath), 'utf8');
-    const p: Profile = JSON.parse(fileContents);
+    const p: Profile = await readJsonFile(profilePath);
 
     return writeCurrentProfile(p, name);
 }
@@ -334,7 +386,7 @@ export async function saveProfileAs(srcName: string, targetName: string) {
     }
 
     const srcProfilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${srcName}.json`);
-    return RNFS.copyFile(srcProfilePath, targetProfilePath);
+    return RNFS.copyFile(ensureAndroidCompatible(srcProfilePath), ensureAndroidCompatible(targetProfilePath));
 }
 
 export function newProfile(): Profile {
@@ -348,6 +400,9 @@ export function newProfile(): Profile {
                 name: "",
                 recording: "", // will delete the file
                 rotation: 0,
+                scale: 1,
+                offset: { x: 0, y: 0 },
+                dirty: false,
             }
         ]
     } as Profile;
@@ -356,20 +411,17 @@ export function newProfile(): Profile {
 export async function createHomeProfile() {
     const p = newProfile()
 
-    SaveProfile(DefaultProfileName, p, true, true);
+    // last arg: do not embed the current buttons' audio/images
+    return SaveProfile(DefaultProfileName, p, true, true, true);
 }
 
 export async function createNewProfile(name: string) {
     const p = newProfile()
 
-    return SaveProfile(name, p, true, false);
+    return SaveProfile(name, p, false, false, true);
 }
 
-async function writeCurrentProfile(p: Profile, name: string) {
-    Settings.set(CURRENT_PROFILE.name, name);
-
-    Settings.set(BUTTONS.name, p.buttons.length);
-    Settings.set(ONE_AFTER_THE_OTHER.name, p.oneAfterTheOther);
+export async function writeCurrentProfile(p: Profile, name: string) {
 
     const buttonColors = [];
     const buttonImageUrls = [];
@@ -379,18 +431,20 @@ async function writeCurrentProfile(p: Profile, name: string) {
     const buttonOffsetsX = [];
     const buttonOffsetsY = [];
     const buttonRotations = [];
+    const buttonDirty = [];
 
     for (let i = 0; i < 20; i++) {
         if (p.buttons.length > i) {
             const btn = p.buttons[i];
-            buttonColors.push(btn.color);
-            buttonImageUrls.push(btn.imageUrl);
-            buttonShowNames.push(btn.showName);
-            buttonTexts.push(btn.name);
-            buttonScales.push(btn.scale);
-            buttonOffsetsX.push(btn.offset.x);
-            buttonOffsetsY.push(btn.offset.y);
+            buttonColors.push(btn.color || colors.defaultVoiceButtonBGColor);
+            buttonImageUrls.push(btn.imageUrl || "");
+            buttonShowNames.push(!!btn.showName);
+            buttonTexts.push(btn.name || "");
+            buttonScales.push(btn.scale ?? 1);
+            buttonOffsetsX.push(btn.offset?.x ?? 0);
+            buttonOffsetsY.push(btn.offset?.y ?? 0);
             buttonRotations.push(btn.rotation || 0);
+            buttonDirty.push(!!btn.dirty);
 
             if (btn.recording && btn.recording.length > 0) {
                 await RNFS.writeFile(getRecordingFileName(i), btn.recording, 'base64');
@@ -416,6 +470,7 @@ async function writeCurrentProfile(p: Profile, name: string) {
             buttonOffsetsX.push(0);
             buttonOffsetsY.push(0);
             buttonRotations.push(0);
+            buttonDirty.push(false);
 
             try {
                 await RNFS.unlink(getRecordingFileName(i));
@@ -431,7 +486,12 @@ async function writeCurrentProfile(p: Profile, name: string) {
     Settings.setArray(BUTTONS_OFFSET_X.name, buttonOffsetsX);
     Settings.setArray(BUTTONS_OFFSET_Y.name, buttonOffsetsY);
     Settings.setArray(BUTTONS_ROTATION.name, buttonRotations);
+    Settings.setArray(BUTTONS_DIRTY.name, buttonDirty);
 
+    // set last, so a failure above does not leave a half-switched profile
+    Settings.set(BUTTONS.name, p.buttons.length);
+    Settings.set(ONE_AFTER_THE_OTHER.name, !!p.oneAfterTheOther);
+    Settings.set(CURRENT_PROFILE.name, name);
 }
 
 export async function isEmptyButton(btn: Button, recName: string): Promise<boolean> {
@@ -441,7 +501,7 @@ export async function isEmptyButton(btn: Button, recName: string): Promise<boole
         btn.color == colors.defaultVoiceButtonBGColor &&
         btn.imageUrl == "" &&
         (btn.recording == undefined || btn.recording == "") &&
-        RNFS.exists(recPath)
+        !(await RNFS.exists(recPath))
 }
 
 export function readCurrentProfile(): Profile {
@@ -463,7 +523,7 @@ export function readCurrentProfile(): Profile {
     const offsetX = Settings.getArray<number>(BUTTONS_OFFSET_X.name, "number", Array(numOfButtons).fill(0));
     const offsetY = Settings.getArray<number>(BUTTONS_OFFSET_Y.name, "number", Array(numOfButtons).fill(0));
     const buttonRotations = Settings.getArray<number>(BUTTONS_ROTATION.name, "number", Array(numOfButtons).fill(0));
-    const dirty = Settings.getArray<boolean>(BUTTONS_DIRTY.name, "boolean", [false, false, false, false]);
+    const dirty = Settings.getArray<boolean>(BUTTONS_DIRTY.name, "boolean", Array(numOfButtons).fill(false));
 
     const buttons = [] as Button[];
     for (let i = 0; i < numOfButtons; i++) {
@@ -478,10 +538,10 @@ export function readCurrentProfile(): Profile {
             imageB64: undefined,
             showName: buttonShowNames[i] || false,
             recording: undefined,
-            offset: { x: offsetX[i], y: offsetY[i] },
-            scale: buttonScales[i],
+            offset: { x: offsetX[i] ?? 0, y: offsetY[i] ?? 0 },
+            scale: buttonScales[i] ?? 1,
             rotation: buttonRotations[i] || 0,
-            dirty: dirty[i],
+            dirty: dirty[i] ?? false,
         });
     }
 
@@ -496,8 +556,7 @@ export function readCurrentProfile(): Profile {
 export async function loadButton2(name: string) {
     console.log("Load Button", name)
     const buttonPath = path.join(RNFS.DocumentDirectoryPath, Folders.Buttons, `${name}.json`);
-    const fileContents = await RNFS.readFile(ensureAndroidCompatible(buttonPath), 'utf8');
-    return JSON.parse(fileContents);
+    return readJsonFile(buttonPath);
 }
 
 export async function saveButton2(btn: EditedButton, index: number, overwrite = false) {
@@ -511,10 +570,16 @@ export async function saveButton2(btn: EditedButton, index: number, overwrite = 
         throw new AlreadyExists(btn.name);
     }
 
-    const filePath = getRecordingFileName(btn.audioName ? btn.audioName : index + "");
-    const audioB64 = await RNFS.exists(filePath) ?
-        await RNFS.readFile(filePath, 'base64') :
-        "";
+    let audioB64 = "";
+    if (!btn.audioName && btn.recording !== undefined) {
+        // button was loaded from the list and not re-recorded
+        audioB64 = btn.recording;
+    } else {
+        const filePath = getRecordingFileName(btn.audioName ? btn.audioName : index + "");
+        audioB64 = await RNFS.exists(filePath) ?
+            await RNFS.readFile(filePath, 'base64') :
+            "";
+    }
 
     const btnToSave = {
         ...btn,
@@ -524,8 +589,7 @@ export async function saveButton2(btn: EditedButton, index: number, overwrite = 
     // voletile field
     delete btnToSave.audioName;
 
-    const str = JSON.stringify(btnToSave);
-    return RNFS.writeFile(ensureAndroidCompatible(buttonPath), str, 'utf8');
+    return writeJsonFile(buttonPath, btnToSave);
 }
 
 
@@ -558,7 +622,7 @@ export async function ListElements(folder: Folders): Promise<string[]> {
 export function isValidFilename(filename: string): boolean {
     const invalidCharsRegex = /[<>:"/\\|?*\x00-\x1F]/;
 
-    if (invalidCharsRegex.test(filename)) {
+    if (filename.trim().length == 0 || invalidCharsRegex.test(filename)) {
         return false;
     }
     return true;

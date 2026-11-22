@@ -3,7 +3,7 @@ import { BTN_COLOR } from "./uielements";
 import { useEffect, useRef, useState } from "react";
 import { fTranslate, isRTL, translate } from "./lang";
 import { DefaultProfileName, ProfilePicker } from "./profile-picker";
-import { AlreadyExists, Button, deleteButton, deleteProfile, Folders, getRecordingFileName, InvalidCharachters, InvalidFileName, isEmptyButton, isValidFilename, LoadProfile, Profile, readCurrentProfile, renameProfile, ReservedFileName, SaveProfile, saveProfileAs, verifyProfileNameFree } from "./profile";
+import { AlreadyExists, Button, createNewProfile, deleteButton, deleteProfile, Folders, getRecordingFileName, InvalidCharachters, InvalidFileName, isEmptyButton, isValidFilename, LoadProfile, Profile, readCurrentProfile, renameProfile, ReservedFileName, SaveProfile, saveProfileAs, verifyProfileNameFree } from "./profile";
 import Toast from 'react-native-toast-message';
 import { Settings } from './setting-storage';
 import { MyIcon } from "./common/icons";
@@ -105,6 +105,7 @@ export const INSTALL = {
     fresh: 'fresh-install',
     firstTimeSettings: 'firstTimeSettings',
     version: 'settings-version',
+    imageUrlsRepaired: 'image-urls-repaired',
 }
 
 
@@ -299,6 +300,21 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
     }
 
     const handleSaveButton = async (index: number, btn: EditedButton) => {
+        try {
+            await doSaveButton(index, btn);
+        } catch (err) {
+            console.log("save button failed", err);
+            Toast.show({
+                autoHide: true,
+                type: 'error',
+                text1: translate("ButtonUpdateFailed")
+            });
+        } finally {
+            setRevision(old => old + 1);
+        }
+    }
+
+    const doSaveButton = async (index: number, btn: EditedButton) => {
         let dirty = false;
         dirty = saveColor(index, btn.color) || dirty;
         dirty = saveImageUrl(index, btn.imageUrl) || dirty;
@@ -316,16 +332,16 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             const tmpFile = getRecordingFileName(btn.audioName)
             console.log("saving audio-file", btn.audioName, tmpFile)
             const targetFile = getRecordingFileName(index + "")
-            unlink(targetFile).
-                catch(() => {/** expected to be empty sometimes */ }).
-                finally(() => moveFile(tmpFile, targetFile));
-        } else if (btn.recording) {
-            // the field recording is a base64 audio, which is saved to file. 
-            // it means this button was just loaded from file
+            await unlink(targetFile).catch(() => {/** expected to be empty sometimes */ });
+            await moveFile(tmpFile, targetFile);
+        } else if (btn.recording !== undefined) {
+            // the field recording is a base64 audio, which is saved to file.
+            // it means this button was just loaded from file ("" = the loaded button has no audio)
             const targetFile = getRecordingFileName(index + "")
-            unlink(targetFile).
-                catch(() => {/** expected to be empty sometimes */ }).
-                finally(() => writeFile(targetFile, btn.recording!, 'base64'));
+            await unlink(targetFile).catch(() => {/** expected to be empty sometimes */ });
+            if (btn.recording.length > 0) {
+                await writeFile(targetFile, btn.recording, 'base64');
+            }
 
             // in this case we set to dirty to false!, as the button was loaded from template
             dirty = false;
@@ -337,7 +353,6 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                 saveDirty(index, true);
             }
         }
-        setRevision(old => old + 1);
     }
 
     const dirStyle: any = { flexDirection: (isRTL() ? "row" : "row-reverse") }
@@ -369,7 +384,7 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             setRevision(prev => prev + 1);
         } else {
             // rename profile
-            return renameProfile(previousName, name).then(() => {
+            return renameProfile(previousName, name, overwrite).then(() => {
                 if (isCurrent) {
                     Settings.set(CURRENT_PROFILE.name, name);
                     setRevision(prev => prev + 1);
@@ -394,11 +409,16 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             return;
         }
 
-        if (isCurrent) {
-            await LoadProfile(DefaultProfileName);
-            setTimeout(() => setRevision(prev => prev + 1), 100);
+        try {
+            if (isCurrent) {
+                await LoadProfile(DefaultProfileName);
+                setTimeout(() => setRevision(prev => prev + 1), 100);
+            }
+            await deleteProfile(name);
+        } catch (err) {
+            console.log("delete profile failed", err);
+            Alert.alert(translate("ProfileSaveFailed"));
         }
-        await deleteProfile(name);
         afterDelete();
     }
 
@@ -412,12 +432,24 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         }
 
         await saveProfileAs(sourceName, targetName)
-            .then(() => afterSave())
+            .then(() => {
+                afterSave();
+                Toast.show({
+                    autoHide: true,
+                    type: 'success',
+                    text1: fTranslate("ProfileSavedAs", targetName)
+                });
+            })
             .catch(err => {
                 if (err instanceof AlreadyExists) {
                     Alert.alert(translate("ProfileExistsTitle"), fTranslate("ProfileExists", targetName),);
+                } else if (err instanceof InvalidFileName) {
+                    Alert.alert(fTranslate("InvalidName", InvalidCharachters));
+                } else if (err instanceof ReservedFileName) {
+                    Alert.alert(translate("ReservedName"));
                 } else {
-                    Alert.alert(err);
+                    console.log("save as failed", err);
+                    Alert.alert(translate("ProfileSaveFailed"));
                 }
             });
     }
@@ -436,7 +468,10 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                 })
             })
             .catch((err) => {
-                if (err instanceof AlreadyExists) {
+                if (err instanceof AlreadyExists && newName == currName) {
+                    // overwriting the active profile's file would be undone on the next profile switch
+                    Alert.alert(translate("ProfileExistsTitle"), fTranslate("ProfileExists", newName));
+                } else if (err instanceof AlreadyExists) {
                     Alert.alert(translate("ProfileExistsTitle"), fTranslate("ProfileExists", newName),
                         [
                             {
@@ -448,7 +483,11 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                                             type: 'success',
                                             text1: translate(isRename ? "ProfileSuccessRenamed" : "ProfileSuccessfulyCreated")
                                         })
-                                    })
+                                    }).catch(() => Toast.show({
+                                        autoHide: true,
+                                        type: 'error',
+                                        text1: translate("ProfileSaveFailed")
+                                    }))
                                 }
                             },
                             { text: translate("Cancel") }
@@ -462,36 +501,43 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                     Toast.show({
                         autoHide: true,
                         type: 'error',
-                        text1: translate(translate("ProfileSaveFailed"))
+                        text1: translate("ProfileSaveFailed")
                     })
                 }
             });
     }
 
     async function handleExportProfile(name: string) {
+        // close the profile list so the progress bar is not hidden behind it
+        setOpenLoadProfile(false);
         setBusy(true);
         setExportInProgress({
             message: translate('ExportInProgress'),
             precent: 0,
         });
 
-        const currentProfileName = Settings.getString(CURRENT_PROFILE.name, "")
-        if (name == currentProfileName) {
-            // save current profile (cannot be default as it cannot be exported)
-            await SaveProfile(name, profile, true, false);
-        }
+        let zipPath = "";
+        try {
+            const currentProfileName = Settings.getString(CURRENT_PROFILE.name, "")
+            if (name == currentProfileName) {
+                // save current profile (cannot be default as it cannot be exported)
+                await SaveProfile(name, readCurrentProfile(), true, false);
+            }
 
-        const zipPath = (await exportProfile(name, (percent) => {
-            setExportInProgress({
-                message: translate('ExportInProgress'),
-                precent: percent,
+            zipPath = await exportProfile(name, (percent) => {
+                setExportInProgress({
+                    message: translate('ExportInProgress'),
+                    precent: percent,
+                });
             });
-        })
-            .finally(() => {
-                setBusy(false);
-                setExportInProgress(undefined);
-            })
-        ) as string;
+        } catch (err) {
+            console.log("export failed", err);
+            Alert.alert(translate("ExportFailed"));
+            return;
+        } finally {
+            setBusy(false);
+            setExportInProgress(undefined);
+        }
 
         return shareFile(zipPath);
 
@@ -547,23 +593,27 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
             precent: 0,
         });
 
-        // first save current profile to disk:
-        const currentProfileName = Settings.getString(CURRENT_PROFILE.name, DefaultProfileName);
-        const p = readCurrentProfile();
-        await SaveProfile(currentProfileName, p, true, true);
+        let zipPath = "";
+        try {
+            // first save current profile to disk:
+            const currentProfileName = Settings.getString(CURRENT_PROFILE.name, DefaultProfileName);
+            const p = readCurrentProfile();
+            await SaveProfile(currentProfileName, p, true, true);
 
-        const zipPath = (await exportAll((percent) => {
-            setExportInProgress({
-                message: translate('BackupInProgress'),
-                precent: percent,
+            zipPath = await exportAll((percent) => {
+                setExportInProgress({
+                    message: translate('BackupInProgress'),
+                    precent: percent,
+                });
             });
-        })
-            .catch(err => console.log("export all failed", err))
-            .finally(() => {
-                setBusy(false);
-                setExportInProgress(undefined);
-            })
-        ) as string;
+        } catch (err) {
+            console.log("export all failed", err);
+            Alert.alert(translate("ExportFailed"));
+            return;
+        } finally {
+            setBusy(false);
+            setExportInProgress(undefined);
+        }
 
         console.log("Export All", zipPath)
 
@@ -603,10 +653,15 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                 console.log("Loading profile ", name)
                 setProfileBusy(true);
                 setOpenLoadProfile(false);
-                LoadProfile(name).finally(() => {
-                    setProfileBusy(false)
-                    setRevision(prev => prev + 1);
-                });
+                LoadProfile(name)
+                    .catch(err => {
+                        console.log("load profile failed", name, err);
+                        Alert.alert(translate("ProfileLoadFailed"));
+                    })
+                    .finally(() => {
+                        setProfileBusy(false)
+                        setRevision(prev => prev + 1);
+                    });
             }}
             editButton={{ name: translate("Rename") }}
             onCreate={() => {
@@ -632,11 +687,19 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         {inputProfile && <EditText initialText="" label={translate("ProfileNameTitle")} onClose={() => setInputProfile(false)}
             onDone={async (name) => {
                 setInputProfile(false);
+                setProfileBusy(true);
                 try {
-                    const currentProfile = readCurrentProfile();
-                    await SaveProfile(name, currentProfile, false);
-                    Settings.set(CURRENT_PROFILE.name, name);
-                    setRevision(prev => prev + 1);
+                    if (name == translate(DefaultProfileName)) {
+                        throw new ReservedFileName();
+                    }
+                    // a new profile starts empty; LoadProfile saves the current profile before switching
+                    await createNewProfile(name);
+                    await LoadProfile(name);
+                    Toast.show({
+                        autoHide: true,
+                        type: 'success',
+                        text1: translate("ProfileSuccessfulyCreated")
+                    });
                 } catch (err) {
                     if (err instanceof AlreadyExists) {
                         Alert.alert(translate("ProfileExistsTitle"), fTranslate("ProfileExists", name));
@@ -644,7 +707,13 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
                         Alert.alert(fTranslate("InvalidName", InvalidCharachters));
                     } else if (err instanceof ReservedFileName) {
                         Alert.alert(translate("ReservedName"));
+                    } else {
+                        console.log("create profile failed", err);
+                        Alert.alert(translate("ProfileSaveFailed"));
                     }
+                } finally {
+                    setProfileBusy(false);
+                    setRevision(prev => prev + 1);
                 }
             }}
             width={Math.min(windowSize.width / 2, 300)}

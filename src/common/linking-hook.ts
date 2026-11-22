@@ -1,6 +1,7 @@
 import { Linking } from 'react-native';
 import { useContext, useEffect, useRef } from 'react';
 import { GlobalContext } from './global-context';
+import { whenSplashClosed } from './splash-state';
 
 export function useIncomingURL(onLinkReceived: (url: string) => void) {
     const handledLink = useRef<string | null>(null);
@@ -16,14 +17,15 @@ export function useIncomingURL(onLinkReceived: (url: string) => void) {
 
         const linkingUrlSubscription = Linking.addEventListener('url', handleUrl);
 
-        // Handle initial cold start link
+        // Handle initial cold start link, once the splash is gone
         (async () => {
+            await whenSplashClosed();
             if (context && context.url) {
-                setTimeout(() => handleUrl({ url: context.url }));
+                handleUrl({ url: context.url });
             } else {
                 const url = await Linking.getInitialURL();
                 if (url) {
-                    setTimeout(() => handleUrl({ url }));
+                    handleUrl({ url });
                 }
             }
         })();
