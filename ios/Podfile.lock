@@ -2510,7 +2510,7 @@ SPEC CHECKSUMS:
   GoogleAppMeasurement: 72c9a682fec6290327ea5e3c4b829b247fcb2c17
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   GTMSessionFetcher: b8ab00db932816e14b0a0664a08cb73dda6d164b
-  hermes-engine: bc5138d396bf1e792858088f405a266bc149ba65
+  hermes-engine: 1cdfeddd2dadf985ac13e02e5b82f75dd55a1490
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   NitroModules: 08ac458d977a73175964f332ded34f1c1dbecd84
   NitroSound: 30dfda12f13a26fd273b527624fef1496da15837
@@ -2594,7 +2594,7 @@ SPEC CHECKSUMS:
   ReactCodegen: b411483ad988ff21fe9e7fb1c5851169f52afabb
   ReactCommon: 3c00047ec244a06c7deaa6ae59cc8aa305fa3f6a
   ReactNativeCameraKit: aca16005874ca639a422fe90a9d6626d9ff1ae21
-  ReactNativeDependencies: f6a4cd62e770379aa1af290339d9102888e5c836
+  ReactNativeDependencies: 3b82848f1ce2c601d5a328b98b9cdf75b6cb70d9
   RNFBAnalytics: 75bebb52136927094dc72c81d0561bf5447296e8
   RNFBApp: 636f2512d0637d103feff9cfdec92738e186527f
   RNFBAppCheck: a7e80aecb1aa964e142cf5f9c6e85053f367b2f4
@@ -2608,6 +2608,6 @@ SPEC CHECKSUMS:
   SSZipArchive: c69881e8ac5521f0e622291387add5f60f30f3c4
   Yoga: e72e7f14bfa5278868f138a38b3186ce2e063bbf
 
-PODFILE CHECKSUM: c4a79f1b2c1398f78d02e97105bd2beb633c8f6b
+PODFILE CHECKSUM: c4e9b582a8fde5a63f887c83fa82926e043f0995
 
-COCOAPODS: 1.15.2
+COCOAPODS: 1.17.0
