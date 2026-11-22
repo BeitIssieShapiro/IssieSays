@@ -7,6 +7,7 @@ import { AlreadyExists, Folders, ListElements, Profile, SaveProfile, writeCurren
 import { Settings } from "./setting-storage";
 import { CURRENT_PROFILE } from "./settings";
 import { translate } from "./lang";
+import { stampPackage } from "@beitissieshapiro/issie-shared";
 export function doNothing() { }
 
 export function getTempFileName(ext: string) {
@@ -16,6 +17,15 @@ export function getTempFileName(ext: string) {
     return path.join(RNFS.TemporaryDirectoryPath, fn + "." + ext);
 }
 
+
+// file functions with a position (read/write) want a plain path, without file://
+export const plainPath = (p: string) => p.startsWith("file://") ? p.substring(7) : p;
+
+// lets other Issie apps tell this is an IssieSays file; the export works without it
+async function stampAsIssieSays(zipPath: string, kind: string) {
+    await stampPackage(RNFS, plainPath(zipPath), { app: "issiesays", kind })
+        .catch(e => console.log("stamp package failed", zipPath, e));
+}
 
 export async function exportProfile(name: string, onProgress?: (percent: number) => void): Promise<string> {
     onProgress?.(10);
@@ -37,10 +47,10 @@ export async function exportProfile(name: string, onProgress?: (percent: number)
     await RNFS.unlink(ensureAndroidCompatible(targetFile)).catch(doNothing);
 
     onProgress?.(80);
-    return zip([metadataTargetFile], targetFile).then((result) => {
-        onProgress?.(100);
-        return result;
-    });
+    const result = await zip([metadataTargetFile], targetFile);
+    await stampAsIssieSays(result, "profile");
+    onProgress?.(100);
+    return result;
 }
 
 export async function exportAll(onProgress?: (percent: number) => void): Promise<string> {
@@ -68,10 +78,10 @@ export async function exportAll(onProgress?: (percent: number) => void): Promise
     await RNFS.unlink(targetPath).catch(doNothing);
 
     onProgress?.(90);
-    return zip(files, targetPath).then(path => {
-        onProgress?.(100);
-        return ensureAndroidCompatible(path);
-    });
+    const result = await zip(files, targetPath);
+    await stampAsIssieSays(result, "backup");
+    onProgress?.(100);
+    return ensureAndroidCompatible(result);
 }
 
 export interface ImportInfo {
