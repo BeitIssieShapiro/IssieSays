@@ -105,6 +105,10 @@ export function RecordButton({
   const [currentName, setCurrentName] = useState<string>(name);
 
   const [recordingExists, setRecordingExists] = useState<boolean>(false);
+  useEffect(() => {
+    // follow the parent, e.g. when a button is loaded from the list
+    setCurrentName(name);
+  }, [name]);
 
   useEffect(() => {
     RNFS.exists(getRecordingFileName(currentName)).then((value: boolean) => {

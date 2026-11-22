@@ -5,7 +5,8 @@ import { colors, gStyles } from "./common/common-style";
 import { IconButton, LabeledIconButton } from "./common/components";
 import { fTranslate, isRTL, translate } from "./lang";
 import { MainButton, Spacer } from "./uielements";
-import { AlreadyExists, Button, deleteButton, Folders, getImagePath, InvalidCharachters, InvalidFileName, loadButton2, saveButton2 } from "./profile";
+import { AlreadyExists, Button, deleteButton, Folders, getImagePath, getRecordingFileName, InvalidCharachters, InvalidFileName, loadButton2, saveButton2 } from "./profile";
+import * as RNFS from 'react-native-fs';
 import { SearchImage, SelectFromGallery } from "./search-image";
 import { RecordButton } from "./recording";
 import { Checkbox } from "./common/check-box";
@@ -30,6 +31,9 @@ export type EditedButton = Button & {
     audioName?: string;
 };
 
+// audio of a button loaded from the list, so it can be played before saving
+const LOADED_AUDIO_NAME = "_loaded_";
+
 export function EditButton({ onClose, isNarrow, button, onDone, index, windowSize }: EditButtonProps) {
     const safeAreaInsets = useSafeAreaInsets();
 
@@ -43,6 +47,16 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
 
     const updateButton = (updates: Partial<EditedButton>) => {
         setLocalButton(prev => ({ ...prev, ...updates }));
+    };
+
+    const loadFromList = async (buttonName: string) => {
+        const loadedBtn = await loadButton2(buttonName);
+        const previewFile = getRecordingFileName(LOADED_AUDIO_NAME);
+        await RNFS.unlink(previewFile).catch(() => { });
+        if (loadedBtn.recording) {
+            await RNFS.writeFile(previewFile, loadedBtn.recording, 'base64');
+        }
+        updateButton({ ...loadedBtn, recording: loadedBtn.recording || "", dirty: false, audioName: undefined });
     };
 
     const colorWidth = Math.min(windowSize.width, windowSize.height);
@@ -155,7 +169,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                 ]}
 
                 placeholderTextColor="gray"
-                defaultValue={localButton.name}
+                value={localButton.name}
                 autoCapitalize="none"
                 autoCorrect={false}
 
@@ -268,8 +282,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                                 Alert.alert(translate("AboutToReloadSameButtonTitle"), fTranslate("AboutToReloadSameButton"), [
                                     {
                                         text: translate("YES"), onPress: async () => {
-                                            const loadedBtn = await loadButton2(buttonName);
-                                            updateButton({ ...loadedBtn, dirty: false, audioName: undefined });
+                                            await loadFromList(buttonName);
                                         }
                                     },
                                     { text: translate("Cancel") }
@@ -283,22 +296,19 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                                         text: translate("SaveFirst"), onPress: () => {
                                             handleSaveButton(localButton, index, async () => {
                                                 // after save
-                                                const loadedBtn = await loadButton2(buttonName);
-                                                updateButton({ ...loadedBtn, dirty: false, audioName: undefined });
+                                                await loadFromList(buttonName);
                                             })
                                         }
                                     },
                                     {
                                         text: translate("ContinueWithoutSave"), onPress: async () => {
-                                            const loadedBtn = await loadButton2(buttonName);
-                                            updateButton({ ...loadedBtn, dirty: false, audioName: undefined });
+                                            await loadFromList(buttonName);
                                         }
                                     },
                                     { text: translate("Cancel") }
                                 ]);
                         } else {
-                            const loadedBtn = await loadButton2(buttonName);
-                            updateButton({ ...loadedBtn, dirty: false, audioName: undefined });
+                            await loadFromList(buttonName);
                         }
                     }
                 }}
@@ -384,7 +394,8 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                         onSave={(tmpName) => {
                             updateButton({ audioName: tmpName })
                         }}
-                        name={localButton.audioName != undefined ? localButton.audioName : index + ""}
+                        name={localButton.audioName != undefined ? localButton.audioName :
+                            localButton.recording !== undefined ? LOADED_AUDIO_NAME : index + ""}
                         backgroundColor={"#013D76"}
                         size={buttonSize}
                         height={60}

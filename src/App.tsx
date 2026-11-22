@@ -200,6 +200,7 @@ function Main(): React.JSX.Element {
   >();
 
   const windowSize = useSafeAreaFrame();
+  const lastImportPath = useRef<string>('');
 
   // useEffect(() => {
   //   const subscription = Dimensions.addEventListener('change', ({ window }: any) => setWindowSize(window));
@@ -222,6 +223,12 @@ function Main(): React.JSX.Element {
 
     console.log('handleImport event:', url, JSON.stringify(event));
 
+    lastImportPath.current = url;
+    runImport(url, false);
+  }
+
+  function runImport(url: string, overwrite: boolean) {
+    setImportInfo(undefined);
     setImportInProgress({
       message: translate('ImportInProgress'),
       precent: 0,
@@ -230,11 +237,12 @@ function Main(): React.JSX.Element {
     let result: ImportInfo = {
       importedProfiles: [],
       skippedExistingProfiles: [],
+      failedProfiles: [],
     };
 
-    importPackage(url, result)
+    importPackage(url, result, '', overwrite)
       .then(() => setImportInfo(result))
-      .catch(err => Alert.alert(translate('ImportError'), err?.message || err))
+      .catch(err => Alert.alert(translate('ImportError'), err?.message || String(err)))
       .finally(() => setImportInProgress(undefined));
   }
 
@@ -451,6 +459,7 @@ function Main(): React.JSX.Element {
           <ImportInfoDialog
             importInfo={importInfo}
             onClose={() => setImportInfo(undefined)}
+            onOverwrite={() => runImport(lastImportPath.current, true)}
           />
         )
       }

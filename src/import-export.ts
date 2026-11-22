@@ -3,7 +3,9 @@ import path from "path";
 
 import { ensureAndroidCompatible, joinPaths } from "./utils";
 import { unzip, zip } from "react-native-zip-archive";
-import { AlreadyExists, Folders, ListElements, Profile, SaveProfile } from "./profile";
+import { AlreadyExists, Folders, ListElements, Profile, SaveProfile, writeCurrentProfile } from "./profile";
+import { Settings } from "./setting-storage";
+import { CURRENT_PROFILE } from "./settings";
 import { translate } from "./lang";
 export function doNothing() { }
 
@@ -80,9 +82,10 @@ export async function exportAll(onProgress?: (percent: number) => void): Promise
 export interface ImportInfo {
     importedProfiles: string[];
     skippedExistingProfiles: string[];
+    failedProfiles: string[];
 }
 
-export async function importPackage(packagePath: string, importInfo: ImportInfo, subFolder = "") {
+export async function importPackage(packagePath: string, importInfo: ImportInfo, subFolder = "", overwrite = false) {
     const unzipTargetPath = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "imported", subFolder));
     await RNFS.unlink(unzipTargetPath).catch(doNothing);
     if (packagePath.startsWith("file://")) {
@@ -102,12 +105,19 @@ export async function importPackage(packagePath: string, importInfo: ImportInfo,
                 oneAfterTheOther: md.oneAfterTheOther,
             };
             try {
-                await SaveProfile(name, p, false, true, true);
+                await SaveProfile(name, p, overwrite, true, true);
+                if (name == Settings.getString(CURRENT_PROFILE.name, "")) {
+                    // the active profile lives in settings, not in its file - without this the
+                    // next profile switch would save the old buttons over what was just imported
+                    await writeCurrentProfile(p, name);
+                }
                 importInfo.importedProfiles.push(md.name);
             } catch (err) {
                 if (err instanceof AlreadyExists) {
                     importInfo.skippedExistingProfiles.push(md.name);
-                    return;
+                } else {
+                    console.log("import profile failed", md.name, err);
+                    importInfo.failedProfiles.push(md.name);
                 }
             }
 
@@ -118,7 +128,9 @@ export async function importPackage(packagePath: string, importInfo: ImportInfo,
         // list of zips
         let i = 0;
         for (const item of items) {
-            await importPackage(item.path, importInfo, i++ + "");
+            // ignore folders and stray files (e.g. __MACOSX, .DS_Store when re-zipped on a mac)
+            if (!item.isFile() || !item.name.toLowerCase().endsWith(".zip")) continue;
+            await importPackage(item.path, importInfo, i++ + "", overwrite);
         }
     }
 }
