@@ -68,3 +68,5 @@ yarn-error.log
 /store-images/
 opencode.json
 .env
+# Detox screenshots and logs
+artifacts/

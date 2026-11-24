@@ -2,12 +2,17 @@
  * @format
  */
 
-import { AppRegistry } from 'react-native';
+import { AppRegistry, LogBox, Platform, Settings } from 'react-native';
 import App from './src/App';
 import { name as appName } from './app.json';
 import { Init } from './src/profile';
 import { initLang, loadLanguage, LANGUAGE_SETTINGS } from '@beitissieshapiro/issie-shared';
 import { languageMap, detectedLanguage, isRight2Left } from './src/lang';
+
+// e2e tests (Detox passes launch arguments as user defaults on iOS): no warning banner over the UI
+if (__DEV__ && Platform.OS === 'ios' && Settings.get('e2e')) {
+  LogBox.ignoreAllLogs();
+}
 
 Init();
 

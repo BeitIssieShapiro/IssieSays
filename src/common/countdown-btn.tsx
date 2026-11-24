@@ -14,6 +14,7 @@ interface CountdownButtonProps {
     textLocation: "left" | "right";
     textKey: string;
     delayInSeconds?: number;
+    testID?: string;
 }
 
 export const CountdownButton: React.FC<CountdownButtonProps> = ({
@@ -22,7 +23,8 @@ export const CountdownButton: React.FC<CountdownButtonProps> = ({
     icon, iconType = "AntDesign", textLocation, textKey,
     delayInSeconds = 3,
     iconSize = 30,
-    iconColor = "white"
+    iconColor = "white",
+    testID,
 }) => {
     // countdown: null means no countdown active.
     const [countdown, setCountdown] = useState<number | null>(null);
@@ -63,6 +65,7 @@ export const CountdownButton: React.FC<CountdownButtonProps> = ({
 
     return (
         <Pressable
+            testID={testID}
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}
             style={[styles.button, style, { flexDirection: textLocation == "left" ? "row-reverse" : "row" }]}

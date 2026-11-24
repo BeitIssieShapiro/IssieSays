@@ -1,0 +1,36 @@
+/** @type {Detox.DetoxConfig} */
+// e2e tests on iPad, iPhone and Android. Device names can be overridden:
+//   DETOX_IPAD="iPad Air 11-inch (M4)"  DETOX_IPHONE="iPhone 17"  DETOX_AVD="IssieTest"  DETOX_ADB_NAME=...
+module.exports = {
+  testRunner: {
+    args: { config: 'e2e/jest.config.js' },
+    jest: { setupTimeout: 180000 },
+  },
+  apps: {
+    'ios.debug': {
+      type: 'ios.app',
+      binaryPath: 'ios/build/Build/Products/Debug-iphonesimulator/IssieSays.app',
+      build: 'xcodebuild -workspace ios/IssieSays.xcworkspace -scheme IssieSays -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build | (command -v xcpretty >/dev/null && xcpretty || cat)',
+    },
+    'android.debug': {
+      type: 'android.apk',
+      binaryPath: 'android/app/build/outputs/apk/debug/app-debug.apk',
+      testBinaryPath: 'android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk',
+      build: 'cd android && ./gradlew :app:assembleDebug :app:assembleAndroidTest -DtestBuildType=debug && cd ..',
+      reversePorts: [8081],
+    },
+  },
+  devices: {
+    simulator: { type: 'ios.simulator', device: { type: process.env.DETOX_IPAD || 'iPad (A16)' } },
+    iphone: { type: 'ios.simulator', device: { type: process.env.DETOX_IPHONE || 'iPhone 17' } },
+    emulator: { type: 'android.emulator', device: { avdName: process.env.DETOX_AVD || 'IssieTest' } },
+    // a phone or tablet connected over USB (adb devices)
+    attached: { type: 'android.attached', device: { adbName: process.env.DETOX_ADB_NAME || '.*' } },
+  },
+  configurations: {
+    'ios.sim.debug': { device: 'simulator', app: 'ios.debug' },
+    'ios.iphone.debug': { device: 'iphone', app: 'ios.debug' },
+    'android.emu.debug': { device: 'emulator', app: 'android.debug' },
+    'android.att.debug': { device: 'attached', app: 'android.debug' },
+  },
+};

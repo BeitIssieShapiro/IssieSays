@@ -201,7 +201,12 @@ export function RecordButton({
           alignItems: 'center',
         }}
       >
+        {/* e2e tests (dev builds only) */}
+        {__DEV__ && <View testID="recorder-state" pointerEvents="none" accessible
+          accessibilityLabel={`recording:${recording ? 1 : 0} exists:${recordingExists ? 1 : 0} playing:${playing ? 1 : 0}`}
+          style={{ position: 'absolute', left: 0, top: 0, width: 1, height: 1, opacity: 0.01 }} />}
         <TouchableOpacity
+          testID="record-btn"
           style={{
             width: size,
             height: size,
@@ -236,6 +241,7 @@ export function RecordButton({
         </TouchableOpacity>
 
         <TouchableOpacity
+          testID="play-btn"
           style={{
             width: size,
             height: size,

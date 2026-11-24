@@ -12,22 +12,22 @@ import { gStyles } from "./common-style";
 // }
 
 
-export function IconButton({ icon, onPress, text, backgroundColor, borderWidth }:
-    { icon?: IconProps, text?: string, backgroundColor?: string, onPress: () => void, type?: undefined | "Ionicon" | "MCI", borderWidth?: number }) {
+export function IconButton({ icon, onPress, text, backgroundColor, borderWidth, testID }:
+    { icon?: IconProps, text?: string, backgroundColor?: string, onPress: () => void, type?: undefined | "Ionicon" | "MCI", borderWidth?: number, testID?: string }) {
 
     return <TouchableOpacity style={
         [styles.iconButton, { flexDirection: "row", direction: isRTL() ? "rtl" : "ltr" },
         backgroundColor && { backgroundColor },
         !text && { borderWidth: 0, padding: 0, maxWidth: styles.iconButton.maxHeight },
         borderWidth != undefined && { borderWidth }
-        ]} onPress={onPress} >
+        ]} onPress={onPress} testID={testID} >
 
         {icon && <MyIcon info={icon} />}
         {!!text && <Text allowFontScaling={false} style={{ fontSize: 22, marginInlineStart: 5, marginInlineEnd: 5, textAlign: icon ? "left" : "center" }}>{text}</Text>}
     </TouchableOpacity >
 }
 
-export function LabeledIconButton({ type, icon, label, onPress, size = 40, color = "black" }:
+export function LabeledIconButton({ type, icon, label, onPress, size = 40, color = "black", testID }:
     {
         type?: IconType,
         icon: string,
@@ -35,9 +35,10 @@ export function LabeledIconButton({ type, icon, label, onPress, size = 40, color
         onPress: () => void,
         size?: number,
         color?: string,
+        testID?: string,
     }) {
 
-    return <Pressable onPress={onPress} style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", width: size * 3 }}>
+    return <Pressable testID={testID} onPress={onPress} style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", width: size * 3 }}>
         <MyIcon info={{ type, name: icon, size, color }} />
         <Text  numberOfLines={1} allowFontScaling={false} style={gStyles.labeledIconText}>{label}</Text>
     </Pressable>

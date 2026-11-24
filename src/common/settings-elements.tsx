@@ -13,6 +13,7 @@ export function ScreenTitle({ title, onClose, onAbout, icon }: { title: string, 
             <Spacer h={10} />}
         <Text allowFontScaling={false} style={gStyles.screenTitleText}>{title}</Text>
         <IconButton
+            testID="screen-close-btn"
             icon={icon}
             onPress={onClose}
             backgroundColor="white"

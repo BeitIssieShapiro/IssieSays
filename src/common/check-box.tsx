@@ -6,11 +6,13 @@ interface CheckboxProps {
     checked: boolean;
     onToggle: () => void;
     size: number;
+    testID?: string;
 }
 
-export function Checkbox({ caption, checked, onToggle, size }: CheckboxProps) {
+export function Checkbox({ caption, checked, onToggle, size, testID }: CheckboxProps) {
 
     return <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", marginEnd: 15 }}
+        testID={testID} accessibilityState={{ checked }}
         onPress={() => onToggle()}>
         {checked ?
             <MyIcon info={{ type: "MDI", name: "checkbox-outline", size }} />

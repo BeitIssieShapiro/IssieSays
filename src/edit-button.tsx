@@ -187,6 +187,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
         <Text allowFontScaling={false} style={styles.label}>{translate("Name")}</Text>
         <View>
             {!isEditingImage && <TextInput
+                testID="edit-button-name"
                 style={[
                     styles.input,
                     isNarrow ? { width: windowSize.width * .8 } : {},
@@ -208,6 +209,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
             <Checkbox
                 size={30}
                 caption={translate("ShowName")}
+                testID="edit-button-show-name"
                 checked={localButton.showName}
                 onToggle={() => updateButton({ showName: !localButton.showName })}
             />
@@ -240,12 +242,14 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                 </Text>
                 <View style={[styles.buttons, isNarrow && { bottom: -5, left: 10, alignItems: "center" }]}>
                     <IconButton
+                        testID="edit-button-save"
                         text={translate("Save")}
                         onPress={() => onDone(localButton)}
                         backgroundColor={colors.titleButtonsBG}
                         icon={{ name: "check" }}
                     />
                     <IconButton
+                        testID="edit-button-cancel"
                         text={translate("Cancel")}
                         onPress={handleCancel}
                         backgroundColor={colors.titleButtonsBG}
@@ -363,6 +367,7 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                             icon="palette-outline"
                             label={translate("ButtonBackgroundColor")}
                             color={colors.defaultIconColor}
+                            testID="edit-button-color"
                             onPress={() => setColorPickerOpen(true)}
                             size={buttonSize}
                         />

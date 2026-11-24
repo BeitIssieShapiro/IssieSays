@@ -41,6 +41,7 @@ export function ColorButton({
   icon,
   index,
   iconColor,
+  testID,
 }: any) {
   let borderStyle = {};
   if (isTooWhite(color)) {
@@ -48,7 +49,7 @@ export function ColorButton({
   }
 
   return (
-    <TouchableOpacity onPress={callback} activeOpacity={0.7} key={'' + index}>
+    <TouchableOpacity testID={testID} onPress={callback} activeOpacity={0.7} key={'' + index}>
       <View
         style={[
           {
@@ -182,6 +183,7 @@ export function MainButton({
   hMargin?: number;
 }) {
   const [playing, setPlaying] = useState<string | undefined>(undefined);
+  const [playCount, setPlayCount] = useState(0); // e2e tests (dev builds only)
   const [currDuration, setCurrDuration] = useState(0.0);
   const [duration, setDuration] = useState(0.0);
   const playCompleteSent = useRef<boolean>(false);
@@ -279,6 +281,7 @@ export function MainButton({
       );
       console.log(`[${clickTime}] Button ${recName} playRecording returned, success: ${success}`);
       if (success) {
+        if (__DEV__) setPlayCount(c => c + 1); // (e2e tests)
         setPlaying(recName);
       } else {
         if (onPlayCompleteRef.current) {
@@ -311,7 +314,12 @@ export function MainButton({
         alignSelf: 'center',
       }}
     >
+      {/* e2e tests (dev builds only) */}
+      {__DEV__ && <View testID={`main-button-state-${recName}`} pointerEvents="none" accessible
+        accessibilityLabel={`playing:${playing ? 1 : 0} played:${playCount}`}
+        style={{ position: 'absolute', left: 0, top: 0, width: 1, height: 1, opacity: 0.01 }} />}
       <View
+        testID={`main-button-${recName}`}
         style={{
           backgroundColor: color,
           width: width * 1.3,

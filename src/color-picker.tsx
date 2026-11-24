@@ -70,6 +70,7 @@ export function MyColorPicker(props: any) {
             {availableColorPicker.map((color, i) => <ColorButton
                 key={i}
                 callback={() => props.onSelect(color)}
+                testID={`color-${color}`}
                 color={color}
                 size={colorButtonSize}
                 icon={color == props.color ? "check" : undefined}

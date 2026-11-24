@@ -428,7 +428,12 @@ function Main(): React.JSX.Element {
   return (
     <View style={{ flex: 1, backgroundColor: mainBackgroundColor }}>
       <View style={[backgroundStyle, { marginTop: safeAreaInsets.top, marginBottom: safeAreaInsets.bottom }]}>
+        {/* e2e tests (dev builds only) read the main screen from this hidden view's label */}
+        {__DEV__ && <View testID="main-state" pointerEvents="none" accessible
+          accessibilityLabel={`buttons:${p.buttons.length} shown:${activeButtons.join(',')} bg:${mainBackgroundColor == BACKGROUND.DARK ? 'dark' : 'light'} names:${p.buttons.map((b: any) => b.name || '-').join(',')} colors:${p.buttons.map((b: any) => b.color).join(',')}`}
+          style={{ position: 'absolute', left: 0, top: 0, width: 1, height: 1, opacity: 0.01 }} />}
         <CountdownButton
+        testID="settings-btn"
         iconSize={45}
         onComplete={() => setShowSettings(true)}
         style={{
@@ -493,6 +498,7 @@ function Main(): React.JSX.Element {
 
       {oneAfterTheOther && (
         <CountdownButton
+          testID="reset-btn"
           iconSize={50}
           onComplete={() => setNextButton(0)}
           style={{

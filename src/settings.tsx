@@ -1,4 +1,4 @@
-import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View, Alert, NativeModules, Platform } from "react-native";
+import { Keyboard, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, NativeModules, Platform } from "react-native";
 import { BTN_COLOR } from "./uielements";
 import { useEffect, useRef, useState } from "react";
 import { fTranslate, isRTL, translate } from "./lang";
@@ -748,6 +748,11 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
         />}
 
+        {/* e2e tests (dev builds only) read the settings from this hidden view's label */}
+        {__DEV__ && <View testID="settings-state" pointerEvents="none" accessible
+            accessibilityLabel={`buttons:${profile.buttons.length} bg:${backgroundColor === BACKGROUND.DARK ? 'dark' : 'light'} oneByOne:${profile.oneAfterTheOther ? 1 : 0} names:${profile.buttons.map((b: Button) => b.name || '-').join(',')}`}
+            style={{ position: 'absolute', left: 0, top: 0, width: 1, height: 1, opacity: 0.01 }} />}
+
         <ScreenTitle title={translate("Settings")} onClose={handleCloseSettings} onAbout={onAbout} icon={{ name: "check-bold", type: "MDI", size: 30, color: colors.titleBlue }} />
 
         {/** Export Progress */}
@@ -780,9 +785,9 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         <View style={styles.settingHost}>
             <View style={[styles.section, marginHorizontal, dirStyle]} >
                 <View style={{ flexDirection: "row" }}>
-                    <IconButton backgroundColor="black" onPress={() => changeBackgroundColor(BACKGROUND.DARK)}
+                    <IconButton testID="bg-dark" backgroundColor="black" onPress={() => changeBackgroundColor(BACKGROUND.DARK)}
                         icon={backgroundColor === BACKGROUND.DARK ? { name: "check", color: "white", size: 25 } : undefined} />
-                    <IconButton backgroundColor="white" onPress={() => changeBackgroundColor(BACKGROUND.LIGHT)} borderWidth={1}
+                    <IconButton testID="bg-light" backgroundColor="white" onPress={() => changeBackgroundColor(BACKGROUND.LIGHT)} borderWidth={1}
                         icon={backgroundColor === BACKGROUND.LIGHT ? { name: "check", color: "black", size: 25 } : undefined} />
                 </View>
                 <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("BackgroundColor")}</Text>
@@ -790,8 +795,8 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
             <View style={[styles.section, marginHorizontal, dirStyle]} >
                 <View style={{ flexDirection: "row" }}>
-                    <IconButton backgroundColor={profile.oneAfterTheOther ? "lightgray" : "white"} borderWidth={profile.oneAfterTheOther ? 3 : 1} text={isMobile ? undefined : translate("OneAfterTheOtherBtn")} icon={{ name: "transition", type: "MDI", color: "black", size: 25 }} onPress={() => changeOneAfterTheOther(true)} />
-                    <IconButton backgroundColor={profile.oneAfterTheOther ? "white" : "lightgray"} borderWidth={profile.oneAfterTheOther ? 1 : 3} text={isMobile ? undefined : translate("AllAtOnceBtn")} icon={{ name: "gamepad-circle-outline", type: "MDI", color: "black", size: 25 }} onPress={() => changeOneAfterTheOther(false)} />
+                    <IconButton backgroundColor={profile.oneAfterTheOther ? "lightgray" : "white"} borderWidth={profile.oneAfterTheOther ? 3 : 1} text={isMobile ? undefined : translate("OneAfterTheOtherBtn")} icon={{ name: "transition", type: "MDI", color: "black", size: 25 }} onPress={() => changeOneAfterTheOther(true)} testID="mode-one-by-one" />
+                    <IconButton backgroundColor={profile.oneAfterTheOther ? "white" : "lightgray"} borderWidth={profile.oneAfterTheOther ? 1 : 3} text={isMobile ? undefined : translate("AllAtOnceBtn")} icon={{ name: "gamepad-circle-outline", type: "MDI", color: "black", size: 25 }} onPress={() => changeOneAfterTheOther(false)} testID="mode-all" />
                 </View>
                 <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("ButtonsLayout")}</Text>
             </View>
@@ -804,13 +809,15 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
 
             <View style={[styles.section, marginHorizontal, dirStyle]} >
                 <View style={[styles.numberSelector, { direction: isRTL() ? "rtl" : "ltr", flexDirection: "row", alignItems: "center" }]}>
-                    <MyIcon info={{ type: "AntDesign", name: "minus-circle", color: profile.buttons.length == 1 ? "lightgray" : BTN_COLOR, size: 35 }}
-                        onPress={() => changeNumOfButton(-1)} />
+                    <TouchableOpacity testID="buttons-minus" onPress={() => changeNumOfButton(-1)}>
+                        <MyIcon info={{ type: "AntDesign", name: "minus-circle", color: profile.buttons.length == 1 ? "lightgray" : BTN_COLOR, size: 35 }} />
+                    </TouchableOpacity>
 
                     <Text allowFontScaling={false} style={{ fontSize: 30, marginHorizontal: 10 }}>{profile.buttons.length}</Text>
 
-                    <MyIcon info={{ type: "AntDesign", name: "plus-circle", color: profile.buttons.length == maxButtons ? "lightgray" : BTN_COLOR, size: 35 }}
-                        onPress={() => changeNumOfButton(1)} />
+                    <TouchableOpacity testID="buttons-plus" onPress={() => changeNumOfButton(1)}>
+                        <MyIcon info={{ type: "AntDesign", name: "plus-circle", color: profile.buttons.length == maxButtons ? "lightgray" : BTN_COLOR, size: 35 }} />
+                    </TouchableOpacity>
                 </View>
 
                 <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("Buttons")}</Text>

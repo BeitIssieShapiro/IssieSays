@@ -58,7 +58,7 @@ export function ButtonCard({ width, height, button, onSetActive, onEditButton, r
             />
         </View>
         <View style={[gStyles.cardFooter, { flexDirection: "row", justifyContent: isNarrow ? "space-between" : "flex-start", alignItems: "center", direction: (isRTL() ? "rtl" : "ltr") }]}>
-            <IconButton icon={{ name: "edit", type: "MI", size: 25, color: colors.titleBlue }} text={isMobile ? "" : translate("EditButton")} onPress={onEditButton} />
+            <IconButton icon={{ name: "edit", type: "MI", size: 25, color: colors.titleBlue }} text={isMobile ? "" : translate("EditButton")} onPress={onEditButton} testID={`edit-button-${recName}`} />
         </View>
     </View>
 
