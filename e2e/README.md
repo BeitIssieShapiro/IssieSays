@@ -3,7 +3,8 @@
 `says-features.test.ts` goes through the app:
 - **Settings:** the number of buttons (1 to 4, and not more), dark and light backgrounds, and the
   buttons layout ("one after the other" or "all at once").
-- **Editing a button:** its name, its color, and a voice recording.
+- **Editing a button:** its name, its color, and a voice recording; saving it as a template, which
+  then shows in the templates library.
 - **Main screen:** the buttons and their names and colors, playing a button's recording, and "one
   after the other" (the next button shows after one plays; reset goes back to the first).
 - **Restart:** the settings are kept after the app restarts.
@@ -37,5 +38,5 @@ screenshots there. Device names: `DETOX_IPAD`, `DETOX_IPHONE`, `DETOX_AVD`, `DET
   built (`react-native-splash-screen` breaks the other modules' test builds). The test runner loads
   `MainActivity` by name: it does not resolve when the test compiles.
 - Phones (`ios.iphone.debug`) are configured but not tried yet.
-- Not covered: profiles (save, load, rename, delete), templates, images (camera, gallery, search),
+- Not covered: profiles (save, load, rename, delete), loading a template, images (camera, gallery, search),
   backup and sharing.

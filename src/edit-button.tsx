@@ -435,8 +435,8 @@ export function EditButton({ onClose, isNarrow, button, onDone, index, windowSiz
                 <View style={gStyles.horizontalSeperator} />
                 <Spacer h={10} />
                 <View style={styles.row}>
-                    <IconButton text={translate("LoadFromList")} icon={{ name: "list", type: "Ionicons" }} onPress={() => setOpenLoadButton(true)} />
-                    <IconButton text={translate("SaveToList")} onPress={() => handleSaveButton(localButton, index)} icon={{ name: "save" }} />
+                    <IconButton testID="templates-btn" text={translate("LoadFromList")} icon={{ name: "list", type: "Ionicons" }} onPress={() => setOpenLoadButton(true)} />
+                    <IconButton testID="save-template-btn" text={translate("SaveToList")} onPress={() => handleSaveButton(localButton, index)} icon={{ name: "save" }} />
                 </View>
             </ScrollView>
         </View>

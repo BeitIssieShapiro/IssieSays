@@ -138,6 +138,21 @@ describe('IssieSays', () => {
     await settingsState('the button named', s => s.names.split(',')[0] === 'Hello');
   });
 
+  it('saves a button as a template, and shows it in the templates library', async () => {
+    await tapId('edit-button-0');
+    await waitFor(element(by.id('edit-button-name'))).toExist().withTimeout(5000);
+    await element(by.id('edit-button-name')).tapReturnKey(); // (its keyboard covers the buttons)
+    await tapId('save-template-btn');
+    await sleep(1500);
+    await tapId('templates-btn');
+    // visible, not only there: the list used to keep no height when the panel opened
+    await waitFor(element(by.id('picker-load-Hello'))).toBeVisible().withTimeout(5000);
+    await shot('templates');
+    await tapId('picker-close');
+    await tapId('edit-button-cancel');
+    await waitFor(element(by.id('settings-state'))).toExist().withTimeout(5000);
+  });
+
   it('switches to a dark background', async () => {
     await tapId('bg-dark');
     await settingsState('a dark background', s => s.bg === 'dark');

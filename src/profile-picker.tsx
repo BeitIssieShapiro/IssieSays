@@ -183,19 +183,19 @@ export function ButtonPicker({ open, height, onClose, onSelect, exclude, folder,
     }, [open, exclude, revision]);
 
 
-    return <FadeInView height={open ? height : 0}
+    return <FadeInView height={open ? height : 0} testID="button-picker"
         style={[styles.pickerView, { bottom: 0, left: 0, right: 0 }]}>
         <Text allowFontScaling={false} style={{ fontSize: 28, margin: 25 }}>{
             folder == Folders.Profiles ?
                 translate("SelectProfileTitle") : translate("SelectButtonTitle")
         }</Text>
         <Seperator width="100%" />
-        <View style={styles.closeButton}>
+        <View style={styles.closeButton} testID="picker-close">
             <MyCloseIcon onClose={onClose} />
 
         </View>
         {!profiles || profiles.length == 0 ?
-            <Text allowFontScaling={false} style={{ fontSize: 25, margin: 25 }}>{translate("NoItemsFound")}</Text> :
+            <Text testID="picker-empty" allowFontScaling={false} style={{ fontSize: 25, margin: 25 }}>{translate("NoItemsFound")}</Text> :
             <ScrollView
                 contentContainerStyle={{
                     paddingHorizontal: 20,
@@ -218,6 +218,7 @@ export function ButtonPicker({ open, height, onClose, onSelect, exclude, folder,
 
                             <View style={styles.actionRow}>
                                 <IconButton
+                                    testID={`picker-load-${pName}`}
                                     icon={{ name: "upload", ...menuActionIcon }}
                                     onPress={() => onSelect(pName)}
                                     text={translate("LoadBtn")}
