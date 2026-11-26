@@ -89,6 +89,7 @@
   "overrides": {
     "@react-native/eslint-config": {
       "eslint-plugin-jest": "^28.14.0"
-    }
+    },
+    "@grpc/grpc-js": "^1.14.3"
   }
 }
