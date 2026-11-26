@@ -1,0 +1,13 @@
+diff --git a/node_modules/react-native-splash-screen/android/build.gradle b/node_modules/react-native-splash-screen/android/build.gradle
+index baef1a9..951ec62 100644
+--- a/node_modules/react-native-splash-screen/android/build.gradle
++++ b/node_modules/react-native-splash-screen/android/build.gradle
+@@ -22,7 +22,7 @@ android {
+     buildTypes {
+         release {
+             minifyEnabled false
+-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
++            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+         }
+     }
+ }

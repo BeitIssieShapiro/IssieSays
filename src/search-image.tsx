@@ -3,6 +3,7 @@ import ImageLibrary from "./image-library"
 import { isRight2Left, translate } from "./lang";
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, Modal, View } from "react-native";
 import { TextInput } from "react-native";
+import type { TextInputInstance } from "react-native";
 import { launchImageLibrary } from "react-native-image-picker";
 import RNFS from 'react-native-fs';
 import { MyCloseIcon } from "./common/icons";
@@ -76,7 +77,7 @@ export function SearchImage({ onSelectImage, open, height, onClose, isScreenNarr
     const safeAreaInsets = useSafeAreaInsets();
 
 
-    const textRef = useRef<TextInput>(null);
+    const textRef = useRef<TextInputInstance>(null);
 
     const doSearch = () => {
         if (textRef.current) {

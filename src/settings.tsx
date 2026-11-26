@@ -1,4 +1,5 @@
 import { Keyboard, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, NativeModules, Platform } from "react-native";
+import type { ScrollViewInstance, TextInputInstance } from "react-native";
 import { BTN_COLOR } from "./uielements";
 import { useEffect, useRef, useState } from "react";
 import { fTranslate, isRTL, translate } from "./lang";
@@ -125,8 +126,8 @@ export function SettingsPage({ onAbout, onClose, windowSize }: { onAbout: () => 
         | undefined
     >();
 
-    const textInputRef = [useRef<TextInput>(null), useRef<TextInput>(null), useRef<TextInput>(null), useRef<TextInput>(null)];
-    const scrollViewRef = useRef<ScrollView>(null);
+    const textInputRef = [useRef<TextInputInstance>(null), useRef<TextInputInstance>(null), useRef<TextInputInstance>(null), useRef<TextInputInstance>(null)];
+    const scrollViewRef = useRef<ScrollViewInstance>(null);
 
     const [profile, setProfile] = useState<Profile>(readCurrentProfile());
     const [profileName, setProfileName] = useState<string>(Settings.getString(CURRENT_PROFILE.name, ""));
