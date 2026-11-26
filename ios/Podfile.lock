@@ -106,7 +106,7 @@ PODS:
     - nanopb/encode (= 3.30910.0)
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
-  - NitroModules (0.37.2):
+  - NitroModules (0.36.5):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1640,7 +1640,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-image-editor (4.3.0):
+  - react-native-image-editor (4.3.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1778,11 +1778,11 @@ PODS:
     - Yoga
   - react-native-splash-screen (3.3.0):
     - React-Core
-  - react-native-vector-icons-ant-design (12.4.0)
-  - react-native-vector-icons-fontawesome6 (12.3.0)
-  - react-native-vector-icons-ionicons (12.3.0)
-  - react-native-vector-icons-material-design-icons (12.4.0)
-  - react-native-vector-icons-material-icons (12.4.0)
+  - react-native-vector-icons-ant-design (12.5.0)
+  - react-native-vector-icons-fontawesome6 (12.4.0)
+  - react-native-vector-icons-ionicons (12.5.0)
+  - react-native-vector-icons-material-design-icons (12.5.0)
+  - react-native-vector-icons-material-icons (12.5.0)
   - React-NativeModulesApple (0.88.1):
     - hermes-engine
     - React-bridging
@@ -2419,11 +2419,11 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNZipArchive (7.0.2):
+  - RNZipArchive (7.1.3):
     - React-Core
-    - RNZipArchive/Core (= 7.0.2)
+    - RNZipArchive/Core (= 7.1.3)
     - SSZipArchive (~> 2.5.5)
-  - RNZipArchive/Core (7.0.2):
+  - RNZipArchive/Core (7.1.3):
     - React-Core
     - SSZipArchive (~> 2.5.5)
   - SocketRocket (0.7.1):
@@ -2810,7 +2810,7 @@ SPEC CHECKSUMS:
   GTMSessionFetcher: a6d2b2aa203485893d4511ff64642dc811f7c09f
   hermes-engine: 79484fc4e58f328d01b9339ef899ca633d3702ee
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
-  NitroModules: ab0ab8c93661b9f3ffa73a21e0a096f50e2a76cf
+  NitroModules: 097ef1802b3d795f9ce8b6531a787adf1bfee76a
   NitroSound: 59b7dda21ada3a241fed077498868951e36ff633
   PromisesObjC: 752c3227f599e3467650e47ea36f433eeb10c273
   PromisesSwift: 217dea0fd5d2ad65222a109c48698add13cc1c5b
@@ -2853,16 +2853,16 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 8d90036d90512f9550224a7617f3d812ade734ca
   React-microtasksnativemodule: 3f3b7b33fd07072a5525e67f5d99e9d9b054d88b
   React-mutationobservernativemodule: 50a78660c2629e2460126279b4c86840254a2eb5
-  react-native-image-editor: 7271747f32145b11ab6f1b2e236dd44d3f53dbb8
+  react-native-image-editor: 4989868f083dc30f2490915c73ba0f3f47f56ee0
   react-native-image-picker: 57ce8881cf79b2ed4fe2c9a39b8f7be4d52c2b0e
   react-native-mmkv: 653589d78ed31ac1196b26e453fb2198872932dc
   react-native-safe-area-context: 2a79e6e82f60879dd32ced24c1ef6b81ce638dfa
   react-native-splash-screen: 95994222cc95c236bd3cdc59fe45ed5f27969594
-  react-native-vector-icons-ant-design: a309d03f837c62c60c74ce5fd82dc0da3f1e7bbe
-  react-native-vector-icons-fontawesome6: 1a73ea16a698f70851ad47e94521a99499e8e974
-  react-native-vector-icons-ionicons: ad07e944a092a5cf71b8b569d8f5ce2bf674c415
-  react-native-vector-icons-material-design-icons: 76cd460b3540b80527b4a80fb7f867f7deedb498
-  react-native-vector-icons-material-icons: d67e485a05560416ff6b5977d5fa7e0eb6af6870
+  react-native-vector-icons-ant-design: 1d338bf7122a06c927f2e8c74a18d2a57f8d488d
+  react-native-vector-icons-fontawesome6: 4818cfee1b9283e57f5476778b21bdb490a08941
+  react-native-vector-icons-ionicons: 7e633927db6ab96e0255b5920c053777cacca505
+  react-native-vector-icons-material-design-icons: 95914f2f6b18e26e5c9563afe33184e110afe674
+  react-native-vector-icons-material-icons: 8717ed6d0adafdea7a20475dababba112992a372
   React-NativeModulesApple: a3c1f1d4d48b27ecabe9ccf8624bac4b4a7dce86
   React-networking: 63654796ac91276a95200d0ade6394a5283f5b58
   React-oscompat: c775bcb2208ace6b8688a4df14c98cec0cb52466
@@ -2911,7 +2911,7 @@ SPEC CHECKSUMS:
   RNPermissions: 528049ba0383921ff6e42b3a979720859a9217fc
   RNShare: f6ef5d9f59a952b8c7694d007130d1e5f4e09fca
   RNSVG: b25b6a43e4ee5386506cf9777334c40471ba7daa
-  RNZipArchive: 4304f5100eab004eeb7349adc51997b3a28deb76
+  RNZipArchive: fc1b9b12b91b996f32bc8ca8251813c2fd594bc6
   SocketRocket: 37aec555668fb852ec12e3c0de59a86ca58f0871
   SSZipArchive: c69881e8ac5521f0e622291387add5f60f30f3c4
   Yoga: 58421dc4dc9c843ad112dceb5b337d4916d4deb7
