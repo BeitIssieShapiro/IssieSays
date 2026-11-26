@@ -23,7 +23,7 @@ module.exports = {
   },
   devices: {
     // Pinned to 9ADFCA0F to preserve Hermes cache; override with DETOX_IPAD_ID.
-    simulator: { type: 'ios.simulator', device: { udid: process.env.DETOX_IPAD_ID || '9ADFCA0F-4B40-4936-9EA3-AF6181962996' } },
+    simulator: { type: 'ios.simulator', device: { id: process.env.DETOX_IPAD_ID || '9ADFCA0F-4B40-4936-9EA3-AF6181962996' } },
     iphone: { type: 'ios.simulator', device: { type: process.env.DETOX_IPHONE || 'iPhone 17' } },
     emulator: { type: 'android.emulator', device: { avdName: process.env.DETOX_AVD || 'IssieTest' } },
     // a phone or tablet connected over USB (adb devices)
