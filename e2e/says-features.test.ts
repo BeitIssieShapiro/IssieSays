@@ -99,7 +99,12 @@ describe('IssieSays', () => {
     // launch; disable synchronization for the initial wait so Detox can find the element.
     // Use 90s to cover cold Hermes bundle evaluation on the first run.
     await device.disableSynchronization();
-    await waitFor(element(by.id('main-state'))).toExist().withTimeout(90000);
+    // Give the app 1s to process the disableSynchronization command before querying.
+    await sleep(1000);
+    // Try settings-btn (a real visible button) first to confirm Detox connectivity,
+    // then wait for main-state (the hidden state monitor).
+    await waitFor(element(by.id('settings-btn'))).toExist().withTimeout(90000);
+    await waitFor(element(by.id('main-state'))).toExist().withTimeout(10000);
     await device.enableSynchronization();
   });
 
