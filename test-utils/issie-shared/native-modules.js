@@ -55,6 +55,24 @@ const firebase = () => {
     return { __esModule: true, default: analytics, getAnalytics: analytics, logEvent: fn(async () => { }) };
 };
 
+/**
+ * @react-native-firebase/* (app, analytics, app-check, functions) as no-ops, as used
+ * by issie-shared's firebase.ts. Call before requiring app code: mockFirebase(jest).
+ */
+function mockFirebase(j = jest) {
+    const noop = () => jest.fn(async () => undefined);
+    const anyFn = () => new Proxy(function () { }, { get: (t, p) => p === 'then' ? undefined : (t[p] = t[p] || anyFn()), apply: () => anyFn() });
+    j.doMock('@react-native-firebase/app', () => ({ __esModule: true, getApp: anyFn(), default: anyFn() }), { virtual: true });
+    j.doMock('@react-native-firebase/analytics', () => ({
+        __esModule: true, default: anyFn(), getAnalytics: anyFn(), logEvent: noop(), logAppOpen: noop(), logScreenView: noop(),
+        setAnalyticsCollectionEnabled: noop(),
+    }), { virtual: true });
+    j.doMock('@react-native-firebase/app-check', () => ({ __esModule: true, default: anyFn(), initializeAppCheck: noop() }), { virtual: true });
+    j.doMock('@react-native-firebase/functions', () => ({
+        __esModule: true, default: anyFn(), getFunctions: anyFn(), httpsCallable: () => jest.fn(async () => ({ data: {} })),
+    }), { virtual: true });
+}
+
 /** Mocks every module above that the app has installed. */
 function mockCommonNativeModules(j = jest) {
     const has = (m) => { try { require.resolve(m); return true; } catch { return false; } };
@@ -72,4 +90,4 @@ function mockCommonNativeModules(j = jest) {
     if (has('react-native-localize')) j.doMock('react-native-localize', () => require('react-native-localize/mock'));
 }
 
-module.exports = { share, zipArchive, tts, nitroSound, splashScreen, firebase, mockCommonNativeModules };
+module.exports = { share, zipArchive, tts, nitroSound, splashScreen, firebase, mockFirebase, mockCommonNativeModules };
