@@ -97,8 +97,9 @@ describe('IssieSays', () => {
     }
     // The Nitro sound engine / RN 0.88.1 event loop keeps the main run loop active after
     // launch; disable synchronization for the initial wait so Detox can find the element.
+    // Use 90s to cover cold Hermes bundle evaluation on the first run.
     await device.disableSynchronization();
-    await mainState('the main screen', () => true, 20000);
+    await waitFor(element(by.id('main-state'))).toExist().withTimeout(90000);
     await device.enableSynchronization();
   });
 
@@ -195,9 +196,10 @@ describe('IssieSays', () => {
   it('keeps the settings after a restart', async () => {
     await device.launchApp({ newInstance: true, launchArgs: { e2e: '1' } });
     await device.disableSynchronization();
+    await waitFor(element(by.id('main-state'))).toExist().withTimeout(90000);
+    await device.enableSynchronization();
     await mainState('the same settings', s => s.buttons === '2' && s.bg === 'dark' && s.shown === '0' &&
       s.names.split(',')[0] === 'Hello', 20000);
-    await device.enableSynchronization();
   });
 
   it('restores the defaults', async () => {
