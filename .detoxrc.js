@@ -29,7 +29,7 @@ module.exports = {
     attached: { type: 'android.attached', device: { adbName: process.env.DETOX_ADB_NAME || '.*' } },
   },
   configurations: {
-    'ios.sim.debug': { device: 'simulator', app: 'ios.debug' },
+    'ios.sim.debug': { device: 'simulator', app: 'ios.debug', behavior: { init: { reinstallApp: false } } },
     'ios.iphone.debug': { device: 'iphone', app: 'ios.debug' },
     'android.emu.debug': { device: 'emulator', app: 'android.debug' },
     'android.att.debug': { device: 'attached', app: 'android.debug' },
