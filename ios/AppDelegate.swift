@@ -24,8 +24,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
      let delegate = ReactNativeDelegate()
      let factory = RCTReactNativeFactory(delegate: delegate)
      
-     RNFBAppCheckModule.sharedInstance()
-     FirebaseApp.configure()
+     if !UserDefaults.standard.bool(forKey: "IS_DETOX_TEST") {
+       RNFBAppCheckModule.sharedInstance()
+       FirebaseApp.configure()
+     }
 
      delegate.dependencyProvider = RCTAppDependencyProvider()
 
