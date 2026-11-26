@@ -1,0 +1,20 @@
+# Child flow: tapping a button on the main screen plays it (a button without a recording must not crash).
+appId: ${APP_ID}
+env:
+  APP_ID: org.issieshapiro.issiesays
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "main-button-0"
+    timeout: 15000
+- tapOn:
+    id: "main-button-0"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "main-button-0"
+# settings must not open on a plain tap (parent lock)
+- tapOn:
+    id: "settings-btn"
+- assertNotVisible:
+    id: "buttons-plus"
