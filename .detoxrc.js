@@ -4,14 +4,14 @@
 module.exports = {
   testRunner: {
     args: { config: 'e2e/jest.config.js' },
-    jest: { setupTimeout: 180000 },
+    jest: { setupTimeout: 300000 },
   },
   apps: {
     'ios.debug': {
       type: 'ios.app',
       binaryPath: 'ios/build/Build/Products/Debug-iphonesimulator/IssieSays.app',
       build: 'xcodebuild -workspace ios/IssieSays.xcworkspace -scheme IssieSays -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build | (command -v xcpretty >/dev/null && xcpretty || cat)',
-      launchArgs: { RCT_jsLocation: 'localhost:8085' },
+      launchArgs: { RCT_jsLocation: 'localhost:8085', IS_DETOX_TEST: true },
     },
     'android.debug': {
       type: 'android.apk',

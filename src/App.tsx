@@ -526,12 +526,17 @@ function Main(): React.JSX.Element {
 import * as ScreenSizer from '@bam.tech/react-native-screen-sizer';
 import { initializeFirebase } from './firebase-config';
 import { MyIcon, checkPackage, showPackageCheckAlert, IssieAlertHost } from '@beitissieshapiro/issie-shared';
+import { IS_E2E } from './isE2E';
 
-ScreenSizer.setup();
+if (!IS_E2E) {
+  ScreenSizer.setup();
+}
 
 export default function App(props: any) {
   useEffect(() => {
-    initializeFirebase();
+    if (!IS_E2E) {
+      initializeFirebase();
+    }
 
     const now = Date.now();
     const nativeStartTime = props.nativeStartTime ?? now;
@@ -559,7 +564,7 @@ export default function App(props: any) {
     >
       <View style={{ flex: 1, backgroundColor: appBackground }}>
         <SafeAreaProvider>
-          {__DEV__ ? (
+          {__DEV__ && !IS_E2E ? (
             <ScreenSizer.Wrapper
               devices={[
                 ...ScreenSizer.defaultDevices.all,
