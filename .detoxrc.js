@@ -11,6 +11,7 @@ module.exports = {
       type: 'ios.app',
       binaryPath: 'ios/build/Build/Products/Debug-iphonesimulator/IssieSays.app',
       build: 'xcodebuild -workspace ios/IssieSays.xcworkspace -scheme IssieSays -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build | (command -v xcpretty >/dev/null && xcpretty || cat)',
+      launchArgs: { RCT_jsLocation: 'localhost:8085' },
     },
     'android.debug': {
       type: 'android.apk',
