@@ -8,10 +8,19 @@ import { name as appName } from './app.json';
 import { Init } from './src/profile';
 import { initLang, loadLanguage, LANGUAGE_SETTINGS } from '@beitissieshapiro/issie-shared';
 import { languageMap, detectedLanguage, isRight2Left } from './src/lang';
+import { initializeFirebase } from './src/firebase-config';
 
-// e2e tests (Detox passes launch arguments as user defaults on iOS): no warning banner over the UI
-if (__DEV__ && Platform.OS === 'ios' && Settings.get('e2e')) {
+// In Detox e2e runs, Firebase's persistent WebSocket prevents the app from
+// ever becoming idle, blocking Detox's element queries indefinitely.
+// Settings.get() reads iOS NSUserDefaults which are populated from launch
+// args before JS runs — reliable here (at index.js body level) but NOT
+// during module evaluation deep in the import chain.
+const IS_E2E_RUN = __DEV__ && Platform.OS === 'ios' && !!Settings.get('e2e');
+
+if (IS_E2E_RUN) {
   LogBox.ignoreAllLogs();
+} else {
+  initializeFirebase();
 }
 
 Init();

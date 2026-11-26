@@ -25,7 +25,7 @@ import {
   ONE_AFTER_THE_OTHER,
   SettingsPage,
 } from './settings';
-import { Alert, NativeModules, Platform, Settings as RNSettings, View } from 'react-native';
+import { Alert, NativeModules, Platform, View } from 'react-native';
 import { CountdownButton } from './common/countdown-btn';
 import { useIncomingURL } from './common/linking-hook';
 import { splashClosed } from './common/splash-state';
@@ -524,7 +524,6 @@ function Main(): React.JSX.Element {
 }
 
 import * as ScreenSizer from '@bam.tech/react-native-screen-sizer';
-import { initializeFirebase } from './firebase-config';
 import { MyIcon, checkPackage, showPackageCheckAlert, IssieAlertHost } from '@beitissieshapiro/issie-shared';
 import { IS_E2E } from './isE2E';
 
@@ -534,12 +533,6 @@ if (!IS_E2E) {
 
 export default function App(props: any) {
   useEffect(() => {
-    // Check Settings.get('e2e') here (not at import time) — the native module
-    // constants are guaranteed populated by the time useEffect runs.
-    const isE2ERun = IS_E2E || (Platform.OS === 'ios' && !!RNSettings.get('e2e'));
-    if (!isE2ERun) {
-      initializeFirebase();
-    }
 
     const now = Date.now();
     const nativeStartTime = props.nativeStartTime ?? now;
