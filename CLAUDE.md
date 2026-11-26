@@ -29,6 +29,6 @@ npx detox test -c ios.sim.debug
 
 - **Nitro sound engine keeps the main run loop active** after launch. The `beforeAll` hook therefore calls `device.disableSynchronization()` + `sleep(1000)` before the initial `waitFor(element(by.id('main-state')))` so Detox doesn't wait for an idle app that never idles.
 
-- **Cold Hermes cache:** On a fresh simulator install, Hermes must JIT-compile the entire debug bundle — this can take 15–25 min. `testTimeout` is set to 1800000 ms (30 min). Subsequent runs with a warm cache complete in ~1–2 min.
+- **Cold Hermes cache:** On a fresh simulator install, Hermes must JIT-compile the entire debug bundle — this can take 15–25 min. `testTimeout` is set to 3600000 ms (60 min). Subsequent runs with a warm cache complete in ~1–2 min.
 
 - **On RN 0.88.1**, a `UIDimmingView` / `PopoverDismissRegion` popover may appear on first launch. If needed, dismiss by tapping `{ x: 825, y: 1185 }` on the element (top-left corner, away from the popover bubble).
