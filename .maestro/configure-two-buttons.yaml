@@ -1,0 +1,34 @@
+# Parent flow: open settings (press-and-hold), add a second button, name it, save, back to the main screen.
+appId: ${APP_ID}
+env:
+  APP_ID: org.issieshapiro.issiesays
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: "settings-btn"
+    timeout: 15000
+- longPressOn:
+    id: "settings-btn"
+- extendedWaitUntil:
+    visible:
+      id: "buttons-plus"
+    timeout: 6000
+- tapOn:
+    id: "buttons-plus"
+- tapOn:
+    id: "edit-button-1"
+- tapOn:
+    id: "edit-button-name"
+- inputText: "Hello"
+- tapOn:
+    id: "edit-button-save"
+- assertVisible: "Hello"
+- tapOn:
+    id: "screen-close-btn"
+- assertVisible:
+    id: "main-button-0"
+- assertVisible:
+    id: "main-button-1"
+- takeScreenshot: says-two-buttons
