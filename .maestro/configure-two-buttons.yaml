@@ -1,7 +1,6 @@
 # Parent flow: open settings (press-and-hold), add a second button, name it, save, back to the main screen.
-appId: ${APP_ID}
-env:
-  APP_ID: org.issieshapiro.issiesays
+# iOS by default; Android: maestro test -e APP_ID=com.IssieSays ...
+appId: ${APP_ID || "org.issieshapiro.issiesays"}
 ---
 - launchApp:
     clearState: true
@@ -15,12 +14,25 @@ env:
     visible:
       id: "buttons-plus"
     timeout: 6000
-- tapOn:
-    id: "buttons-plus"
+# (Android can lose the first tap: tapped until the second button shows)
+- repeat:
+    times: 3
+    while:
+      notVisible:
+        id: "edit-button-1"
+    commands:
+      - tapOn:
+          id: "buttons-plus"
+      - waitForAnimationToEnd:
+          timeout: 2000
 - tapOn:
     id: "edit-button-1"
 - tapOn:
     id: "edit-button-name"
+# (the field may hold a suggested name; Android drops letters typed before it has focus)
+- waitForAnimationToEnd:
+    timeout: 3000
+- eraseText
 - inputText: "Hello"
 - tapOn:
     id: "edit-button-save"
