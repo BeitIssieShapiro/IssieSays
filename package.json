@@ -31,6 +31,7 @@
     "@react-native-vector-icons/ionicons": "^12.3.0",
     "@react-native-vector-icons/material-design-icons": "^12.3.0",
     "@react-native-vector-icons/material-icons": "^12.3.0",
+    "@react-native/assets-registry": "^0.88.1",
     "@react-native/new-app-screen": "0.88.1",
     "@rneui/base": "^5.0.0",
     "@rneui/themed": "^5.0.0",

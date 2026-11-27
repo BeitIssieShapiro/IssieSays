@@ -68,6 +68,34 @@ async function tapUntil(id: string, nextId: string) {
   }
 }
 
+// taps until the element goes away: like tapUntilSettings, the first tap on a view that just
+// appeared can be lost
+async function tapUntilGone(id: string) {
+  for (let i = 0; ; i++) {
+    await tapId(id);
+    try {
+      await waitFor(element(by.id(id))).not.toExist().withTimeout(2000);
+      return;
+    } catch (e) {
+      if (i >= 2) throw e;
+    }
+  }
+}
+
+// on the settings screen, the first tap right after it opens can be lost (iOS, RN 0.88): taps until
+// the settings show the change
+async function tapUntilSettings(id: string, what: string, check: (s: State) => boolean) {
+  for (let i = 0; ; i++) {
+    await tapId(id);
+    try {
+      await expectLabel('settings-state', what, check, 2000);
+      return;
+    } catch (e) {
+      if (i >= 2) throw e;
+    }
+  }
+}
+
 // (in dev builds the settings button opens at once; in release it must be held for 3 seconds)
 async function openSettings() {
   await tapId('settings-btn', 15000);
@@ -95,13 +123,12 @@ describe('IssieSays', () => {
       // (Detox's permissions option is iOS only)
       execSync(`adb -s ${device.id} shell pm grant com.IssieSays android.permission.RECORD_AUDIO`);
     }
-    // The Nitro sound engine / RN 0.88.1 event loop keeps the main run loop active after
-    // launch; disable synchronization for the initial wait so Detox can find the element.
-    // Use 90s to cover cold Hermes bundle evaluation on the first run.
+    // The Nitro sound engine keeps the main run loop active after launch; disable
+    // synchronization for the initial wait so Detox can find the element.
     await device.disableSynchronization();
     // Give the app 1s to process the disableSynchronization command before querying.
     await sleep(1000);
-    await waitFor(element(by.id('main-state'))).toExist().withTimeout(90000);
+    await waitFor(element(by.id('main-state'))).toExist().withTimeout(30000);
     await device.enableSynchronization();
   });
 
@@ -125,7 +152,7 @@ describe('IssieSays', () => {
     await element(by.id('edit-button-name')).clearText();
     await element(by.id('edit-button-name')).typeText('Hello');
     await tapUntil('edit-button-color', `color-${GREEN}`);
-    await tapId(`color-${GREEN}`);
+    await tapUntilGone(`color-${GREEN}`); // (picking a color closes the picker)
 
     // while recording, the app's timers keep it busy: Detox would wait for it to be idle
     await device.disableSynchronization();
@@ -179,8 +206,7 @@ describe('IssieSays', () => {
 
   it('shows one button after the other', async () => {
     await openSettings();
-    await tapId('mode-one-by-one');
-    await settingsState('one after the other', s => s.oneByOne === '1');
+    await tapUntilSettings('mode-one-by-one', 'one after the other', s => s.oneByOne === '1');
     await closeSettings();
     await mainState('only the first button', s => s.shown === '0');
 
@@ -198,7 +224,7 @@ describe('IssieSays', () => {
   it('keeps the settings after a restart', async () => {
     await device.launchApp({ newInstance: true, launchArgs: { e2e: '1' } });
     await device.disableSynchronization();
-    await waitFor(element(by.id('main-state'))).toExist().withTimeout(90000);
+    await waitFor(element(by.id('main-state'))).toExist().withTimeout(30000);
     await device.enableSynchronization();
     await mainState('the same settings', s => s.buttons === '2' && s.bg === 'dark' && s.shown === '0' &&
       s.names.split(',')[0] === 'Hello', 20000);
@@ -206,7 +232,7 @@ describe('IssieSays', () => {
 
   it('restores the defaults', async () => {
     await openSettings();
-    await tapId('mode-all');
+    await tapUntilSettings('mode-all', 'all together', s => s.oneByOne === '0');
     await tapId('bg-light');
     await tapId('buttons-minus');
     await settingsState('the defaults', s => s.buttons === '1' && s.bg === 'light' && s.oneByOne === '0');

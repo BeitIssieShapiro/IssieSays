@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
 
@@ -8,20 +9,19 @@ const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
  * @type {import('@react-native/metro-config').MetroConfig}
  */
 
-const issieShared = path.resolve(__dirname, '../../issie-shared');
+// issie-shared is a file: dependency (a symlink in node_modules). Follow the link so this works
+// from any checkout (including git worktrees), and resolve every package it imports from this
+// app's node_modules: issie-shared has its own dev copy of react-native, and bundling a second
+// react-native crashes the app at startup ("'PlatformConstants' could not be found").
+const appModules = path.resolve(__dirname, 'node_modules');
+const issieShared = fs.realpathSync(path.join(appModules, '@beitissieshapiro/issie-shared'));
+const escapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const config = {
   watchFolders: [issieShared],
   resolver: {
-    // issie-shared's node_modules may have its own react/react-native;
-    // pin them to the app's copies to avoid duplicate-React crashes.
-    extraNodeModules: {
-      // pin react/react-native to the app's copies to avoid duplicate-React crashes
-      'react': path.resolve(__dirname, 'node_modules/react'),
-      'react-native': path.resolve(__dirname, 'node_modules/react-native'),
-      // @react-native/assets-registry is missing from this worktree; use issie-shared's copy
-      '@react-native/assets-registry': path.resolve(issieShared, 'node_modules/@react-native/assets-registry'),
-    },
+    nodeModulesPaths: [appModules],
+    blockList: [new RegExp(`^${escapeRe(path.join(issieShared, 'node_modules'))}/.*$`)],
   },
 };
 

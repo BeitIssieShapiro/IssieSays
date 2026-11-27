@@ -16,6 +16,7 @@ IssieSays is a React Native AAC (Augmentative and Alternative Communication) com
 **Run** (Metro must be running on port 8085, app built for simulator):
 ```
 npx detox test -c ios.sim.debug
+npx detox test -c android.emu.debug   # after: npx detox build -c android.emu.debug
 ```
 
 **Key implementation notes:**
@@ -29,6 +30,10 @@ npx detox test -c ios.sim.debug
 
 - **Nitro sound engine keeps the main run loop active** after launch. The `beforeAll` hook therefore calls `device.disableSynchronization()` + `sleep(1000)` before the initial `waitFor(element(by.id('main-state')))` so Detox doesn't wait for an idle app that never idles.
 
-- **Cold Hermes cache:** On a fresh simulator install, Hermes must JIT-compile the entire debug bundle — this can take 15–25 min. `testTimeout` is set to 3600000 ms (60 min). Subsequent runs with a warm cache complete in ~1–2 min.
+- **Startup hang = two copies of react-native in the bundle.** `issie-shared` has its own dev copy of `react-native` in its `node_modules`. If Metro bundles it, the app dies at startup (`'PlatformConstants' could not be found`, then `"IssieSays" has not been registered`) and Detox waits forever on the bundle load. `metro.config.js` blocks `issie-shared/node_modules` and resolves everything from this app's `node_modules` — keep it that way. (An earlier "cold Hermes takes 15–60 min" theory was wrong; a normal run takes ~2–3 min.)
+
+- **Lost first tap:** the first tap on a screen or panel that just appeared can be lost (settings mode buttons, the color picker). The tests use `tapUntil` / `tapUntilSettings` / `tapUntilGone`, which retry until the change shows.
+
+- **Android:** the debug build is pointed at Metro on 8085 (`-PreactNativeDevServerPort=8085`, `reversePorts: [8085]`). Run on a tablet AVD (`IssieTablet`, the default) — on a phone the edit screen's bottom buttons are under the gesture bar. Needs `JAVA_HOME=/opt/homebrew/opt/openjdk@21`.
 
 - **On RN 0.88.1**, a `UIDimmingView` / `PopoverDismissRegion` popover may appear on first launch. If needed, dismiss by tapping `{ x: 825, y: 1185 }` on the element (top-left corner, away from the popover bubble).
